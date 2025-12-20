@@ -3,20 +3,16 @@ import pandas as pd
 
 # --- 1. CONFIG ---
 st.set_page_config(
-    page_title="TechChoose - Smart Comparison",
+    page_title="TechChoose - Smart Finder",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Initialize Session State
-if 'compare_item' not in st.session_state:
-    st.session_state.compare_item = None
-
 # --- 2. LOAD DATA ---
 @st.cache_data(ttl=60)
 def load_data():
-    # 👇👇👇 ลิงก์ CSV ของพี่ 👇👇👇
+    # 👇👇👇 ใส่ลิงก์ CSV ของพี่เหมือนเดิมครับ 👇👇👇
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv" 
     try:
         df = pd.read_csv(sheet_url)
@@ -25,7 +21,7 @@ def load_data():
     except:
         return pd.DataFrame()
 
-# --- 3. STYLE (แก้เรื่องปุ่มมองไม่เห็น + ดีไซน์ใหม่) ---
+# --- 3. PREMIUM STYLE (NEON) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
@@ -36,41 +32,39 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
 
-    /* กล่องเปรียบเทียบ (ย้ายมาไว้ข้างล่าง) */
-    .vs-box {
-        background-color: #1E293B;
-        border: 2px solid #3B82F6;
-        border-radius: 20px;
-        padding: 30px;
-        margin-top: 40px;
-        animation: slideUp 0.5s ease-out;
-    }
-    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
     /* Winner Badge */
     .winner-badge {
         background: #F59E0B; color: black; font-weight: bold;
-        padding: 5px 10px; border-radius: 5px; font-size: 0.8em;
+        padding: 8px 16px; border-radius: 20px; font-size: 0.9em;
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
     }
 
     /* Card สินค้า */
     .product-card {
         background: #1E293B; border: 1px solid #334155;
-        padding: 15px; border-radius: 12px; margin-bottom: 15px;
+        padding: 20px; border-radius: 16px; margin-bottom: 20px;
+        transition: transform 0.2s;
     }
+    .product-card:hover { border-color: #3B82F6; transform: translateY(-5px); }
 
-    /* ปุ่ม Amazon หลัก */
+    /* ปุ่ม Amazon สีทอง (แก้สีตัวอักษรเป็นดำเข้ม) */
     .amazon-btn {
         background: linear-gradient(to bottom, #FFD814, #F7CA00);
-        color: black !important; padding: 12px 25px; border-radius: 30px;
+        color: #000000 !important; /* สีดำสนิท */
+        padding: 12px 24px; border-radius: 8px;
         text-decoration: none; font-weight: 800; display: inline-block;
-        margin-top: 15px; transition: transform 0.2s;
+        margin-top: 15px; text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .amazon-btn:hover { transform: scale(1.05); }
+    .amazon-btn:hover { transform: scale(1.02); color: #000000 !important; }
     
     /* ตัวเลขราคา */
-    .price-text { color: #FBBF24; font-weight: 900; font-size: 1.4em; }
+    .price-text { color: #FBBF24; font-weight: 900; font-size: 1.5em; }
     
+    /* Progress Bar */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -93,7 +87,6 @@ with st.sidebar:
 
     st.divider()
     if st.button("🚀 Find My Match", type="primary"):
-        st.session_state.compare_item = None
         st.rerun()
 
 # --- 5. MAIN LOGIC ---
@@ -110,16 +103,18 @@ if not df.empty:
     df = df.sort_values(by='match_percent', ascending=False).reset_index(drop=True)
     winner = df.iloc[0]
 
-    col1, col2 = st.columns([1.5, 1.2], gap="large")
+    col1, col2 = st.columns([1.6, 1.2], gap="large")
 
-    # --- ส่วนแสดง Winner (ซ้าย) ---
+    # --- WINNER SECTION (กลับมาใช้แบบเดิมที่สวยๆ) ---
     with col1:
-        st.markdown(f"<div style='padding:20px; border:1px solid #F59E0B; border-radius:15px; background:linear-gradient(180deg, #1E293B 0%, #0F172A 100%); text-align:center;'>", unsafe_allow_html=True)
-        st.markdown(f"<span class='winner-badge'>🏆 #1 TOP PICK ({winner['match_percent']:.0f}%)</span>", unsafe_allow_html=True)
-        st.markdown(f"<h1>{winner['name']}</h1>", unsafe_allow_html=True)
-        st.markdown(f"<div class='price-text'>${winner['price']:,}</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style='padding:30px; border:2px solid #F59E0B; border-radius:20px; background:linear-gradient(180deg, #1E293B 0%, #0F172A 100%); text-align:center;'>
+            <span class='winner-badge'>🏆 #1 TOP PICK FOR YOU ({winner['match_percent']:.0f}%)</span>
+            <h1 style='margin-top:15px; font-size:2.5em;'>{winner['name']}</h1>
+            <div class='price-text'>${winner['price']:,}</div>
+            <br>
+        """, unsafe_allow_html=True)
         
-        st.write("---")
         st.progress(int(winner['performance']*10), f"⚡ Speed: {winner['performance']}/10")
         st.progress(int(winner['camera']*10), f"📸 Camera: {winner['camera']}/10")
         st.progress(int(winner['battery']*10), f"🔋 Battery: {winner['battery']}/10")
@@ -128,86 +123,45 @@ if not df.empty:
             <a href="{winner['link']}" target="_blank" class="amazon-btn">
                 🛒 Buy on Amazon
             </a>
+        </div>
         """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- ส่วนแสดงรายการอื่น (ขวา) ---
+    # --- RUNNERS UP & COMPARISON (แก้ให้เสถียร) ---
     with col2:
         st.subheader("🥈 Alternatives")
         for i, row in df.iloc[1:6].iterrows():
             with st.container():
+                # Card HTML
                 st.markdown(f"""
                 <div class="product-card">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>{row['name']}</b>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b style="font-size:1.1em;">{row['name']}</b>
                         <span style="color:#3B82F6; font-weight:bold;">{row['match_percent']:.0f}%</span>
                     </div>
                     <div style="color:#94A3B8; margin-bottom:10px;">Est. ${row['price']:,}</div>
+                    <a href='{row['link']}' target='_blank' style='color:#F59E0B; text-decoration:none; font-weight:bold; font-size:0.9em; display:block; margin-bottom:10px;'>
+                        View Deal >
+                    </a>
+                </div>
                 """, unsafe_allow_html=True)
-                
-                # ปุ่มกด Compare (ใช้ st.button ปกติ จะได้ไม่มีปัญหาเรื่องสี)
-                c_btn1, c_btn2 = st.columns([1, 1.5])
-                with c_btn1:
-                    if st.button(f"🆚 Compare", key=f"btn_{i}"):
-                        st.session_state.compare_item = row
-                        st.rerun() # รีเฟรชเพื่อโชว์กล่องข้างล่าง
-                with c_btn2:
-                     st.markdown(f"<a href='{row['link']}' target='_blank' style='color:#F59E0B; text-decoration:none; font-weight:bold; font-size:0.9em;'>View Deal ></a>", unsafe_allow_html=True)
-                
-                st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- 🥊 COMPARISON SECTION (ย้ายมาล่างสุด) ---
-    if st.session_state.compare_item is not None:
-        challenger = st.session_state.compare_item
-        
-        # คำนวณส่วนต่าง
-        diff_price = winner['price'] - challenger['price']
-        price_msg = ""
-        if diff_price > 0:
-            price_msg = f"Save ${diff_price:,} if you choose {challenger['name']}"
-        elif diff_price < 0:
-            price_msg = f"{winner['name']} is cheaper by ${abs(diff_price):,}"
-        else:
-            price_msg = "Both have the same price."
-
-        st.markdown("<div id='compare_section'></div>", unsafe_allow_html=True) # Anchor
-        st.markdown(f"""
-        <div class="vs-box">
-            <h2 style="text-align:center; color:#F8FAFC;">🥊 Head-to-Head Analysis</h2>
-            <div style="display:flex; justify-content:space-around; align-items:center; text-align:center; margin-top:20px;">
-                <div style="width:40%;">
-                    <h3 style="color:#FBBF24;">{winner['name']}</h3>
-                    <div style="font-size:1.5em; font-weight:bold;">${winner['price']:,}</div>
-                    <div class="winner-badge" style="margin-top:10px;">WINNER</div>
-                </div>
-                <div style="font-size:2em; font-weight:900; color:#64748B;">VS</div>
-                <div style="width:40%;">
-                    <h3 style="color:#F8FAFC;">{challenger['name']}</h3>
-                    <div style="font-size:1.5em; font-weight:bold;">${challenger['price']:,}</div>
-                </div>
-            </div>
-            
-            <hr style="border-color:#334155; margin:30px 0;">
-            
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <div style="background:#0F172A; padding:15px; border-radius:10px;">
-                    <h4 style="color:#3B82F6;">📊 Specs Difference</h4>
-                    <p>⚡ <b>Speed:</b> {winner['performance']} vs {challenger['performance']}</p>
-                    <p>📸 <b>Camera:</b> {winner['camera']} vs {challenger['camera']}</p>
-                    <p>🔋 <b>Battery:</b> {winner['battery']} vs {challenger['battery']}</p>
-                </div>
-                <div style="background:#0F172A; padding:15px; border-radius:10px;">
-                    <h4 style="color:#F59E0B;">💰 Price & Verdict</h4>
-                    <p style="font-size:1.1em; font-weight:bold; color:#22C55E;">{price_msg}</p>
-                    <p style="color:#94A3B8; font-size:0.9em;">
-                        *Score Gap: {(winner['match_percent'] - challenger['match_percent']):.1f}% better match for you.
-                    </p>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Auto Scroll (Optional Hack) - หรือแค่ให้มันเด้งขึ้นมาก็พอ
+                # 🔥 Feature เปรียบเทียบแบบ Native (ไม่พังแน่นอน)
+                with st.expander(f"🆚 Compare vs {winner['name']}"):
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.caption("Winner")
+                        st.write(f"**{winner['performance']}** Speed")
+                        st.write(f"**{winner['camera']}** Cam")
+                    with c2:
+                        st.caption("This")
+                        st.write(f"**{row['performance']}** Speed")
+                        st.write(f"**{row['camera']}** Cam")
+                    
+                    diff = winner['price'] - row['price']
+                    if diff > 0:
+                        st.success(f"💰 Save ${diff:,}")
+                    else:
+                        st.info(f"💎 Premium")
 
     # --- Footer ---
     st.write("---")
