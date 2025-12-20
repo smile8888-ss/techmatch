@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
-import random
 
 # --- 1. CONFIG ---
 st.set_page_config(
-    page_title="TechChoose - Top 4 Picks",
-    page_icon="🤖",
+    page_title="TechChoose - Lifestyle Match",
+    page_icon="🎯",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -36,17 +35,25 @@ st.markdown("""
     /* Winner Box */
     .winner-box {
         background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
-        border: 2px solid #F59E0B;
+        border: 2px solid #3B82F6; /* สีฟ้าให้ดู Smart */
         border-radius: 20px;
         padding: 30px;
         text-align: center;
-        box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
     }
     
-    /* AI Verdict Box (ส่วนที่เพิ่มใหม่) */
+    /* Persona Badge */
+    .persona-badge {
+        background: #3B82F6; color: white; font-weight: bold;
+        padding: 5px 15px; border-radius: 20px; font-size: 0.8em;
+        text-transform: uppercase; letter-spacing: 1px;
+        margin-bottom: 10px; display: inline-block;
+    }
+
+    /* AI Verdict Box */
     .ai-verdict {
         background-color: #172554;
-        border-left: 5px solid #3B82F6;
+        border-left: 5px solid #F59E0B;
         padding: 15px;
         margin-top: 20px;
         text-align: left;
@@ -66,10 +73,6 @@ st.markdown("""
     }
     .product-card:hover { border-color: #3B82F6; transform: translateX(5px); }
 
-    /* Tags */
-    .tag-green { background: #064E3B; color: #34D399; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; border: 1px solid #059669; }
-    .tag-blue { background: #172554; color: #60A5FA; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; border: 1px solid #2563EB; }
-
     /* Button */
     .amazon-btn {
         background: linear-gradient(to bottom, #FFD814, #F7CA00);
@@ -80,51 +83,79 @@ st.markdown("""
     .amazon-btn:hover { transform: scale(1.02); }
     
     .price-big { color: #FBBF24; font-weight: 900; font-size: 2.2em; }
+    
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%);
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. SIDEBAR ---
+# --- 4. SIDEBAR (The Persona Logic) ---
 with st.sidebar:
     st.title("🎯 TechChoose")
-    st.caption("AI-Powered Recommendation")
+    st.caption("Select your lifestyle:")
     st.write("---")
     
     os_choice = st.radio("📱 Ecosystem:", ["Any", "iOS (iPhone)", "Android"], index=0)
     st.write("---")
     
-    def get_score(label): return {"Ignore": 1, "Nice to have": 5, "Important": 8, "Must have": 10}[label]
+    # 🔥 New Feature: Lifestyle Selector
+    lifestyle = st.radio(
+        "👤 Who are you?",
+        [
+            "🎮 Hardcore Gamer", 
+            "📸 Content Creator", 
+            "💼 Business / Work", 
+            "💰 Student / Budget Saver", 
+            "🛠️ Custom (Manual Setup)"
+        ]
+    )
 
-    p = get_score(st.select_slider("🚀 Speed", ["Ignore", "Nice to have", "Important", "Must have"], "Important"))
-    c = get_score(st.select_slider("📸 Camera", ["Ignore", "Nice to have", "Important", "Must have"], "Important"))
-    b = get_score(st.select_slider("🔋 Battery", ["Ignore", "Nice to have", "Important", "Must have"], "Nice to have"))
-    v = get_score(st.select_slider("💰 Value", ["Ignore", "Nice to have", "Important", "Must have"], "Nice to have"))
+    # Auto-Set Weights based on Lifestyle
+    if lifestyle == "🎮 Hardcore Gamer":
+        p, c, b, v = 10, 3, 8, 5
+        st.info("✅ Setting: Max Speed + Battery")
+    elif lifestyle == "📸 Content Creator":
+        p, c, b, v = 7, 10, 8, 5
+        st.info("✅ Setting: Max Camera + Storage")
+    elif lifestyle == "💼 Business / Work":
+        p, c, b, v = 8, 6, 9, 6
+        st.info("✅ Setting: Balanced + Reliability")
+    elif lifestyle == "💰 Student / Budget Saver":
+        p, c, b, v = 5, 5, 7, 10
+        st.info("✅ Setting: Best Value for Money")
+    else:
+        # Custom Mode: Show Sliders
+        st.write("---")
+        st.caption("⚙️ Manual Adjustment")
+        def get_score(label): return {"Ignore": 1, "Nice to have": 5, "Important": 8, "Must have": 10}[label]
+        p = get_score(st.select_slider("🚀 Speed", ["Ignore", "Nice to have", "Important", "Must have"], "Important"))
+        c = get_score(st.select_slider("📸 Camera", ["Ignore", "Nice to have", "Important", "Must have"], "Important"))
+        b = get_score(st.select_slider("🔋 Battery", ["Ignore", "Nice to have", "Important", "Must have"], "Nice to have"))
+        v = get_score(st.select_slider("💰 Value", ["Ignore", "Nice to have", "Important", "Must have"], "Nice to have"))
 
     st.write("---")
-    if st.button("🔥 Run Analysis", type="primary"):
+    if st.button("🔥 Find My Phone", type="primary"):
         st.rerun()
 
-# --- 5. HELPER FUNCTION (สร้างคำพูด AI) ---
-def generate_verdict(row):
-    reasons = []
-    if row['performance'] >= 9: reasons.append("an absolute powerhouse for gaming")
-    if row['camera'] >= 9: reasons.append("a professional-grade camera system")
-    if row['battery'] >= 9: reasons.append("all-day battery life")
-    if row['value'] >= 8: reasons.append("unbeatable value for money")
-    
-    if not reasons: return "This device offers the most balanced specs for your specific needs."
-    
-    # รวมประโยคให้ดูเป็นธรรมชาติ
-    text = f"This is your #1 pick because it features **{reasons[0]}**"
-    if len(reasons) > 1: text += f" and **{reasons[1]}**."
-    else: text += "."
-    return text
+# --- 5. HELPER FUNCTION ---
+def generate_verdict(row, mode):
+    # ปรับคำพูด AI ตามโหมดที่เลือก
+    if "Gamer" in mode:
+        return f"For gaming, the **{row['name']}** is a beast! With a performance score of {row['performance']}/10, it handles AAA games easily."
+    elif "Creator" in mode:
+        return f"If you love photos, **{row['name']}** is the one. Its camera system ({row['camera']}/10) captures stunning details."
+    elif "Student" in mode or "Budget" in mode:
+        return f"Smart choice! The **{row['name']}** gives you the best bang for your buck at ${row['price']:,}."
+    else:
+        return f"The **{row['name']}** is the best all-rounder for you, balancing performance, battery, and price perfectly."
 
 def get_pros(row):
     pros = []
-    if row['performance'] >= 9: pros.append("🚀 Top-tier Performance")
-    if row['camera'] >= 9: pros.append("📸 Excellent Camera")
-    if row['battery'] >= 9: pros.append("🔋 Long-lasting Battery")
-    if row['value'] >= 8: pros.append("💰 Great Price Point")
+    if row['performance'] >= 9: pros.append("🚀 Ultimate Performance")
+    if row['camera'] >= 9: pros.append("📸 Pro-Grade Camera")
+    if row['battery'] >= 9: pros.append("🔋 All-Day Battery")
+    if row['value'] >= 8: pros.append("💰 Best Value Pick")
     return pros
 
 # --- 6. MAIN LOGIC ---
@@ -144,46 +175,46 @@ if not df.empty:
 
     col1, col2 = st.columns([1.5, 1.2], gap="large")
 
-    # --- WINNER (HERO SECTION) ---
+    # --- WINNER ---
     with col1:
         st.markdown(f"""
         <div class='winner-box'>
-            <span style='background:#F59E0B; color:black; padding:5px 15px; border-radius:20px; font-weight:bold;'>🏆 #1 WINNER ({winner['match']:.0f}%)</span>
-            <h1 style='margin-top:15px;'>{winner['name']}</h1>
+            <span class='persona-badge'>Selected for: {lifestyle.split(' ')[1]}</span><br>
+            <span style='color:#F59E0B; font-weight:bold; font-size:1.2em;'>🏆 #1 RECOMMENDATION</span>
+            <h1 style='margin-top:10px;'>{winner['name']}</h1>
             <div class='price-big'>${winner['price']:,}</div>
         """, unsafe_allow_html=True)
 
-        # 🔥 ส่วน AI Verdict (พูดกับลูกค้า)
-        verdict_text = generate_verdict(winner)
+        # 🔥 AI Verdict (พูดตามไลฟ์สไตล์)
+        verdict_text = generate_verdict(winner, lifestyle)
         st.markdown(f"""
         <div class='ai-verdict'>
-            <b>💡 AI Verdict:</b><br>
+            <b>💡 Why this matches you:</b><br>
             {verdict_text}
         </div>
         <br>
         """, unsafe_allow_html=True)
         
-        # 🔥 ส่วน Pros (ข้อดี)
         pros_list = get_pros(winner)
         for pro in pros_list:
             st.markdown(f"<div class='pros-text'>✅ {pro}</div>", unsafe_allow_html=True)
 
         st.markdown(f"""
             <a href="{winner['link']}" target="_blank" class="amazon-btn">
-                🛒 Check Today's Price
+                🛒 Check Price on Amazon
             </a>
         </div>
         """, unsafe_allow_html=True)
 
     # --- TOP 3 ALTERNATIVES ---
     with col2:
-        st.subheader("🥈 Runner-ups (Top 3)")
+        st.subheader(f"🥈 Best Alternatives for {lifestyle.split(' ')[1]}")
         
         for i, row in df.iloc[1:4].iterrows():
             diff = winner['price'] - row['price']
             tag_html = ""
-            if diff > 0: tag_html = f"<div class='tag-green'>💰 Save ${diff:,}</div>"
-            elif row['match'] >= (winner['match'] - 2): tag_html = f"<div class='tag-blue'>🔥 Close Match</div>"
+            if diff > 0: 
+                tag_html = f"<span style='color:#34D399; background:#064E3B; padding:2px 8px; border-radius:4px; font-size:0.8em;'>💰 Save ${diff:,}</span>"
             
             st.markdown(f"""
             <div class="product-card">
@@ -194,7 +225,7 @@ if not df.empty:
                         {tag_html}
                     </div>
                     <div style="text-align:right;">
-                        <span style="color:#3B82F6; font-weight:900;">{row['match']:.0f}%</span>
+                        <span style="color:#3B82F6; font-weight:900;">{row['match']:.0f}% Match</span>
                         <br>
                         <a href='{row['link']}' target='_blank' style='color:#F59E0B; font-weight:bold; font-size:0.85em; text-decoration:none;'>
                             View Deal >
