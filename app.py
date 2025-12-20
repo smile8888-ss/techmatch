@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
+import random
 
 # --- 1. CONFIG ---
 st.set_page_config(
-    page_title="TechChoose - Smart Finder",
-    page_icon="⚡",
+    page_title="TechChoose - Top 4 Picks",
+    page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -12,7 +13,7 @@ st.set_page_config(
 # --- 2. LOAD DATA ---
 @st.cache_data(ttl=60)
 def load_data():
-    # 👇👇👇 ใส่ลิงก์ CSV ของพี่เหมือนเดิมครับ 👇👇👇
+    # 👇👇👇 ลิงก์ CSV ของพี่ครับ 👇👇👇
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv" 
     try:
         df = pd.read_csv(sheet_url)
@@ -21,7 +22,7 @@ def load_data():
     except:
         return pd.DataFrame()
 
-# --- 3. PREMIUM STYLE (NEON) ---
+# --- 3. STYLE ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
@@ -32,140 +33,179 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
 
-    /* Winner Badge */
-    .winner-badge {
-        background: #F59E0B; color: black; font-weight: bold;
-        padding: 8px 16px; border-radius: 20px; font-size: 0.9em;
-        box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+    /* Winner Box */
+    .winner-box {
+        background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
+        border: 2px solid #F59E0B;
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+    }
+    
+    /* AI Verdict Box (ส่วนที่เพิ่มใหม่) */
+    .ai-verdict {
+        background-color: #172554;
+        border-left: 5px solid #3B82F6;
+        padding: 15px;
+        margin-top: 20px;
+        text-align: left;
+        border-radius: 5px;
+        font-size: 0.95em;
+        line-height: 1.5;
     }
 
-    /* Card สินค้า */
+    /* Pros List */
+    .pros-text { color: #4ADE80; font-size: 0.9em; margin-bottom: 5px; text-align: left; }
+    
+    /* Product Card */
     .product-card {
         background: #1E293B; border: 1px solid #334155;
-        padding: 20px; border-radius: 16px; margin-bottom: 20px;
+        padding: 20px; border-radius: 15px; margin-bottom: 15px;
         transition: transform 0.2s;
     }
-    .product-card:hover { border-color: #3B82F6; transform: translateY(-5px); }
+    .product-card:hover { border-color: #3B82F6; transform: translateX(5px); }
 
-    /* ปุ่ม Amazon สีทอง (แก้สีตัวอักษรเป็นดำเข้ม) */
+    /* Tags */
+    .tag-green { background: #064E3B; color: #34D399; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; border: 1px solid #059669; }
+    .tag-blue { background: #172554; color: #60A5FA; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; border: 1px solid #2563EB; }
+
+    /* Button */
     .amazon-btn {
         background: linear-gradient(to bottom, #FFD814, #F7CA00);
-        color: #000000 !important; /* สีดำสนิท */
-        padding: 12px 24px; border-radius: 8px;
+        color: #000000 !important; padding: 12px 30px; border-radius: 8px;
         text-decoration: none; font-weight: 800; display: inline-block;
-        margin-top: 15px; text-align: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .amazon-btn:hover { transform: scale(1.02); color: #000000 !important; }
+    .amazon-btn:hover { transform: scale(1.02); }
     
-    /* ตัวเลขราคา */
-    .price-text { color: #FBBF24; font-weight: 900; font-size: 1.5em; }
-    
-    /* Progress Bar */
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%);
-    }
+    .price-big { color: #FBBF24; font-weight: 900; font-size: 2.2em; }
 </style>
 """, unsafe_allow_html=True)
 
 # --- 4. SIDEBAR ---
 with st.sidebar:
-    st.title("🎯 Filter")
-    st.divider()
-    os_choice = st.radio("System:", ["Any", "iOS (iPhone)", "Android"], index=0)
+    st.title("🎯 TechChoose")
+    st.caption("AI-Powered Recommendation")
     st.write("---")
     
-    def get_score(label):
-        return {"Don't Care": 1, "Nice to Have": 5, "Important": 8, "Essential!": 10}[label]
+    os_choice = st.radio("📱 Ecosystem:", ["Any", "iOS (iPhone)", "Android"], index=0)
+    st.write("---")
+    
+    def get_score(label): return {"Ignore": 1, "Nice to have": 5, "Important": 8, "Must have": 10}[label]
 
-    p_opt = st.select_slider("Speed & Gaming", ["Don't Care", "Nice to Have", "Important", "Essential!"], "Important")
-    c_opt = st.select_slider("Camera Quality", ["Don't Care", "Nice to Have", "Important", "Essential!"], "Important")
-    b_opt = st.select_slider("Battery Life", ["Don't Care", "Nice to Have", "Important", "Essential!"], "Nice to Have")
-    v_opt = st.select_slider("Price / Value", ["Don't Care", "Nice to Have", "Important", "Essential!"], "Nice to Have")
+    p = get_score(st.select_slider("🚀 Speed", ["Ignore", "Nice to have", "Important", "Must have"], "Important"))
+    c = get_score(st.select_slider("📸 Camera", ["Ignore", "Nice to have", "Important", "Must have"], "Important"))
+    b = get_score(st.select_slider("🔋 Battery", ["Ignore", "Nice to have", "Important", "Must have"], "Nice to have"))
+    v = get_score(st.select_slider("💰 Value", ["Ignore", "Nice to have", "Important", "Must have"], "Nice to have"))
 
-    w_perf, w_cam, w_batt, w_val = get_score(p_opt), get_score(c_opt), get_score(b_opt), get_score(v_opt)
-
-    st.divider()
-    if st.button("🚀 Find My Match", type="primary"):
+    st.write("---")
+    if st.button("🔥 Run Analysis", type="primary"):
         st.rerun()
 
-# --- 5. MAIN LOGIC ---
+# --- 5. HELPER FUNCTION (สร้างคำพูด AI) ---
+def generate_verdict(row):
+    reasons = []
+    if row['performance'] >= 9: reasons.append("an absolute powerhouse for gaming")
+    if row['camera'] >= 9: reasons.append("a professional-grade camera system")
+    if row['battery'] >= 9: reasons.append("all-day battery life")
+    if row['value'] >= 8: reasons.append("unbeatable value for money")
+    
+    if not reasons: return "This device offers the most balanced specs for your specific needs."
+    
+    # รวมประโยคให้ดูเป็นธรรมชาติ
+    text = f"This is your #1 pick because it features **{reasons[0]}**"
+    if len(reasons) > 1: text += f" and **{reasons[1]}**."
+    else: text += "."
+    return text
+
+def get_pros(row):
+    pros = []
+    if row['performance'] >= 9: pros.append("🚀 Top-tier Performance")
+    if row['camera'] >= 9: pros.append("📸 Excellent Camera")
+    if row['battery'] >= 9: pros.append("🔋 Long-lasting Battery")
+    if row['value'] >= 8: pros.append("💰 Great Price Point")
+    return pros
+
+# --- 6. MAIN LOGIC ---
 df = load_data()
 
 if not df.empty:
     if "iOS" in os_choice: df = df[df['os_type'] == 'iOS']
     elif "Android" in os_choice: df = df[df['os_type'] == 'Android']
 
-    # Calc Score
-    df['score_raw'] = (df['performance']*w_perf) + (df['camera']*w_cam) + (df['battery']*w_batt) + (df['value']*w_val)
-    max_possible = (10*w_perf) + (10*w_cam) + (10*w_batt) + (10*w_val)
-    df['match_percent'] = (df['score_raw'] / max_possible) * 100
-    df = df.sort_values(by='match_percent', ascending=False).reset_index(drop=True)
+    # Score Calculation
+    df['score'] = (df['performance']*p) + (df['camera']*c) + (df['battery']*b) + (df['value']*v)
+    max_score = (10*p) + (10*c) + (10*b) + (10*v)
+    df['match'] = (df['score'] / max_score) * 100
+    df = df.sort_values(by='match', ascending=False).reset_index(drop=True)
+    
     winner = df.iloc[0]
 
-    col1, col2 = st.columns([1.6, 1.2], gap="large")
+    col1, col2 = st.columns([1.5, 1.2], gap="large")
 
-    # --- WINNER SECTION (กลับมาใช้แบบเดิมที่สวยๆ) ---
+    # --- WINNER (HERO SECTION) ---
     with col1:
         st.markdown(f"""
-        <div style='padding:30px; border:2px solid #F59E0B; border-radius:20px; background:linear-gradient(180deg, #1E293B 0%, #0F172A 100%); text-align:center;'>
-            <span class='winner-badge'>🏆 #1 TOP PICK FOR YOU ({winner['match_percent']:.0f}%)</span>
-            <h1 style='margin-top:15px; font-size:2.5em;'>{winner['name']}</h1>
-            <div class='price-text'>${winner['price']:,}</div>
-            <br>
+        <div class='winner-box'>
+            <span style='background:#F59E0B; color:black; padding:5px 15px; border-radius:20px; font-weight:bold;'>🏆 #1 WINNER ({winner['match']:.0f}%)</span>
+            <h1 style='margin-top:15px;'>{winner['name']}</h1>
+            <div class='price-big'>${winner['price']:,}</div>
+        """, unsafe_allow_html=True)
+
+        # 🔥 ส่วน AI Verdict (พูดกับลูกค้า)
+        verdict_text = generate_verdict(winner)
+        st.markdown(f"""
+        <div class='ai-verdict'>
+            <b>💡 AI Verdict:</b><br>
+            {verdict_text}
+        </div>
+        <br>
         """, unsafe_allow_html=True)
         
-        st.progress(int(winner['performance']*10), f"⚡ Speed: {winner['performance']}/10")
-        st.progress(int(winner['camera']*10), f"📸 Camera: {winner['camera']}/10")
-        st.progress(int(winner['battery']*10), f"🔋 Battery: {winner['battery']}/10")
-        
+        # 🔥 ส่วน Pros (ข้อดี)
+        pros_list = get_pros(winner)
+        for pro in pros_list:
+            st.markdown(f"<div class='pros-text'>✅ {pro}</div>", unsafe_allow_html=True)
+
         st.markdown(f"""
             <a href="{winner['link']}" target="_blank" class="amazon-btn">
-                🛒 Buy on Amazon
+                🛒 Check Today's Price
             </a>
         </div>
         """, unsafe_allow_html=True)
 
-    # --- RUNNERS UP & COMPARISON (แก้ให้เสถียร) ---
+    # --- TOP 3 ALTERNATIVES ---
     with col2:
-        st.subheader("🥈 Alternatives")
-        for i, row in df.iloc[1:6].iterrows():
-            with st.container():
-                # Card HTML
-                st.markdown(f"""
-                <div class="product-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b style="font-size:1.1em;">{row['name']}</b>
-                        <span style="color:#3B82F6; font-weight:bold;">{row['match_percent']:.0f}%</span>
+        st.subheader("🥈 Runner-ups (Top 3)")
+        
+        for i, row in df.iloc[1:4].iterrows():
+            diff = winner['price'] - row['price']
+            tag_html = ""
+            if diff > 0: tag_html = f"<div class='tag-green'>💰 Save ${diff:,}</div>"
+            elif row['match'] >= (winner['match'] - 2): tag_html = f"<div class='tag-blue'>🔥 Close Match</div>"
+            
+            st.markdown(f"""
+            <div class="product-card">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <b style="font-size:1.1em;">{i}. {row['name']}</b>
+                        <div style="color:#94A3B8; font-size:0.9em;">Est. ${row['price']:,}</div>
+                        {tag_html}
                     </div>
-                    <div style="color:#94A3B8; margin-bottom:10px;">Est. ${row['price']:,}</div>
-                    <a href='{row['link']}' target='_blank' style='color:#F59E0B; text-decoration:none; font-weight:bold; font-size:0.9em; display:block; margin-bottom:10px;'>
-                        View Deal >
-                    </a>
+                    <div style="text-align:right;">
+                        <span style="color:#3B82F6; font-weight:900;">{row['match']:.0f}%</span>
+                        <br>
+                        <a href='{row['link']}' target='_blank' style='color:#F59E0B; font-weight:bold; font-size:0.85em; text-decoration:none;'>
+                            View Deal >
+                        </a>
+                    </div>
                 </div>
-                """, unsafe_allow_html=True)
+            </div>
+            """, unsafe_allow_html=True)
 
-                # 🔥 Feature เปรียบเทียบแบบ Native (ไม่พังแน่นอน)
-                with st.expander(f"🆚 Compare vs {winner['name']}"):
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        st.caption("Winner")
-                        st.write(f"**{winner['performance']}** Speed")
-                        st.write(f"**{winner['camera']}** Cam")
-                    with c2:
-                        st.caption("This")
-                        st.write(f"**{row['performance']}** Speed")
-                        st.write(f"**{row['camera']}** Cam")
-                    
-                    diff = winner['price'] - row['price']
-                    if diff > 0:
-                        st.success(f"💰 Save ${diff:,}")
-                    else:
-                        st.info(f"💎 Premium")
-
-    # --- Footer ---
     st.write("---")
-    st.caption("Disclaimer: TechChoose is a participant in the Amazon Services LLC Associates Program. Prices are subject to change.")
+    st.caption("Disclaimer: TechChoose is a participant in the Amazon Services LLC Associates Program.")
 
 else:
-    st.error("Please connect your Google Sheet CSV.")
+    st.error("Please connect your Google Sheet.")
