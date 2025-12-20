@@ -3,8 +3,8 @@ import pandas as pd
 
 # --- 1. SETUP ---
 st.set_page_config(
-    page_title="TechChoose - AI Gadget Finder",
-    page_icon="🤖",
+    page_title="TechChoose - Smart Comparison",
+    page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -12,7 +12,7 @@ st.set_page_config(
 # --- 2. LOAD DATA ---
 @st.cache_data(ttl=60)
 def load_data():
-    # 👇👇👇 ลิงก์ CSV ของพี่ 👇👇👇
+    # 👇👇👇 ลิงก์ CSV ของพี่ ใส่ตรงนี้ครับ 👇👇👇
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
     try:
         df = pd.read_csv(sheet_url)
@@ -21,122 +21,143 @@ def load_data():
     except:
         return pd.DataFrame()
 
-# --- 3. STYLE ---
+# --- 3. STYLE (Neon & Comparison) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
     
-    .stApp { background-color: #0F172A; color: #F8FAFC; font-family: 'Inter', sans-serif; }
+    .stApp { background-color: #0B1120; color: #E2E8F0; font-family: 'Inter', sans-serif; }
     
-    /* Highlight Text */
-    .highlight { color: #FBBF24; font-weight: bold; }
-    
-    /* Progress Bar */
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%);
-        height: 10px !important; border-radius: 6px;
+    /* Comparison Box */
+    .vs-box {
+        background: #1E293B;
+        border: 2px solid #334155;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 20px;
+        text-align: center;
     }
     
-    /* Card Design */
-    .product-card {
-        background: #1E293B; border: 1px solid #334155;
-        padding: 20px; border-radius: 16px; margin-bottom: 15px;
-        transition: transform 0.2s;
+    /* Winner Label */
+    .winner-badge {
+        background-color: #F59E0B; color: black; 
+        padding: 5px 15px; border-radius: 20px; 
+        font-weight: bold; font-size: 0.8em;
     }
-    .product-card:hover { transform: translateY(-5px); border-color: #FBBF24; }
+    
+    /* Metric Enhancement */
+    [data-testid="stMetricValue"] { font-size: 1.8rem !important; }
     
     /* Button */
     .cta-btn {
         background: linear-gradient(90deg, #F59E0B, #D97706);
-        color: white !important; padding: 12px 24px; border-radius: 8px;
-        text-decoration: none; font-weight: bold; display: inline-block;
-        margin-top: 10px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        color: white !important; padding: 15px 30px; border-radius: 10px;
+        text-decoration: none; font-weight: 800; display: block;
+        margin-top: 20px; text-align: center;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
     }
-    .cta-btn:hover { transform: scale(1.05); color: white !important; }
+    .cta-btn:hover { transform: scale(1.02); }
 </style>
 """, unsafe_allow_html=True)
 
 # --- 4. SIDEBAR ---
 with st.sidebar:
-    st.title("🤖 TechChoose AI")
-    st.caption("Smart Recommendations in 3 clicks.")
+    st.title("⚖️ TechChoose")
+    st.markdown("Compare & Decide in seconds.")
     st.write("---")
     
-    st.markdown("### 1️⃣ Ecosystem")
-    os_choice = st.radio("Select OS:", ["Show All", "🍎 iOS (iPhone)", "🤖 Android"], index=0)
+    st.header("📱 Ecosystem")
+    os_choice = st.radio("System:", ["Any", "iOS (iPhone)", "Android"], index=0)
     
-    st.markdown("### 2️⃣ What matters most?")
-    # Helper to convert text to number
+    st.write("---")
+    st.header("🎯 Priorities")
     def score(t): return {"Low": 1, "Medium": 5, "High": 8, "Max": 10}[t]
     
-    w_perf = score(st.select_slider("Gaming / Speed", ["Low", "Medium", "High", "Max"], "High"))
-    w_cam = score(st.select_slider("Camera Quality", ["Low", "Medium", "High", "Max"], "High"))
-    w_batt = score(st.select_slider("Battery Life", ["Low", "Medium", "High", "Max"], "Medium"))
-    w_val = score(st.select_slider("Price / Value", ["Low", "Medium", "High", "Max"], "Medium"))
+    w_perf = score(st.select_slider("Gaming/Speed", ["Low", "Medium", "High", "Max"], "High"))
+    w_cam = score(st.select_slider("Camera", ["Low", "Medium", "High", "Max"], "High"))
+    w_batt = score(st.select_slider("Battery", ["Low", "Medium", "High", "Max"], "Medium"))
+    w_val = score(st.select_slider("Value", ["Low", "Medium", "High", "Max"], "Medium"))
     
     st.write("---")
-    if st.button("🚀 Run Analysis", type="primary"):
+    if st.button("🚀 Analyze Now", type="primary"):
         st.rerun()
 
 # --- 5. MAIN LOGIC ---
 df = load_data()
 
 if not df.empty:
-    # Filter OS
+    # Filter & Calculate
     if "iOS" in os_choice: df = df[df['os_type'] == 'iOS']
     elif "Android" in os_choice: df = df[df['os_type'] == 'Android']
     
-    # Calculate Score
     df['score'] = (df['performance']*w_perf) + (df['camera']*w_cam) + (df['battery']*w_batt) + (df['value']*w_val)
     max_score = (10*w_perf) + (10*w_cam) + (10*w_batt) + (10*w_val)
     df['match'] = (df['score'] / max_score) * 100
     df = df.sort_values('match', ascending=False).reset_index(drop=True)
     
-    top = df.iloc[0]
-
-    # --- SHOWCASE ---
-    c1, c2 = st.columns([1.5, 1], gap="large")
+    winner = df.iloc[0]
     
-    with c1:
-        st.caption(f"🏆 TOP MATCH ({top['match']:.0f}%)")
-        st.markdown(f"# {top['name']}")
-        st.markdown(f"<h2 style='color:#FBBF24'>${top['price']:,}</h2>", unsafe_allow_html=True)
-        
-        st.markdown("### 📊 AI Analysis")
-        st.progress(int(top['performance']*10), f"Speed: {top['performance']}/10")
-        st.progress(int(top['camera']*10), f"Camera: {top['camera']}/10")
-        st.progress(int(top['battery']*10), f"Battery: {top['battery']}/10")
-        
+    # --- UI LAYOUT ---
+    st.caption(f"✅ AI Analysis Complete based on your {w_perf/10*100:.0f}% focus on performance.")
+    
+    # 🏆 ส่วนโชว์ผู้ชนะ (Hero Section)
+    col1, col2 = st.columns([1.5, 1])
+    with col1:
+        st.markdown(f"<span class='winner-badge'>🏆 #1 BEST CHOICE ({winner['match']:.0f}%)</span>", unsafe_allow_html=True)
+        st.title(winner['name'])
+        st.markdown(f"<h1 style='color:#FBBF24; margin-top:-20px;'>${winner['price']:,}</h1>", unsafe_allow_html=True)
         st.markdown(f"""
-            <br>
-            <a href="{top['link']}" target="_blank" class="cta-btn">
-                🛒 Check Price & Reviews on Amazon
+            <a href="{winner['link']}" target="_blank" class="cta-btn">
+                🛒 See Today's Deal on Amazon
             </a>
         """, unsafe_allow_html=True)
 
-    with c2:
-        st.subheader("🥈 Runner-ups")
-        for i, row in df.iloc[1:5].iterrows():
-            st.markdown(f"""
-            <div class="product-card">
-                <div style="display:flex; justify-content:space-between;">
-                    <b>{row['name']}</b>
-                    <span class="highlight">{row['match']:.0f}%</span>
-                </div>
-                <div style="color:#94A3B8; font-size:0.9em;">${row['price']:,}</div>
-                <a href="{row['link']}" target="_blank" style="color:#FBBF24; text-decoration:none; font-weight:bold; font-size:0.9em;">View Deal ></a>
-            </div>
-            """, unsafe_allow_html=True)
+    # ⚔️ ส่วนเปรียบเทียบ (Head-to-Head) - ฟีเจอร์ใหม่!
+    if len(df) > 1:
+        runner_up = df.iloc[1]
+        
+        st.write("---")
+        st.subheader("🥊 Head-to-Head: Why #1 Won?")
+        
+        # กล่องเปรียบเทียบ
+        with st.container():
+            c1, c2, c3 = st.columns([1, 0.5, 1])
+            
+            # ฝั่งผู้ชนะ
+            with c1:
+                st.info(f"🏆 {winner['name']}")
+                st.metric("Speed", f"{winner['performance']}/10", f"{winner['performance'] - runner_up['performance']}")
+                st.metric("Camera", f"{winner['camera']}/10", f"{winner['camera'] - runner_up['camera']}")
+                st.metric("Battery", f"{winner['battery']}/10", f"{winner['battery'] - runner_up['battery']}")
+            
+            # ตรงกลาง (VS)
+            with c2:
+                st.markdown("<br><br><h1 style='text-align:center; color:#64748B;'>VS</h1>", unsafe_allow_html=True)
+            
+            # ฝั่งที่ 2
+            with c3:
+                st.write(f"🥈 {runner_up['name']}")
+                st.metric("Speed", f"{runner_up['performance']}/10", delta_color="off")
+                st.metric("Camera", f"{runner_up['camera']}/10", delta_color="off")
+                st.metric("Battery", f"{runner_up['battery']}/10", delta_color="off")
 
-    # --- DISCLAIMER (กฎเหล็ก) ---
+        # สรุปเหตุผล (Verdict)
+        diff_price = runner_up['price'] - winner['price']
+        verdict = ""
+        if winner['performance'] > runner_up['performance']:
+            verdict += f"The **{winner['name']}** is faster. "
+        if winner['camera'] > runner_up['camera']:
+            verdict += "It has a better camera system. "
+        if diff_price > 0:
+            verdict += f"Plus, it is **${diff_price} cheaper** than the {runner_up['name']}!"
+        elif diff_price < 0:
+            verdict += f"It costs a bit more, but the specs are worth it."
+            
+        st.success(f"💡 **AI Verdict:** {verdict}")
+
+    # --- DISCLAIMER ---
     st.write("---")
-    st.markdown("""
-    <div style='text-align: center; color: #64748B; font-size: 0.8em;'>
-        <p>Disclaimer: TechChoose is a participant in the Amazon Services LLC Associates Program. 
-        As an Amazon Associate, we earn from qualifying purchases.</p>
-        <p>© 2025 TechChoose. Prices and availability are subject to change.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.caption("Disclaimer: TechChoose is a participant in the Amazon Services LLC Associates Program. Prices are subject to change.")
 
 else:
-    st.error("Connection Error: Please check your Google Sheet Link.")
+    st.error("Please connect your Google Sheet.")
