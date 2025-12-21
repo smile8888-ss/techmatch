@@ -3,8 +3,8 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Smart Logic 2.0",
-    page_icon="🧠",
+    page_title="TechChoose - Final Polish",
+    page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -18,14 +18,13 @@ def load_data():
         df['os_type'] = df['name'].apply(lambda x: 'iOS' if 'iPhone' in str(x) else 'Android')
         
         if 'antutu' in df.columns:
-            # Dynamic Scaling: ให้คะแนนเต็ม 10 อิงจากตัวท็อปสุด
             df['perf_score'] = (df['antutu'] / df['antutu'].max()) * 10
         else:
-            df['perf_score'] = 8.0 # Fallback
+            df['perf_score'] = 8.0 
             
         if 'camera' in df.columns: df['cam_score'] = df['camera']
         if 'battery' in df.columns: df['batt_score'] = df['battery']
-        if 'antutu' not in df.columns: df['antutu'] = df['price'] * 2000 # Fake Data กัน Error
+        if 'antutu' not in df.columns: df['antutu'] = df['price'] * 2000
 
         return df
     except Exception:
@@ -99,9 +98,9 @@ with st.sidebar:
     os_choice = st.selectbox("📱 Operating System", ["Any", "iOS (Apple)", "Android"])
     st.write("")
     
-    # เพิ่ม "General Use" เข้าไปในตัวเลือก
     lifestyle = st.selectbox("👤 User Persona", [
-        "🏠 General Use / Daily Driver",  # <-- NEW
+        "💎 Ultimate High-End",
+        "🏠 General Use / Daily Driver",
         "🎮 Hardcore Gamer", 
         "📸 Content Creator", 
         "💼 Business Pro", 
@@ -109,33 +108,48 @@ with st.sidebar:
         "🛠️ Custom"
     ])
     st.write("")
-    budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50)
+    
+    # --- 🔥 LOGIC: ซ่อน Budget เมื่อเลือก High-End ---
+    if "High-End" in lifestyle:
+        budget = 9999 # Unlimited Budget
+        st.info("💎 Mode: Unlimited Budget Enabled")
+    else:
+        budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50)
 
-    # --- 🔥 UPDATED WEIGHTING LOGIC ---
+    # --- WEIGHTS ---
     p, c, b, v = 5, 5, 5, 5
     price_penalty_threshold = 9999
     
-    if "Gamer" in lifestyle: 
-        p,c,b,v = 20, 0, 8, 2   # เน้นแรง (20), ไม่สนกล้อง (0)
+    if "High-End" in lifestyle:
+        p,c,b,v = 10, 10, 10, 0
+    elif "Gamer" in lifestyle: 
+        p,c,b,v = 20, 0, 8, 2
     elif "Creator" in lifestyle: 
-        p,c,b,v = 6, 20, 6, 2   # เน้นกล้อง (20)
+        p,c,b,v = 6, 20, 6, 2
     elif "Business" in lifestyle: 
-        p,c,b,v = 8, 4, 15, 5   # เน้นแบตสุดๆ (15), กล้องรอง (4), แรงพอประมาณ (8)
+        p,c,b,v = 8, 4, 15, 5
     elif "General" in lifestyle:
-        p,c,b,v = 8, 8, 8, 10   # เน้นสมดุล (8) และความคุ้มค่า (10)
+        p,c,b,v = 8, 8, 8, 10
     elif "Student" in lifestyle: 
-        p,c,b,v = 6, 6, 8, 20   # เน้นคุ้มค่าสุดๆ (20)
-        price_penalty_threshold = 800 # หักคะแนนถ้าแพงเกิน
+        p,c,b,v = 6, 6, 8, 20
+        price_penalty_threshold = 800
 
+    # --- 🔥 CUSTOM: ชื่อเต็มๆ ไม่งง ---
     if "Custom" in lifestyle:
-        p = st.slider("Perf", 1,10,8); c = st.slider("Cam", 1,10,8); b = st.slider("Batt", 1,10,5); v = st.slider("Val", 1,10,5)
+        st.divider()
+        st.markdown("### 🎛️ Adjust Preferences")
+        p = st.slider("🚀 Performance (ความแรง)", 1, 10, 8)
+        c = st.slider("📸 Camera Quality (กล้อง)", 1, 10, 8)
+        b = st.slider("🔋 Battery Life (แบตเตอรี่)", 1, 10, 5)
+        v = st.slider("💰 Value for Money (ความคุ้มค่า)", 1, 10, 5)
 
     st.divider()
     st.button("🚀 ANALYZE MARKET", type="primary", use_container_width=True)
 
 # --- 5. FUNCTIONS ---
 def get_dynamic_badge(mode, price):
-    if "Gamer" in mode: return "🏆 GAMING BEAST"
+    if "High-End" in mode: return "💎 ABSOLUTE BEST IN CLASS"
+    elif "Gamer" in mode: return "🏆 GAMING BEAST"
     elif "Creator" in mode: return "🎥 CREATOR CHOICE"
     elif "Student" in mode: return "💰 SMART SAVER PICK"
     elif "Business" in mode: return "💼 RELIABLE WORKHORSE"
@@ -143,7 +157,8 @@ def get_dynamic_badge(mode, price):
     else: return "⭐ TOP FLAGSHIP"
 
 def get_expert_verdict(row, mode):
-    if "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b> ensures lag-free gaming."
+    if "High-End" in mode: return f"<b>No Compromise:</b> This device represents the pinnacle of technology. Maximum performance, best-in-class camera, and premium build quality."
+    elif "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b> ensures lag-free gaming."
     elif "Creator" in mode: return f"Studio quality. Top-tier camera system for professional results."
     elif "Business" in mode: return f"<b>All-day Reliability:</b> Prioritizes battery life and multitasking stability for professionals."
     elif "General" in mode: return f"<b>The Perfect Balance:</b> Good camera, smooth performance, and decent battery. A jack of all trades."
