@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Pro",
+    page_title="TechChoose - Ultimate Logic",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -16,67 +16,50 @@ def load_data():
     try:
         df = pd.read_csv(sheet_url)
         df['os_type'] = df['name'].apply(lambda x: 'iOS' if 'iPhone' in str(x) else 'Android')
+        
+        # Default Data Generation
         if 'antutu' not in df.columns: df['antutu'] = df['price'].apply(lambda x: x * 2500 if x > 0 else 500000)
         if 'dxomark' not in df.columns: df['dxomark'] = df['camera'].apply(lambda x: x * 15 + 20)
         if 'award' not in df.columns: df['award'] = "Top Choice"
+
+        # --- 🔥 NEW: คำนวณ Performance จริงจาก AnTuTu ---
+        # หาค่า AnTuTu สูงสุดในตลาดตอนนี้
+        max_antutu = df['antutu'].max() 
+        # ปรับคะแนน Performance ใหม่ตามสัดส่วนความแรงจริง (เต็ม 10)
+        df['performance'] = (df['antutu'] / max_antutu) * 10 
+        
         return df
     except Exception:
         return pd.DataFrame()
 
-# --- 3. CSS (Separated & Clean) ---
+# --- 3. CSS (Pro Style) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
-    /* --- SIDEBAR FIX (แก้ตัวหนังสือในกล่องให้ชัด) --- */
+    /* Sidebar */
     section[data-testid="stSidebar"] { background-color: #050505; border-right: 1px solid #222; }
+    section[data-testid="stSidebar"] * { color: #FFFFFF !important; }
+    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 { color: #FBBF24 !important; }
     
-    /* หัวข้อใหญ่ */
-    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 { color: #FBBF24 !important; }
-    
-    /* Label ของตัวเลือก */
-    .stMarkdown label p { font-size: 1.1em; color: #FFFFFF !important; font-weight: 700; }
-    
-    /* กล่องเลือก (Dropdown) - บังคับพื้นหลังและตัวหนังสือ */
-    div[data-baseweb="select"] > div { 
-        background-color: #222222 !important; 
-        border: 1px solid #555 !important; 
-        color: #FFFFFF !important;
-    }
-    
-    /* ตัวหนังสือข้างในกล่องเลือก (สำคัญมาก!) */
-    div[data-baseweb="select"] span { 
-        color: #FFFFFF !important; 
-        font-weight: 600;
-    }
-    
-    /* ไอคอนลูกศร */
+    /* Input Styling */
+    div[data-baseweb="select"] > div { background-color: #222 !important; border: 1px solid #555 !important; }
+    div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="select"] svg { fill: #FBBF24 !important; }
-    
-    /* เมนูที่เด้งออกมา */
-    ul[data-baseweb="menu"] { background-color: #222 !important; }
-    li[data-baseweb="option"] { color: #FFF !important; }
-    
-    /* --- MAIN CONTENT STYLES --- */
+
+    /* Winner Card */
     .winner-box {
         background: radial-gradient(circle at top right, #111, #000);
-        border: 2px solid #3B82F6;
-        border-radius: 20px; padding: 40px;
+        border: 2px solid #3B82F6; border-radius: 20px; padding: 40px;
         box-shadow: 0 0 60px rgba(59, 130, 246, 0.25);
     }
-    .award-badge {
-        background: #F59E0B; color: black; font-weight: 900; padding: 8px 16px; 
-        border-radius: 50px; text-transform: uppercase; display: inline-block; margin-bottom: 20px; font-size: 0.9em;
-    }
+    .award-badge { background: #F59E0B; color: black; font-weight: 900; padding: 8px 16px; border-radius: 50px; text-transform: uppercase; display: inline-block; margin-bottom: 20px; font-size: 0.9em; }
     .hero-title { font-size: 3.5em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 15px; }
     .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 30px; }
 
-    .expert-verdict {
-        background: #111; border-left: 5px solid #3B82F6; padding: 25px; border-radius: 0 12px 12px 0; 
-        margin-bottom: 35px; font-size: 1.15em; line-height: 1.6; color: #E0E0E0;
-    }
+    .expert-verdict { background: #111; border-left: 5px solid #3B82F6; padding: 25px; border-radius: 0 12px 12px 0; margin-bottom: 35px; font-size: 1.15em; line-height: 1.6; color: #E0E0E0; }
 
     .stat-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 35px; }
     .stat-box { background: #151515; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #333; }
@@ -95,18 +78,14 @@ st.markdown("""
     }
     .amazon-btn:hover { background: #2563EB; box-shadow: 0 0 30px rgba(59, 130, 246, 0.4); }
 
-    /* --- ALTERNATIVES STYLES (ย้าย Style มาไว้ที่นี่ กันโค้ดหลุด) --- */
+    /* Alternatives */
     .alt-link { text-decoration: none; display: block; }
-    .alt-row {
-        background: #0A0A0A; border: 1px solid #222; padding: 20px; border-radius: 12px; 
-        margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease;
-    }
+    .alt-row { background: #0A0A0A; border: 1px solid #222; padding: 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; }
     .alt-row:hover { border-color: #FBBF24; background: #111; transform: scale(1.01); }
     
     .save-tag { color: #10B981; font-weight: bold; font-size: 0.9em; margin-left: 10px; }
     .buy-hint { color: #FBBF24; font-size: 0.8em; font-weight: bold; margin-top: 5px; }
     
-    /* Mini Bars CSS */
     .mini-bar-container { display: flex; gap: 10px; margin-top: 10px; }
     .mini-stat { width: 50px; }
     .mini-label { font-size: 0.6em; color: #888; margin-bottom: 3px; font-weight:bold;}
@@ -114,7 +93,6 @@ st.markdown("""
     .mini-fill-blue { height: 100%; border-radius: 2px; background: #3B82F6; }
     .mini-fill-purple { height: 100%; border-radius: 2px; background: #A855F7; }
     .mini-fill-green { height: 100%; border-radius: 2px; background: #10B981; }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -132,12 +110,14 @@ with st.sidebar:
     budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50)
 
     p, c, b, v = 5, 5, 5, 5
-    if "Gamer" in lifestyle: p,c,b,v = 10, 3, 8, 4
+    if "Gamer" in lifestyle: p,c,b,v = 12, 3, 8, 3 # เพิ่ม Perf Weight ให้หนักขึ้นอีก
     elif "Creator" in lifestyle: p,c,b,v = 7, 10, 8, 5
     elif "Business" in lifestyle: p,c,b,v = 8, 6, 9, 6
     elif "Student" in lifestyle: p,c,b,v = 5, 5, 7, 15
-    if budget >= 1000: v = 2; p += 2; c += 2
+    
+    if budget >= 1000: v = 1; p += 3 # คนรวยไม่แคร์ราคา เน้นแรงอย่างเดียว
     elif budget <= 400: v = 20
+
     if "Custom" in lifestyle:
         p = st.slider("Perf", 1,10,8); c = st.slider("Cam", 1,10,8); b = st.slider("Batt", 1,10,5); v = st.slider("Val", 1,10,5)
 
@@ -154,7 +134,7 @@ def get_expert_verdict(row, mode):
     return verdict
 
 def stat_bar_html(label, score, color):
-    return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
+    return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
 
 # --- 6. MAIN APP ---
 df = load_data()
@@ -184,20 +164,13 @@ if not df.empty:
             st.markdown("### 🥈 Top Alternatives")
             for i, row in df.iloc[1:6].iterrows():
                 diff = winner['price'] - row['price']
-                
-                # --- แก้ไขจุดที่ HTML หลุด: ใช้ Class แทน Inline Style ---
-                # ก่อนหน้านี้เราเขียน style='color:...' ในนี้ มันเลยพัง
-                # ตอนนี้เราใช้ <span class='save-tag'> แทน
                 save_html = f"<span class='save-tag'>SAVE ${diff:,}</span>" if diff > 0 else ""
                 
-                # สร้าง Mini Bars แบบสะอาด (Clean HTML)
-                bar1 = f"<div class='mini-stat'><div class='mini-label'>🚀 {row['performance']}</div><div class='mini-track'><div class='mini-fill-blue' style='width:{row['performance']*10}%;'></div></div></div>"
-                bar2 = f"<div class='mini-stat'><div class='mini-label'>📸 {row['camera']}</div><div class='mini-track'><div class='mini-fill-purple' style='width:{row['camera']*10}%;'></div></div></div>"
+                bar1 = f"<div class='mini-stat'><div class='mini-label'>🚀 {row['performance']:.1f}</div><div class='mini-track'><div class='mini-fill-blue' style='width:{row['performance']*10}%;'></div></div></div>"
+                bar2 = f"<div class='mini-stat'><div class='mini-label'>📸 {row['camera']:.1f}</div><div class='mini-track'><div class='mini-fill-purple' style='width:{row['camera']*10}%;'></div></div></div>"
                 bar3 = f"<div class='mini-stat'><div class='mini-label'>🔋 {row['battery']}</div><div class='mini-track'><div class='mini-fill-green' style='width:{row['battery']*10}%;'></div></div></div>"
-                
                 mini_bars_html = f"<div class='mini-bar-container'>{bar1}{bar2}{bar3}</div>"
                 
-                # รวมร่าง (ใช้ Class ทั้งหมด ไม่มีการเขียน Style ในนี้แล้ว)
                 alt_final_html = f"""
 <a href='{row['link']}' target='_blank' class='alt-link'>
     <div class='alt-row'>
