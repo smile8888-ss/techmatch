@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Master Class",
+    page_title="TechChoose - Pro Edition",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -17,7 +17,7 @@ def load_data():
         df = pd.read_csv(sheet_url)
         df['os_type'] = df['name'].apply(lambda x: 'iOS' if 'iPhone' in str(x) else 'Android')
         
-        # Auto-fill missing data
+        # กันข้อมูล Error
         if 'antutu' not in df.columns: df['antutu'] = df['price'].apply(lambda x: x * 2500 if x > 0 else 500000)
         if 'dxomark' not in df.columns: df['dxomark'] = df['camera'].apply(lambda x: x * 15 + 20)
         if 'award' not in df.columns: df['award'] = "Top Choice"
@@ -26,39 +26,24 @@ def load_data():
     except Exception:
         return pd.DataFrame()
 
-# --- 3. CSS (Super Bright Sidebar & Clickable Cards) ---
+# --- 3. CSS (Pro Theme) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* Global Background */
+    /* Background */
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
-    /* --- SIDEBAR FIX (แก้ตัวหนังสือมืดให้ขาวจั๊วะ) --- */
+    /* Sidebar */
     section[data-testid="stSidebar"] { background-color: #050505; border-right: 1px solid #222; }
+    .stMarkdown label p { font-size: 1.2em; font-weight: 800; color: #FBBF24 !important; }
     
-    /* บังคับทุกตัวอักษรใน Sidebar ให้เป็นสีขาว */
-    section[data-testid="stSidebar"] p, 
-    section[data-testid="stSidebar"] span, 
-    section[data-testid="stSidebar"] label, 
-    section[data-testid="stSidebar"] div { 
-        color: #FFFFFF !important; 
-    }
-    
-    /* หัวข้อใหญ่ใน Sidebar ให้เป็นสีทอง */
-    section[data-testid="stSidebar"] h1, 
-    section[data-testid="stSidebar"] h2, 
-    section[data-testid="stSidebar"] h3 { 
-        color: #FBBF24 !important; 
-    }
-
-    /* กล่องตัวเลือก (Dropdown & Slider) */
-    div[data-baseweb="select"] > div { 
-        background-color: #1A1A1A !important; 
-        color: #FFFFFF !important; 
-        border: 1px solid #444 !important;
-    }
-    div[data-baseweb="select"] span { color: #FFFFFF !important; }
+    /* Input Controls */
+    div[data-baseweb="select"] > div { background-color: #222222 !important; color: white !important; border: 2px solid #555 !important; }
+    div[data-baseweb="select"] span { color: #FFFFFF !important; font-weight: 600; font-size: 1.1em; }
+    div[data-baseweb="select"] svg { fill: #FBBF24 !important; }
+    ul[data-baseweb="menu"] { background-color: #222 !important; border: 1px solid #555; }
+    li[data-baseweb="option"] { color: #FFF !important; }
     
     /* --- WINNER CARD --- */
     .winner-box {
@@ -99,24 +84,22 @@ st.markdown("""
     }
     .amazon-btn:hover { background: #2563EB; box-shadow: 0 0 30px rgba(59, 130, 246, 0.4); }
 
-    /* --- CLICKABLE ALTERNATIVES (ลิ้งค์ซื้อ) --- */
-    .alt-link { text-decoration: none; color: inherit; display: block; } /* ล้างค่า Link เดิม */
-    
+    /* --- CLICKABLE ALTERNATIVES WITH MINI BARS --- */
+    .alt-link { text-decoration: none; display: block; }
     .alt-row {
         background: #0A0A0A; border: 1px solid #222;
         padding: 20px; border-radius: 12px; margin-bottom: 12px;
         display: flex; justify-content: space-between; align-items: center;
         transition: all 0.2s ease;
     }
-    /* Effect ตอนเอาเมาส์ชี้ */
-    .alt-row:hover { 
-        border-color: #FBBF24; 
-        background: #161616; 
-        transform: translateX(5px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    }
+    .alt-row:hover { border-color: #FBBF24; background: #111; transform: scale(1.01); }
     
-    .buy-hint { font-size: 0.75em; color: #FBBF24; font-weight: bold; margin-top: 5px; text-align: right; text-transform: uppercase;}
+    /* CSS สำหรับ Mini Bars */
+    .mini-bar-container { display: flex; gap: 12px; margin-top: 8px; }
+    .mini-stat { width: 45px; }
+    .mini-label { font-size: 0.6em; color: #888; margin-bottom: 2px; }
+    .mini-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
+    .mini-fill { height: 100%; border-radius: 2px; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -128,7 +111,6 @@ with st.sidebar:
     st.markdown("---")
     
     st.markdown("### ⚙️ Search Settings")
-    
     os_choice = st.selectbox("📱 Operating System", ["Any", "iOS (Apple)", "Android"])
     st.write("")
     lifestyle = st.selectbox("👤 User Persona", ["🎮 Hardcore Gamer", "📸 Content Creator", "💼 Business Pro", "💰 Student / Budget", "🛠️ Custom"])
@@ -187,24 +169,34 @@ if not df.empty:
             st.markdown(winner_html, unsafe_allow_html=True)
 
         with c2:
-            st.markdown("### 🥈 Best Alternatives")
+            st.markdown("### 🥈 Top Alternatives")
             for i, row in df.iloc[1:6].iterrows():
                 diff = winner['price'] - row['price']
                 save_tag = f"<span style='color:#10B981; margin-left:10px;'>SAVE ${diff:,}</span>" if diff > 0 else ""
                 
-                # --- แก้ตรงนี้: ใส่ <a> ครอบทั้งกล่อง ---
-                # ตอนนี้คลิกที่ไหนในกล่อง ก็จะไป Amazon ทันที
+                # --- NEW: MINI BARS INJECTION ---
+                # เพิ่มหลอดพลังจิ๋ว 3 สี (ฟ้า/ม่วง/เขียว) ใต้ราคา
+                mini_bars = f"""
+                <div class='mini-bar-container'>
+                    <div class='mini-stat'><div class='mini-label'>🚀 {row['performance']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['performance']*10}%; background:#3B82F6;'></div></div></div>
+                    <div class='mini-stat'><div class='mini-label'>📸 {row['camera']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['camera']*10}%; background:#A855F7;'></div></div></div>
+                    <div class='mini-stat'><div class='mini-label'>🔋 {row['battery']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['battery']*10}%; background:#10B981;'></div></div></div>
+                </div>
+                """
+                
+                # HTML รวมร่าง (One-line)
                 alt_html = f"""
 <a href="{row['link']}" target="_blank" class="alt-link">
     <div class='alt-row'>
         <div>
             <div style='font-weight:bold; font-size:1.1em; color:white;'>{i}. {row['name']}</div>
             <div style='color:#FBBF24; font-weight:bold;'>${row['price']:,} {save_tag}</div>
-            <div style='font-size:0.85em; color:#888; margin-top:5px;'>AnTuTu: {int(row['antutu']):,} | DXO: {int(row['dxomark'])}</div>
+            {mini_bars}
+            <div style='font-size:0.8em; color:#666; margin-top:6px;'>AnTuTu: {int(row['antutu']):,}</div>
         </div>
         <div style='text-align:right'>
             <div style='font-size:1.3em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div>
-            <div class='buy-hint'>🛒 CHECK PRICE ></div>
+            <div class='buy-hint'>VIEW ></div>
         </div>
     </div>
 </a>
@@ -214,4 +206,4 @@ if not df.empty:
     else:
         st.warning(f"No devices found under ${budget}. Please adjust your filters.")
 else:
-    st.error("Database Error: Please check your Google Sheet connection.")
+    st.error("Database Error.")
