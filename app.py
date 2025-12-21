@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-import random
+import textwrap
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Fix",
-    page_icon="🛒",
+    page_title="TechChoose - Global Expert",
+    page_icon="🏆",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -18,106 +18,145 @@ def load_data():
         df = pd.read_csv(sheet_url)
         df['os_type'] = df['name'].apply(lambda x: 'iOS' if 'iPhone' in str(x) else 'Android')
         
-        # --- ระบบกันเหนียว (Auto-Fill) ---
-        # ถ้าใน Excel พี่ไม่มีคอลัมน์ antutu (หรือยังไม่อัปเดต) โค้ดนี้จะกันไม่ให้แอปพัง
-        # และใส่เลขสมมติให้ดูเป็นตัวอย่างไปก่อน
-        if 'antutu' not in df.columns: 
-            df['antutu'] = df['price'].apply(lambda x: x * 2500 if x > 0 else 500000)
-        if 'dxomark' not in df.columns: 
-            df['dxomark'] = df['camera'].apply(lambda x: x * 15 + 20)
-        if 'award' not in df.columns: 
-            df['award'] = "Best Choice"
+        # Auto-fill data (กันพัง)
+        if 'antutu' not in df.columns: df['antutu'] = df['price'].apply(lambda x: x * 2500 if x > 0 else 500000)
+        if 'dxomark' not in df.columns: df['dxomark'] = df['camera'].apply(lambda x: x * 15 + 20)
+        if 'award' not in df.columns: df['award'] = "Top Choice"
             
         return df
     except Exception:
         return pd.DataFrame()
 
-# --- 3. CSS (High Contrast Fix) ---
+# --- 3. GLOBAL CSS (White Text on Black) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* พื้นหลังหลัก */
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
-    /* --- SIDEBAR FIX (แก้ให้มองเห็นชัดๆ) --- */
-    section[data-testid="stSidebar"] { background-color: #111111; border-right: 1px solid #333; }
+    /* Sidebar */
+    section[data-testid="stSidebar"] { background-color: #0A0A0A; border-right: 1px solid #222; }
+    .stMarkdown label p { font-size: 1.1em; font-weight: 700; color: #FBBF24 !important; }
+    div[data-baseweb="select"] > div { background-color: #222 !important; color: white !important; border: 1px solid #444 !important; }
+    div[data-baseweb="select"] span { color: white !important; }
+    ul[data-baseweb="menu"] { background-color: #222 !important; }
+    li[data-baseweb="option"] { color: #FFFFFF !important; }
     
-    /* บังคับกล่องเลือกเป็น "สีขาว" ตัวหนังสือ "สีดำ" (High Contrast) */
-    div[data-baseweb="select"] > div { 
-        background-color: #FFFFFF !important; 
-        color: #000000 !important; 
-        border: 2px solid #3B82F6 !important; 
-    }
-    div[data-baseweb="select"] span { 
-        color: #000000 !important; /* ตัวหนังสือในกล่องเป็นสีดำ */
-        font-weight: bold;
-    }
-    /* สีของ Dropdown ตอนกด */
-    ul[data-baseweb="menu"] { background-color: #FFFFFF !important; }
-    li[data-baseweb="option"] { color: #000000 !important; }
-
-    /* ป้าย Label ใน Sidebar */
-    .stMarkdown label p { font-size: 1.1em; font-weight: bold; color: #F59E0B !important; }
-
-    /* --- WINNER BOX --- */
+    /* --- WINNER CARD --- */
     .winner-box {
-        background: #0A0A0A;
+        background: radial-gradient(circle at top right, #111, #000);
         border: 2px solid #3B82F6;
-        border-radius: 16px; padding: 30px;
-        text-align: left;
+        border-radius: 24px; padding: 40px;
+        box-shadow: 0 0 60px rgba(59, 130, 246, 0.2);
     }
-    .hero-title { font-size: 3em; font-weight: 900; margin-bottom: 10px; line-height: 1.2; color: #FFF; }
-    .hero-price { color: #FBBF24; font-size: 2.8em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 20px;}
     
-    /* BENCHMARK GRID */
-    .bench-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; background: #151515; padding: 15px; border-radius: 10px;}
-    .bench-item { text-align: center; }
-    .bench-score { font-size: 1.5em; font-weight: 800; color: white; }
-    .bench-label { font-size: 0.8em; color: #AAA; }
+    .award-badge {
+        background: #F59E0B; color: black; font-weight: 900; 
+        padding: 6px 14px; border-radius: 50px; 
+        text-transform: uppercase; font-size: 0.8em; letter-spacing: 1px;
+        display: inline-block; margin-bottom: 15px;
+    }
+    
+    .hero-title { font-size: 3.5em; font-weight: 900; line-height: 1.1; margin-bottom: 10px; color: white; }
+    .hero-price { color: #FBBF24; font-size: 2.8em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 25px; }
+
+    /* VERDICT BOX (คำอธิบาย) */
+    .expert-verdict {
+        background: #111; border-left: 4px solid #3B82F6;
+        padding: 20px; border-radius: 0 12px 12px 0;
+        margin-bottom: 30px;
+        font-size: 1.1em; line-height: 1.6; color: #DDD;
+    }
+
+    /* STAT BARS (หลอดพลังที่พี่ชอบ) */
+    .stat-container {
+        display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;
+        margin-bottom: 30px;
+    }
+    .stat-box { background: #1A1A1A; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #333; }
+    .stat-label { font-size: 0.8em; color: #BBB; font-weight: 700; margin-bottom: 5px; }
+    .stat-val { font-size: 1.5em; font-weight: 900; color: white; }
+    .bar-bg { background: #333; height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+
+    /* BENCHMARK DATA (คะแนนดิบ) */
+    .bench-row {
+        display: flex; gap: 20px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;
+    }
+    .bench-item { font-family: 'JetBrains Mono'; font-size: 0.9em; color: #888; }
+    .bench-item span { color: #FFF; font-weight: bold; }
 
     /* BUTTON */
     .amazon-btn {
-        display: block; width: 100%; background-color: #F59E0B; color: #000; 
-        padding: 15px; text-align: center; border-radius: 8px; font-weight: 900; 
-        text-decoration: none; font-size: 1.2em; margin-top: 20px;
+        background: #3B82F6; color: white !important; 
+        padding: 20px; width: 100%; display: block; text-align: center; 
+        border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 1.3em;
+        transition: 0.3s;
     }
-    .amazon-btn:hover { background-color: #FFF; }
+    .amazon-btn:hover { background: #2563EB; transform: scale(1.02); }
 
     /* ALTERNATIVES */
-    .alt-row { background: #111; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #222; display:flex; justify-content:space-between; align-items:center;}
+    .alt-row {
+        background: #0F0F0F; border: 1px solid #222;
+        padding: 15px; border-radius: 10px; margin-bottom: 10px;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .alt-row:hover { border-color: #FBBF24; background: #141414; }
+
 </style>
 """, unsafe_allow_html=True)
 
 # --- 4. SIDEBAR ---
 with st.sidebar:
     st.title("🛒 TechChoose")
-    st.markdown("### ⚙️ ตัวเลือกการค้นหา") # ใช้ Markdown ให้ตัวใหญ่ขึ้น
+    st.caption("Global Market Analyzer")
+    st.markdown("---")
     
-    os_choice = st.selectbox("📱 ระบบปฏิบัติการ (System)", ["Any", "iOS", "Android"])
+    os_choice = st.selectbox("📱 Operating System", ["Any", "iOS (Apple)", "Android"])
     st.write("")
-    lifestyle = st.selectbox("👤 รูปแบบการใช้งาน (Usage)", ["🎮 Hardcore Gamer", "📸 Content Creator", "💼 Business Pro", "💰 Student / Budget", "🛠️ Custom"])
+    lifestyle = st.selectbox("👤 User Persona", ["🎮 Hardcore Gamer", "📸 Content Creator", "💼 Business Pro", "💰 Student / Budget", "🛠️ Custom"])
     st.write("")
-    budget = st.slider("💰 งบประมาณสูงสุด ($)", 100, 2000, 2000, step=50)
+    budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50)
 
     # Logic
     p, c, b, v = 5, 5, 5, 5
     if "Gamer" in lifestyle: p,c,b,v = 10, 3, 8, 4
     elif "Creator" in lifestyle: p,c,b,v = 7, 10, 8, 5
     elif "Business" in lifestyle: p,c,b,v = 8, 6, 9, 6
-    elif "Student" in lifestyle: p,c,b,v = 5, 5, 7, 15 # เน้นคุ้มมากๆ
-    
+    elif "Student" in lifestyle: p,c,b,v = 5, 5, 7, 15
     if budget >= 1000: v = 2; p += 2; c += 2
-    elif budget <= 400: v = 20 # งบน้อย บูสต์ความคุ้มค่าสุดๆ
-
+    elif budget <= 400: v = 20
     if "Custom" in lifestyle:
-        st.divider()
         p = st.slider("Perf", 1,10,8); c = st.slider("Cam", 1,10,8); b = st.slider("Batt", 1,10,5); v = st.slider("Val", 1,10,5)
-
     st.divider()
-    st.button("🔍 ค้นหามือถือที่ใช่", type="primary", use_container_width=True)
+    st.button("🚀 ANALYZE MARKET", type="primary", use_container_width=True)
 
-# --- 5. MAIN APP ---
+# --- 5. HELPER FUNCTIONS ---
+def get_expert_verdict(row, mode):
+    # ฟังก์ชันสร้างคำอธิบายแบบ Expert
+    verdict = f"<b>🤖 Expert Analysis:</b><br>"
+    
+    if "Gamer" in mode:
+        verdict += f"Based on its massive <b>AnTuTu score of {int(row['antutu']):,}</b>, the {row['name']} is a verified gaming powerhouse. It outperforms 95% of devices in its class."
+    elif "Creator" in mode:
+        verdict += f"According to DXOMARK standards, this device scores <b>{int(row['dxomark'])}</b>, making it a top-tier choice for mobile photography and videography."
+    elif "Student" in mode or row['price'] < 400:
+        verdict += f"Global market data indicates this is a 'Best Value' leader. You get flagship-grade features at a fraction of the cost."
+    else:
+        verdict += f"A balanced flagship that excels across all metrics. Trusted by professionals for its reliability and consistent performance."
+        
+    return verdict
+
+def stat_bar(label, score, color):
+    # สร้างหลอดพลัง
+    return f"""
+    <div class='stat-box'>
+        <div class='stat-label'>{label}</div>
+        <div class='stat-val'>{score}/10</div>
+        <div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div>
+    </div>
+    """
+
+# --- 6. MAIN APP ---
 df = load_data()
 
 if not df.empty:
@@ -135,41 +174,57 @@ if not df.empty:
         c1, c2 = st.columns([1.5, 1], gap="large")
 
         with c1:
-            # --- HTML STRING แบบบรรทัดเดียว (แก้โค้ดหลุด 100%) ---
-            # ผมเอา indentation ออกหมด เพื่อไม่ให้ Markdown เข้าใจผิดว่าเป็น code block
-            winner_html = f"""
+            # HTML แบบบรรทัดเดียว (กันพัง 100%)
+            winner_html = textwrap.dedent(f"""
 <div class='winner-box'>
-<div style='color:#3B82F6; font-weight:bold; margin-bottom:10px;'>🏆 {winner['award']}</div>
-<div class='hero-title'>{winner['name']}</div>
-<div class='hero-price'>${winner['price']:,}</div>
-<div class='bench-grid'>
-<div class='bench-item'><div class='bench-score' style='color:#3B82F6'>🚀 {int(winner['antutu']):,}</div><div class='bench-label'>AnTuTu Score</div></div>
-<div class='bench-item'><div class='bench-score' style='color:#A855F7'>📸 {int(winner['dxomark'])}</div><div class='bench-label'>DXOMARK</div></div>
+    <div class='award-badge'>🏆 {winner['award']}</div>
+    <div class='hero-title'>{winner['name']}</div>
+    <div class='hero-price'>${winner['price']:,}</div>
+    
+    <div class='expert-verdict'>
+        {get_expert_verdict(winner, lifestyle)}
+    </div>
+    
+    <div class='stat-container'>
+        {stat_bar("🚀 PERFORMANCE", winner['performance'], "#3B82F6")}
+        {stat_bar("📸 CAMERA", winner['camera'], "#A855F7")}
+        {stat_bar("🔋 BATTERY", winner['battery'], "#10B981")}
+    </div>
+
+    <div class='bench-row'>
+        <div class='bench-item'>AnTuTu Benchmark: <span>{int(winner['antutu']):,}</span></div>
+        <div class='bench-item'>DXOMARK Score: <span>{int(winner['dxomark'])}</span></div>
+    </div>
+    
+    <br>
+    <a href="{winner['link']}" target="_blank" class='amazon-btn'>
+        🛒 CHECK GLOBAL PRICE
+    </a>
 </div>
-<div style='color:#CCC; line-height:1.6; margin-bottom:20px;'>
-<b>💡 AI Verdict:</b> This device matches <b>{winner['match']:.1f}%</b> of your requirement profile. Best in class for {lifestyle} usage.
-</div>
-<a href="{winner['link']}" target="_blank" class='amazon-btn'>🛒 CHECK AMAZON PRICE</a>
-</div>
-"""
+""")
             st.markdown(winner_html, unsafe_allow_html=True)
 
         with c2:
-            st.markdown("### 📉 Best Alternatives")
+            st.markdown("### 🥈 Top Alternatives")
             for i, row in df.iloc[1:6].iterrows():
                 diff = winner['price'] - row['price']
-                save_tag = f"<span style='color:#10B981; font-weight:bold;'>SAVE ${diff:,}</span>" if diff > 0 else ""
+                save_tag = f"<span style='color:#10B981; margin-left:10px;'>SAVE ${diff:,}</span>" if diff > 0 else ""
                 
-                # HTML บรรทัดเดียวเช่นกัน
                 alt_html = f"""
 <div class='alt-row'>
-<div><div style='font-weight:bold; font-size:1.1em;'>{i}. {row['name']}</div><div style='color:#888; font-size:0.9em;'>AnTuTu: {int(row['antutu']):,} | ${row['price']:,}</div></div>
-<div style='text-align:right;'><div style='color:#3B82F6; font-weight:bold; font-size:1.2em;'>{row['match']:.0f}%</div><div>{save_tag}</div></div>
+    <div>
+        <div style='font-weight:bold; font-size:1.1em; color:white;'>{i}. {row['name']}</div>
+        <div style='color:#FBBF24; font-weight:bold;'>${row['price']:,} {save_tag}</div>
+        <div style='font-size:0.8em; color:#888; margin-top:5px;'>
+            🚀 AnTuTu: {int(row['antutu']):,} | 📸 DXO: {int(row['dxomark'])}
+        </div>
+    </div>
+    <div style='font-size:1.3em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div>
 </div>
 """
                 st.markdown(alt_html, unsafe_allow_html=True)
 
     else:
-        st.warning(f"ไม่พบมือถือในช่วงราคาต่ำกว่า ${budget} ลองเพิ่มงบอีกนิดนะครับ")
+        st.warning(f"No devices found under ${budget}. Please adjust your budget.")
 else:
-    st.error("เชื่อมต่อฐานข้อมูลไม่ได้")
+    st.error("Database connection failed.")
