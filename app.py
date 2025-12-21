@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Clean UI",
+    page_title="TechChoose - Final Pro",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -57,7 +57,10 @@ st.markdown("""
         margin-bottom: 20px; font-size: 0.9em; letter-spacing: 1px;
     }
     .hero-title { font-size: 3.5em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 15px; }
-    .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 30px; }
+    .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 5px; }
+    
+    .msrp-label { font-size: 0.8em; color: #666; margin-bottom: 25px; font-style: italic; }
+
     .expert-verdict { background: #111; border-left: 5px solid #3B82F6; padding: 25px; border-radius: 0 12px 12px 0; margin-bottom: 35px; color: #E0E0E0; line-height: 1.6; }
     
     .stat-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 35px; }
@@ -70,8 +73,10 @@ st.markdown("""
     .bench-item span { font-weight: bold; font-size: 1.2em; margin-left: 8px; color:white; }
     .bench-item { color: #888; font-family: 'JetBrains Mono'; }
 
-    .amazon-btn { background: #3B82F6; color: white !important; padding: 22px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.4em; margin-top: 30px; transition: 0.3s; }
+    /* Button Area */
+    .amazon-btn { background: #3B82F6; color: white !important; padding: 22px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.4em; margin-top: 20px; transition: 0.3s; }
     .amazon-btn:hover { background: #2563EB; }
+    .deal-hint { text-align: center; color: #10B981; font-size: 0.9em; margin-top: 10px; font-weight: bold; }
 
     /* Alternatives */
     .alt-link { text-decoration: none; display: block; }
@@ -86,6 +91,12 @@ st.markdown("""
     .mini-fill-blue { height: 100%; background: #3B82F6; border-radius: 2px;} 
     .mini-fill-purple { height: 100%; background: #A855F7; border-radius: 2px;} 
     .mini-fill-green { height: 100%; background: #10B981; border-radius: 2px;}
+    
+    /* Disclaimer Footer */
+    .disclaimer-box { 
+        margin-top: 50px; padding: 20px; border-top: 1px solid #222; 
+        text-align: center; color: #555; font-size: 0.8em; 
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -106,44 +117,36 @@ with st.sidebar:
         "📸 Content Creator", 
         "💼 Business Pro", 
         "💰 Student / Budget", 
-        "🛠️ Custom" # โหมดเดียวที่จะโชว์ Slider
+        "🛠️ Custom"
     ])
     st.write("")
     
-    # --- 🔥 LOGIC: ซ่อน Budget Slider ทุกโหมดยกเว้น Custom ---
-    if "Custom" in lifestyle:
+    if "High-End" in lifestyle:
+        budget = 9999 
+        st.info("💎 UNLIMITED BUDGET ACTIVATED")
+    elif "Custom" in lifestyle:
         budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50)
     else:
-        # โหมดอื่นๆ ให้งบไม่อั้น (AI จะไปตัดคะแนนเอาเองตาม Logic Student/Value)
-        budget = 9999 
+        budget = 9999
 
-    # --- WEIGHTS CALCULATION ---
+    # --- WEIGHTS ---
     p, c, b, v = 5, 5, 5, 5
     price_penalty_threshold = 9999
     
-    if "High-End" in lifestyle:
-        p,c,b,v = 10, 10, 10, 0
-    elif "Gamer" in lifestyle: 
-        p,c,b,v = 20, 0, 8, 2
-    elif "Creator" in lifestyle: 
-        p,c,b,v = 6, 20, 6, 2
-    elif "Business" in lifestyle: 
-        p,c,b,v = 8, 4, 15, 5
-    elif "General" in lifestyle:
-        p,c,b,v = 8, 8, 8, 10
-    elif "Student" in lifestyle: 
-        p,c,b,v = 6, 6, 8, 20
-        price_penalty_threshold = 800
+    if "High-End" in lifestyle: p,c,b,v = 10, 10, 10, 0
+    elif "Gamer" in lifestyle: p,c,b,v = 20, 0, 8, 2
+    elif "Creator" in lifestyle: p,c,b,v = 6, 20, 6, 2
+    elif "Business" in lifestyle: p,c,b,v = 8, 4, 15, 5
+    elif "General" in lifestyle: p,c,b,v = 8, 8, 8, 10
+    elif "Student" in lifestyle: p,c,b,v = 6, 6, 8, 20; price_penalty_threshold = 800
 
-    # --- 🔥 CUSTOM MODE: โชว์ตัวปรับละเอียด ---
     if "Custom" in lifestyle:
         st.divider()
         st.markdown("### 🎛️ Adjust Preferences")
-        # ตรงนี้ปรับแค่ Weight (Budget อยู่ข้างบนแล้ว)
-        p = st.slider("🚀 Performance (ความแรง)", 1, 10, 8)
-        c = st.slider("📸 Camera Quality (กล้อง)", 1, 10, 8)
-        b = st.slider("🔋 Battery Life (แบตเตอรี่)", 1, 10, 5)
-        v = st.slider("💰 Value for Money (ความคุ้มค่า)", 1, 10, 5)
+        p = st.slider("🚀 Performance", 1, 10, 8)
+        c = st.slider("📸 Camera", 1, 10, 8)
+        b = st.slider("🔋 Battery", 1, 10, 5)
+        v = st.slider("💰 Value", 1, 10, 5)
 
     st.divider()
     st.button("🚀 ANALYZE MARKET", type="primary", use_container_width=True)
@@ -165,7 +168,7 @@ def get_expert_verdict(row, mode):
     elif "Business" in mode: return f"<b>All-day Reliability:</b> Prioritizes battery life and multitasking stability."
     elif "General" in mode: return f"<b>The Perfect Balance:</b> Good camera, smooth performance, and decent battery."
     elif "Student" in mode: 
-        if row['price'] > 800: return "<b>Luxury Pick:</b> Extremely powerful, but arguably overkill for a student budget."
+        if row['price'] > 800: return "<b>Luxury Pick:</b> Powerful but overkill for a student budget."
         else: return "<b>Smart Choice:</b> High-end features at a fraction of the flagship price."
     return f"Excellent all-rounder recommendation."
 
@@ -180,14 +183,12 @@ if not df.empty:
     elif "Android" in os_choice: df = df[df['os_type'] == 'Android']
     df = df[df['price'] <= budget]
 
-    # --- SCORE ENGINE ---
     base_score = (df['perf_score']*p) + (df['cam_score']*c) + (df['batt_score']*b) + (df['value']*v)
     price_penalty = df['price'].apply(lambda x: (x - price_penalty_threshold) * 0.5 if x > price_penalty_threshold else 0)
     df['final_score'] = base_score - price_penalty
     
     max_possible = (10*p) + (10*c) + (10*b) + (10*v)
     df['match'] = (df['final_score'] / max_possible) * 100
-    
     df = df.sort_values(by='match', ascending=False).reset_index(drop=True)
 
     if len(df) > 0:
@@ -199,7 +200,15 @@ if not df.empty:
             verdict_html = get_expert_verdict(winner, lifestyle)
             stats_html = f"{stat_bar_html('🚀 PERFORMANCE', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAMERA', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATTERY', winner['batt_score'], '#10B981')}"
             
-            winner_html = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{verdict_html}</div><div class='stat-container'>{stats_html}</div><div class='bench-row'><div class='bench-item'>🚀 AnTuTu: <span>{int(winner['antutu']):,}</span></div><div class='bench-item'>📸 Camera: <span>{int(winner['cam_score'])}/10</span></div></div><a href='{winner['link']}' target='_blank' class='amazon-btn'>🛒 CHECK GLOBAL PRICE</a></div>"""
+            # --- 🔥 BUTTON & DISCLAIMER AREA ---
+            btn_section = f"""
+            <a href='{winner['link']}' target='_blank' class='amazon-btn'>
+                👉 VIEW DEAL ON AMAZON
+            </a>
+            <div class='deal-hint'>⚡ Click to check today's best price & coupons</div>
+            """
+            
+            winner_html = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='msrp-label'>*Official MSRP. Online price may be lower.</div><div class='expert-verdict'>{verdict_html}</div><div class='stat-container'>{stats_html}</div><div class='bench-row'><div class='bench-item'>🚀 AnTuTu: <span>{int(winner['antutu']):,}</span></div><div class='bench-item'>📸 Camera: <span>{int(winner['cam_score'])}/10</span></div></div>{btn_section}</div>"""
             st.markdown(winner_html, unsafe_allow_html=True)
 
         with c2:
@@ -213,23 +222,16 @@ if not df.empty:
                 bar3 = f"<div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div>"
                 mini_bars_html = f"<div class='mini-bar-container'>{bar1}{bar2}{bar3}</div>"
                 
-                alt_html = f"""
-<a href='{row['link']}' target='_blank' class='alt-link'>
-    <div class='alt-row'>
-        <div>
-            <div style='font-weight:bold; font-size:1.1em; color:white;'>{i}. {row['name']}</div>
-            <div style='color:#FBBF24; font-weight:bold;'>${row['price']:,} {save_html}</div>
-            {mini_bars_html}
-            <div style='font-size:0.8em; color:#666; margin-top:6px;'>Match: {row['match']:.1f}%</div>
-        </div>
-        <div style='text-align:right'>
-            <div style='font-size:1.3em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div>
-            <div class='buy-hint' style='color:#FBBF24; font-size:0.8em; font-weight:bold; margin-top:5px;'>VIEW ></div>
-        </div>
-    </div>
-</a>
-"""
+                alt_html = f"""<a href='{row['link']}' target='_blank' class='alt-link'><div class='alt-row'><div><div style='font-weight:bold; font-size:1.1em; color:white;'>{i}. {row['name']}</div><div style='color:#FBBF24; font-weight:bold;'>${row['price']:,} {save_html}</div>{mini_bars_html}<div style='font-size:0.8em; color:#666; margin-top:6px;'>Match: {row['match']:.1f}%</div></div><div style='text-align:right'><div style='font-size:1.3em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div><div class='buy-hint' style='color:#FBBF24; font-size:0.8em; font-weight:bold; margin-top:5px;'>VIEW ></div></div></div></a>"""
                 st.markdown(alt_html, unsafe_allow_html=True)
+
+        # --- 🔥 FOOTER DISCLAIMER ---
+        st.markdown("""
+        <div class='disclaimer-box'>
+            TechChoose is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. <br>
+            Product prices and availability are accurate as of the date/time indicated and are subject to change. Any price and availability information displayed on Amazon at the time of purchase will apply to the purchase of this product.
+        </div>
+        """, unsafe_allow_html=True)
 
     else:
         st.warning(f"No devices found under ${budget}. Please adjust your filters.")
