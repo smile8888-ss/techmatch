@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go # พระเอกของเรา (กราฟแมงมุม)
 
 # --- 1. CONFIG ---
 st.set_page_config(
-    page_title="TechChoose - Pro Analyst",
+    page_title="TechChoose - Pro Dashboard",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -21,133 +20,140 @@ def load_data():
     except Exception:
         return pd.DataFrame()
 
-# --- 3. PRO CSS (Data Viz Style) ---
+# --- 3. CSS (ธีม Pro ที่แก้เรื่องสีจมแล้ว) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
     
-    .stApp { background-color: #0B0E14; color: #E2E8F0; font-family: 'Inter', sans-serif; }
+    /* Global Font */
+    .stApp { background-color: #0B1121; color: #E2E8F0; font-family: 'Inter', sans-serif; }
     
-    /* Sidebar */
-    section[data-testid="stSidebar"] { background-color: #050505; border-right: 1px solid #1E1E1E; }
-    section[data-testid="stSidebar"] div[data-baseweb="select"] > div { background-color: #1A1A1A !important; color: white !important; border: 1px solid #333; }
+    /* --- SIDEBAR FIX (แก้สีจมให้ชัดเป๊ะ) --- */
+    section[data-testid="stSidebar"] { background-color: #020617; border-right: 1px solid #1E293B; }
     
-    /* Winner Card */
+    /* บังคับสี Dropdown และ Slider */
+    div[data-baseweb="select"] > div {
+        background-color: #1E293B !important;
+        color: white !important;
+        border-color: #475569 !important;
+    }
+    div[data-baseweb="select"] span { color: white !important; }
+    div[data-testid="stMarkdownContainer"] p { color: #CBD5E1; }
+
+    /* --- WINNER CARD --- */
     .winner-card {
-        background: #11151C;
-        border: 1px solid #3B82F6; border-left: 5px solid #3B82F6;
-        border-radius: 12px; padding: 30px;
-        box-shadow: 0 4px 30px rgba(59, 130, 246, 0.1);
+        background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%);
+        border: 1px solid #3B82F6; border-radius: 20px; padding: 35px;
+        box-shadow: 0 10px 40px rgba(59, 130, 246, 0.15);
     }
     
+    .rank-badge {
+        background: #F59E0B; color: #000; font-weight: 800; 
+        padding: 6px 16px; border-radius: 30px; 
+        text-transform: uppercase; letter-spacing: 1px; font-size: 0.8em;
+        display: inline-block; margin-bottom: 15px;
+    }
+
     .hero-name {
-        font-family: 'Inter', sans-serif;
-        font-size: 3.5em; font-weight: 900; letter-spacing: -1px;
-        background: -webkit-linear-gradient(0deg, #fff, #94A3B8);
+        font-size: 3em; font-weight: 900; background: -webkit-linear-gradient(#fff, #94A3B8);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        margin-bottom: 5px;
-    }
-    
-    .price-tag {
-        font-family: 'JetBrains Mono', monospace;
-        color: #FBBF24; font-size: 1.8em; font-weight: bold;
-    }
-    
-    .tier-badge {
-        background: #333; color: #aaa; padding: 2px 8px; border-radius: 4px;
-        font-size: 0.5em; vertical-align: middle; margin-left: 10px;
-        font-family: 'JetBrains Mono', monospace;
+        margin: 10px 0; line-height: 1.1;
     }
 
-    /* Tags */
-    .spec-tag {
-        display: inline-block; background: #1E293B; color: #94A3B8;
-        padding: 5px 12px; border-radius: 20px; font-size: 0.85em; margin-right: 5px; margin-top: 10px;
-        border: 1px solid #334155;
-    }
+    .hero-price { color: #FBBF24; font-size: 2.2em; font-weight: 700; margin-bottom: 25px; }
 
-    /* Button */
-    .amazon-btn {
-        background: #F59E0B; color: black !important; padding: 15px 40px; 
-        border-radius: 4px; text-decoration: none; font-weight: 800; 
-        display: inline-block; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px;
-        transition: 0.2s;
+    /* --- STAT GRID (ตารางค่าพลัง 3 สี) --- */
+    .stat-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+        background: #0B1121; padding: 20px; border-radius: 15px; border: 1px solid #334155;
     }
-    .amazon-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+    .stat-box { text-align: center; }
+    .stat-label { color: #94A3B8; font-size: 0.85em; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+    .stat-value { font-size: 1.5em; font-weight: 800; color: white; }
+    .stat-bar-bg { width: 100%; height: 6px; background: #334155; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+    .stat-bar-fill { height: 100%; border-radius: 3px; }
 
-    /* Alternatives */
+    /* --- ALTERNATIVES --- */
     .alt-row {
-        background: #11151C; border-bottom: 1px solid #222;
-        padding: 20px; display: flex; justify-content: space-between; align-items: center;
+        background: #1E293B; border-bottom: 1px solid #334155;
+        padding: 20px; border-radius: 12px; margin-bottom: 12px;
+        display: flex; justify-content: space-between; align-items: center;
         transition: 0.2s;
     }
-    .alt-row:hover { background: #1A1F29; border-left: 3px solid #F59E0B; }
-    
+    .alt-row:hover { background: #28364A; border-color: #3B82F6; }
+
+    /* BUTTON */
+    .cta-btn {
+        background: linear-gradient(90deg, #F59E0B, #D97706);
+        color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none;
+        font-weight: bold; display: block; text-align: center; margin-top: 25px;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); transition: 0.3s;
+    }
+    .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5); color:white;}
+
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. GRAPH FUNCTION (RADAR CHART) ---
-def create_radar_chart(row):
-    categories = ['Performance', 'Camera', 'Battery', 'Value']
-    values = [row['performance'], row['camera'], row['battery'], row['value']]
-    
-    fig = go.Figure()
-    fig.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories,
-        fill='toself',
-        fillcolor='rgba(59, 130, 246, 0.2)',
-        line_color='#3B82F6',
-        linewidth=2
-    ))
-    
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(visible=True, range=[0, 10], color='#555'),
-            bgcolor='rgba(0,0,0,0)'
-        ),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=20, r=20, t=20, b=20),
-        height=300,
-        font=dict(color='#E2E8F0', family="Inter")
-    )
-    return fig
-
-def get_price_tier(price):
-    if price < 500: return "$"
-    elif price < 800: return "$$"
-    elif price < 1100: return "$$$"
-    else: return "$$$$"
-
-# --- 5. SIDEBAR ---
+# --- 4. SIDEBAR ---
 with st.sidebar:
-    st.title("⚡ TechChoose")
-    st.caption("ANALYTICS MODE")
-    st.write("---")
+    st.markdown("### ⚙️ PREFERENCES")
     
-    os_choice = st.selectbox("OPERATING SYSTEM", ["Any", "iOS", "Android"])
+    os_choice = st.selectbox("📱 Mobile Ecosystem", ["Any", "iOS (Apple)", "Android"])
+    
     st.write("")
-    lifestyle = st.selectbox("TARGET USER", ["🎮 Gamer", "📸 Creator", "💼 Pro", "💰 Student", "🛠️ Custom"])
+    lifestyle = st.selectbox("👤 User Persona", [
+        "🎮 Hardcore Gamer", 
+        "📸 Content Creator", 
+        "💼 Business Professional", 
+        "💰 Student / Budget Saver", 
+        "🛠️ Custom Configuration"
+    ])
+    
     st.write("")
-    budget = st.slider("MAX BUDGET (USD)", 300, 2000, 2000, step=50)
+    budget = st.slider("💰 Maximum Budget ($)", 300, 2000, 2000, step=50)
 
-    # Weights
+    # Weights Logic
     p, c, b, v = 5, 5, 5, 5
     if "Gamer" in lifestyle: p,c,b,v = 10,3,8,5
     elif "Creator" in lifestyle: p,c,b,v = 7,10,8,5
-    elif "Pro" in lifestyle: p,c,b,v = 8,6,9,6
+    elif "Business" in lifestyle: p,c,b,v = 8,6,9,6
     elif "Student" in lifestyle: p,c,b,v = 5,5,7,10
     else: 
-        p = st.slider("Perf", 1,10,8)
-        c = st.slider("Cam", 1,10,8)
-        b = st.slider("Batt", 1,10,5)
-        v = st.slider("Value", 1,10,5)
-    
-    st.divider()
-    st.button("RUN ANALYSIS", type="primary", use_container_width=True)
+        st.divider()
+        st.caption("Manual Sliders")
+        p = st.slider("Performance", 1, 10, 8)
+        c = st.slider("Camera", 1, 10, 8)
+        b = st.slider("Battery", 1, 10, 5)
+        v = st.slider("Value", 1, 10, 5)
 
-# --- 6. MAIN APP ---
+    st.divider()
+    st.button("🚀 RUN ANALYSIS", type="primary", use_container_width=True)
+
+# --- 5. FUNCTIONS ---
+def generate_pro_verdict(row, mode):
+    # คำอธิบายแบบ Pro
+    if "Gamer" in mode:
+        return f"Engineered for dominance. The **{row['name']}** delivers elite frame rates, making it the definitive choice for mobile esports."
+    elif "Creator" in mode:
+        return f"Studio quality in your pocket. **{row['name']}** features a class-leading camera system for professional content creation."
+    elif "Student" in mode:
+        return f"Maximum efficiency per dollar. **{row['name']}** outperforms its price bracket, offering flagship features at an entry-level investment."
+    else:
+        return f"The perfect daily driver. **{row['name']}** offers a balanced synergy of speed, battery life, and build quality."
+
+def stat_bar_html(label, score, color):
+    percent = score * 10
+    return f"""
+    <div class="stat-box">
+        <div class="stat-label">{label}</div>
+        <div class="stat-value">{score}/10</div>
+        <div class="stat-bar-bg">
+            <div class="stat-bar-fill" style="width:{percent}%; background:{color};"></div>
+        </div>
+    </div>
+    """
+
+# --- 6. MAIN LOGIC ---
 df = load_data()
 
 if not df.empty:
@@ -162,56 +168,55 @@ if not df.empty:
 
     if len(df) > 0:
         winner = df.iloc[0]
-        c1, c2 = st.columns([1.5, 1], gap="large")
+        c1, c2 = st.columns([1.3, 1], gap="large")
 
+        # --- WINNER SECTION ---
         with c1:
-            tier = get_price_tier(winner['price'])
             st.markdown(f"""
             <div class='winner-card'>
-                <div style='color:#3B82F6; font-weight:bold; letter-spacing:2px; font-size:0.8em; margin-bottom:10px;'>TOP ANALYST PICK</div>
+                <span class='rank-badge'>🏆 #1 Top Recommendation</span>
                 <div class='hero-name'>{winner['name']}</div>
-                <div class='price-tag'>
-                    ${winner['price']:,} <span class='tier-badge'>{tier} Tier</span>
+                <div class='hero-price'>${winner['price']:,}</div>
+                
+                <div style='margin-bottom:25px; color:#94A3B8; line-height:1.6;'>
+                    {generate_pro_verdict(winner, lifestyle)}
                 </div>
-                <div style='margin-top:20px;'>
-                    <span class='spec-tag'>🚀 Speed {winner['performance']}/10</span>
-                    <span class='spec-tag'>📸 Cam {winner['camera']}/10</span>
-                    <span class='spec-tag'>🔋 Batt {winner['battery']}/10</span>
+                
+                <div class="stat-grid">
+                    {stat_bar_html("🚀 Performance", winner['performance'], "#3B82F6")}
+                    {stat_bar_html("📸 Camera", winner['camera'], "#A855F7")}
+                    {stat_bar_html("🔋 Battery", winner['battery'], "#22C55E")}
                 </div>
-                <p style='margin-top:25px; color:#94A3B8; line-height:1.6;'>
-                    Based on your requirements for <b>{lifestyle}</b>, this device offers the optimal balance of specifications. 
-                    It achieves a <b>{winner['match']:.1f}% match score</b> against our algorithm.
-                </p>
-                <a href="{winner['link']}" target="_blank" class="amazon-btn">VIEW OFFER ></a>
+
+                <a href="{winner['link']}" target="_blank" class="cta-btn">
+                    🛒 Check Current Price on Amazon
+                </a>
             </div>
             """, unsafe_allow_html=True)
 
+        # --- ALTERNATIVES SECTION ---
         with c2:
-            # 🔥 ตรงนี้คือทีเด็ด: กราฟแมงมุม 🔥
-            st.markdown("### 📊 Performance Profile")
-            fig = create_radar_chart(winner)
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            st.markdown("### 📊 Market Comparison")
+            st.markdown(f"<div style='color:#64748B; margin-bottom:15px;'>Filtered for budget: < ${budget:,}</div>", unsafe_allow_html=True)
             
-            # Alternatives Table
-            st.markdown("### 📉 Market Alternatives")
             for i, row in df.iloc[1:5].iterrows():
                 diff = winner['price'] - row['price']
-                save_tag = f"<span style='color:#4ADE80; font-weight:bold;'>Save ${diff:,}</span>" if diff > 0 else ""
+                save_tag = f"<span style='color:#4ADE80; font-size:0.8em; font-weight:bold;'>Save ${diff:,}</span>" if diff > 0 else ""
                 
                 st.markdown(f"""
                 <div class='alt-row'>
                     <div>
-                        <div style='font-weight:bold; font-size:1.1em;'>{i}. {row['name']}</div>
-                        <div style='color:#666; font-family:"JetBrains Mono"; font-size:0.9em;'>${row['price']:,}</div>
+                        <div style='font-weight:700; font-size:1.1em; color:#F1F5F9;'>{i}. {row['name']}</div>
+                        <div style='color:#94A3B8; font-size:0.9em;'>Est. ${row['price']:,} &nbsp; {save_tag}</div>
                     </div>
                     <div style='text-align:right;'>
-                        <div style='color:#3B82F6; font-weight:bold;'>{row['match']:.0f}%</div>
-                        <a href="{row['link']}" target="_blank" style='color:#F59E0B; text-decoration:none; font-size:0.8em;'>View</a>
+                        <div style='font-size:1.2em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div>
+                        <a href="{row['link']}" target="_blank" style='color:#F59E0B; text-decoration:none; font-size:0.8em; font-weight:600;'>View Deal ></a>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                
+
     else:
-        st.warning(f"No match found under ${budget}")
+        st.warning("No devices found in this range.")
 else:
-    st.error("Data Error")
+    st.error("Data Source Error")
