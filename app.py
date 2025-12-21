@@ -3,8 +3,8 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Dynamic Badges",
-    page_icon="💎",
+    page_title="TechChoose - Smart Logic 2.0",
+    page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -16,8 +16,17 @@ def load_data():
     try:
         df = pd.read_csv(sheet_url)
         df['os_type'] = df['name'].apply(lambda x: 'iOS' if 'iPhone' in str(x) else 'Android')
-        if 'antutu' not in df.columns: df['antutu'] = df['price'].apply(lambda x: x * 2500 if x > 0 else 500000)
-        if 'dxomark' not in df.columns: df['dxomark'] = df['camera'].apply(lambda x: x * 15 + 20)
+        
+        if 'antutu' in df.columns:
+            # Dynamic Scaling: ให้คะแนนเต็ม 10 อิงจากตัวท็อปสุด
+            df['perf_score'] = (df['antutu'] / df['antutu'].max()) * 10
+        else:
+            df['perf_score'] = 8.0 # Fallback
+            
+        if 'camera' in df.columns: df['cam_score'] = df['camera']
+        if 'battery' in df.columns: df['batt_score'] = df['battery']
+        if 'antutu' not in df.columns: df['antutu'] = df['price'] * 2000 # Fake Data กัน Error
+
         return df
     except Exception:
         return pd.DataFrame()
@@ -26,7 +35,6 @@ def load_data():
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
-    
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
     /* Sidebar */
@@ -36,8 +44,8 @@ st.markdown("""
     div[data-baseweb="select"] > div { background-color: #222 !important; border: 1px solid #555 !important; }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="select"] svg { fill: #FBBF24 !important; }
-    
-    /* Main Card */
+
+    /* Winner Box */
     .winner-box {
         background: radial-gradient(circle at top right, #111, #000);
         border: 2px solid #3B82F6; border-radius: 20px; padding: 40px;
@@ -47,7 +55,6 @@ st.markdown("""
         background: #F59E0B; color: black; font-weight: 900; padding: 10px 20px; 
         border-radius: 50px; text-transform: uppercase; display: inline-block; 
         margin-bottom: 20px; font-size: 0.9em; letter-spacing: 1px;
-        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
     }
     .hero-title { font-size: 3.5em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 15px; }
     .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 30px; }
@@ -60,47 +67,66 @@ st.markdown("""
     .bar-bg { background: #333; height: 6px; border-radius: 3px; margin-top: 10px; overflow: hidden; }
     
     .bench-row { display: flex; gap: 30px; padding-top: 25px; border-top: 1px solid #222; margin-top: 25px; }
-    .bench-item span { font-weight: bold; font-size: 1.2em; margin-left: 8px; color:white;}
+    .bench-item span { font-weight: bold; font-size: 1.2em; margin-left: 8px; color:white; }
     .bench-item { color: #888; font-family: 'JetBrains Mono'; }
 
     .amazon-btn { background: #3B82F6; color: white !important; padding: 22px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.4em; margin-top: 30px; transition: 0.3s; }
     .amazon-btn:hover { background: #2563EB; }
-    
+
+    /* Alternatives */
     .alt-link { text-decoration: none; display: block; }
     .alt-row { background: #0A0A0A; border: 1px solid #222; padding: 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
     .alt-row:hover { border-color: #FBBF24; background: #111; transform: scale(1.01); }
     .save-tag { color: #10B981; font-weight: bold; margin-left: 10px; }
     
+    /* Clean Mini Bars */
     .mini-bar-container { display: flex; gap: 10px; margin-top: 10px; }
     .mini-stat { width: 50px; }
     .mini-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
     .mini-fill-blue { height: 100%; background: #3B82F6; border-radius: 2px;} 
     .mini-fill-purple { height: 100%; background: #A855F7; border-radius: 2px;} 
     .mini-fill-green { height: 100%; background: #10B981; border-radius: 2px;}
-
 </style>
 """, unsafe_allow_html=True)
 
 # --- 4. SIDEBAR ---
 with st.sidebar:
     st.title("🛒 TechChoose")
-    st.caption("Global Market Analyzer")
+    st.caption("AI Smart Logic Engine")
     st.markdown("---")
     
     st.markdown("### ⚙️ Search Settings")
     os_choice = st.selectbox("📱 Operating System", ["Any", "iOS (Apple)", "Android"])
     st.write("")
-    lifestyle = st.selectbox("👤 User Persona", ["🎮 Hardcore Gamer", "📸 Content Creator", "💼 Business Pro", "💰 Student / Budget", "🛠️ Custom"])
+    
+    # เพิ่ม "General Use" เข้าไปในตัวเลือก
+    lifestyle = st.selectbox("👤 User Persona", [
+        "🏠 General Use / Daily Driver",  # <-- NEW
+        "🎮 Hardcore Gamer", 
+        "📸 Content Creator", 
+        "💼 Business Pro", 
+        "💰 Student / Budget", 
+        "🛠️ Custom"
+    ])
     st.write("")
     budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50)
 
+    # --- 🔥 UPDATED WEIGHTING LOGIC ---
     p, c, b, v = 5, 5, 5, 5
-    if "Gamer" in lifestyle: p,c,b,v = 12, 3, 8, 3
-    elif "Creator" in lifestyle: p,c,b,v = 7, 10, 8, 5
-    elif "Business" in lifestyle: p,c,b,v = 8, 6, 9, 6
-    elif "Student" in lifestyle: p,c,b,v = 5, 5, 7, 15
-    if budget >= 1000: v = 1; p += 3
-    elif budget <= 400: v = 20
+    price_penalty_threshold = 9999
+    
+    if "Gamer" in lifestyle: 
+        p,c,b,v = 20, 0, 8, 2   # เน้นแรง (20), ไม่สนกล้อง (0)
+    elif "Creator" in lifestyle: 
+        p,c,b,v = 6, 20, 6, 2   # เน้นกล้อง (20)
+    elif "Business" in lifestyle: 
+        p,c,b,v = 8, 4, 15, 5   # เน้นแบตสุดๆ (15), กล้องรอง (4), แรงพอประมาณ (8)
+    elif "General" in lifestyle:
+        p,c,b,v = 8, 8, 8, 10   # เน้นสมดุล (8) และความคุ้มค่า (10)
+    elif "Student" in lifestyle: 
+        p,c,b,v = 6, 6, 8, 20   # เน้นคุ้มค่าสุดๆ (20)
+        price_penalty_threshold = 800 # หักคะแนนถ้าแพงเกิน
+
     if "Custom" in lifestyle:
         p = st.slider("Perf", 1,10,8); c = st.slider("Cam", 1,10,8); b = st.slider("Batt", 1,10,5); v = st.slider("Val", 1,10,5)
 
@@ -109,20 +135,22 @@ with st.sidebar:
 
 # --- 5. FUNCTIONS ---
 def get_dynamic_badge(mode, price):
-    # นี่คือ "สมองใหม่" ของป้ายเหลืองครับ 🧠
-    if "Gamer" in mode: return "🏆 ULTIMATE GAMING BEAST"
-    elif "Creator" in mode: return "🎥 BEST VIDEO CREATOR"
-    elif "Business" in mode: return "💼 TOP PRODUCTIVITY PICK"
-    elif "Student" in mode or price < 500: return "💰 BEST VALUE CHAMPION"
-    else: return "⭐ #1 OVERALL FLAGSHIP"
+    if "Gamer" in mode: return "🏆 GAMING BEAST"
+    elif "Creator" in mode: return "🎥 CREATOR CHOICE"
+    elif "Student" in mode: return "💰 SMART SAVER PICK"
+    elif "Business" in mode: return "💼 RELIABLE WORKHORSE"
+    elif "General" in mode: return "⭐ BEST BALANCED PICK"
+    else: return "⭐ TOP FLAGSHIP"
 
 def get_expert_verdict(row, mode):
-    verdict = "<b>🤖 Expert Analysis:</b><br>"
-    if "Gamer" in mode: verdict += f"Dominates the arena with an <b>AnTuTu score of {int(row['antutu']):,}</b>. Verified as a top-tier gaming powerhouse."
-    elif "Creator" in mode: verdict += f"Studio-grade imaging. <b>DXOMARK score of {int(row['dxomark'])}</b> ensures professional photo and video quality."
-    elif "Student" in mode or row['price'] < 400: verdict += f"Global 'Best Value' leader. Delivers flagship-level features and reliability at a highly competitive price."
-    else: verdict += f"The ultimate all-rounder. Achieves top stability scores across performance, camera, and battery metrics."
-    return verdict
+    if "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b> ensures lag-free gaming."
+    elif "Creator" in mode: return f"Studio quality. Top-tier camera system for professional results."
+    elif "Business" in mode: return f"<b>All-day Reliability:</b> Prioritizes battery life and multitasking stability for professionals."
+    elif "General" in mode: return f"<b>The Perfect Balance:</b> Good camera, smooth performance, and decent battery. A jack of all trades."
+    elif "Student" in mode: 
+        if row['price'] > 800: return "<b>Luxury Pick:</b> Extremely powerful, but arguably overkill for a student budget."
+        else: return "<b>Smart Choice:</b> High-end features at a fraction of the flagship price."
+    return f"Excellent all-rounder recommendation."
 
 def stat_bar_html(label, score, color):
     return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
@@ -135,9 +163,14 @@ if not df.empty:
     elif "Android" in os_choice: df = df[df['os_type'] == 'Android']
     df = df[df['price'] <= budget]
 
-    df['score'] = (df['performance']*p) + (df['camera']*c) + (df['battery']*b) + (df['value']*v)
-    max_score = (10*p) + (10*c) + (10*b) + (10*v)
-    df['match'] = (df['score'] / max_score) * 100
+    # --- SCORE ENGINE ---
+    base_score = (df['perf_score']*p) + (df['cam_score']*c) + (df['batt_score']*b) + (df['value']*v)
+    price_penalty = df['price'].apply(lambda x: (x - price_penalty_threshold) * 0.5 if x > price_penalty_threshold else 0)
+    df['final_score'] = base_score - price_penalty
+    
+    max_possible = (10*p) + (10*c) + (10*b) + (10*v)
+    df['match'] = (df['final_score'] / max_possible) * 100
+    
     df = df.sort_values(by='match', ascending=False).reset_index(drop=True)
 
     if len(df) > 0:
@@ -145,13 +178,11 @@ if not df.empty:
         c1, c2 = st.columns([1.5, 1], gap="large")
 
         with c1:
-            # ใช้ฟังก์ชัน get_dynamic_badge แทนการดึงจาก CSV ตรงๆ
             current_badge = get_dynamic_badge(lifestyle, winner['price'])
-            
             verdict_html = get_expert_verdict(winner, lifestyle)
-            stats_html = f"{stat_bar_html('🚀 PERFORMANCE', winner['performance'], '#3B82F6')}{stat_bar_html('📸 CAMERA', winner['camera'], '#A855F7')}{stat_bar_html('🔋 BATTERY', winner['battery'], '#10B981')}"
+            stats_html = f"{stat_bar_html('🚀 PERFORMANCE', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAMERA', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATTERY', winner['batt_score'], '#10B981')}"
             
-            winner_html = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{verdict_html}</div><div class='stat-container'>{stats_html}</div><div class='bench-row'><div class='bench-item'>🚀 AnTuTu: <span>{int(winner['antutu']):,}</span></div><div class='bench-item'>📸 DXOMARK: <span>{int(winner['dxomark'])}</span></div></div><a href='{winner['link']}' target='_blank' class='amazon-btn'>🛒 CHECK GLOBAL PRICE</a></div>"""
+            winner_html = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{verdict_html}</div><div class='stat-container'>{stats_html}</div><div class='bench-row'><div class='bench-item'>🚀 AnTuTu: <span>{int(winner['antutu']):,}</span></div><div class='bench-item'>📸 Camera: <span>{int(winner['cam_score'])}/10</span></div></div><a href='{winner['link']}' target='_blank' class='amazon-btn'>🛒 CHECK GLOBAL PRICE</a></div>"""
             st.markdown(winner_html, unsafe_allow_html=True)
 
         with c2:
@@ -160,9 +191,9 @@ if not df.empty:
                 diff = winner['price'] - row['price']
                 save_html = f"<span class='save-tag'>SAVE ${diff:,}</span>" if diff > 0 else ""
                 
-                bar1 = f"<div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['performance']*10}%;'></div></div></div>"
-                bar2 = f"<div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['camera']*10}%;'></div></div></div>"
-                bar3 = f"<div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['battery']*10}%;'></div></div></div>"
+                bar1 = f"<div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div>"
+                bar2 = f"<div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div>"
+                bar3 = f"<div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div>"
                 mini_bars_html = f"<div class='mini-bar-container'>{bar1}{bar2}{bar3}</div>"
                 
                 alt_html = f"""
@@ -172,7 +203,7 @@ if not df.empty:
             <div style='font-weight:bold; font-size:1.1em; color:white;'>{i}. {row['name']}</div>
             <div style='color:#FBBF24; font-weight:bold;'>${row['price']:,} {save_html}</div>
             {mini_bars_html}
-            <div style='font-size:0.8em; color:#666; margin-top:6px;'>AnTuTu: {int(row['antutu']):,}</div>
+            <div style='font-size:0.8em; color:#666; margin-top:6px;'>Match: {row['match']:.1f}%</div>
         </div>
         <div style='text-align:right'>
             <div style='font-size:1.3em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div>
