@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go # พระเอกของเรา (กราฟแมงมุม)
 
 # --- 1. CONFIG ---
 st.set_page_config(
-    page_title="TechChoose - Data Mode",
+    page_title="TechChoose - Pro Analyst",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -12,7 +13,6 @@ st.set_page_config(
 # --- 2. LOAD DATA ---
 @st.cache_data(ttl=60)
 def load_data():
-    # ลิงก์เดิมของพี่ (ไม่ต้องมีคอลัมน์ image ก็ทำงานได้)
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
     try:
         df = pd.read_csv(sheet_url)
@@ -21,83 +21,133 @@ def load_data():
     except Exception:
         return pd.DataFrame()
 
-# --- 3. CSS (Minimalist Dark) ---
+# --- 3. PRO CSS (Data Viz Style) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
     
-    .stApp { background-color: #0F172A; color: #F8FAFC; font-family: 'Inter', sans-serif; }
+    .stApp { background-color: #0B0E14; color: #E2E8F0; font-family: 'Inter', sans-serif; }
     
-    section[data-testid="stSidebar"] { background-color: #020617; border-right: 1px solid #1E293B; }
-    section[data-testid="stSidebar"] * { color: #E2E8F0 !important; }
-
-    /* Winner Card - เน้นตัวหนังสือใหญ่ */
+    /* Sidebar */
+    section[data-testid="stSidebar"] { background-color: #050505; border-right: 1px solid #1E1E1E; }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div { background-color: #1A1A1A !important; color: white !important; border: 1px solid #333; }
+    
+    /* Winner Card */
     .winner-card {
-        background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-        border: 2px solid #3B82F6; border-radius: 20px; padding: 40px;
-        text-align: left; box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
-        position: relative;
+        background: #11151C;
+        border: 1px solid #3B82F6; border-left: 5px solid #3B82F6;
+        border-radius: 12px; padding: 30px;
+        box-shadow: 0 4px 30px rgba(59, 130, 246, 0.1);
     }
     
-    /* Alternatives Card */
-    .alt-card {
-        background: #1E293B; border: 1px solid #334155;
-        padding: 20px; border-radius: 12px; margin-bottom: 15px;
-        transition: transform 0.2s;
+    .hero-name {
+        font-family: 'Inter', sans-serif;
+        font-size: 3.5em; font-weight: 900; letter-spacing: -1px;
+        background: -webkit-linear-gradient(0deg, #fff, #94A3B8);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        margin-bottom: 5px;
     }
-    .alt-card:hover { border-color: #3B82F6; transform: translateX(5px); }
+    
+    .price-tag {
+        font-family: 'JetBrains Mono', monospace;
+        color: #FBBF24; font-size: 1.8em; font-weight: bold;
+    }
+    
+    .tier-badge {
+        background: #333; color: #aaa; padding: 2px 8px; border-radius: 4px;
+        font-size: 0.5em; vertical-align: middle; margin-left: 10px;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Tags */
+    .spec-tag {
+        display: inline-block; background: #1E293B; color: #94A3B8;
+        padding: 5px 12px; border-radius: 20px; font-size: 0.85em; margin-right: 5px; margin-top: 10px;
+        border: 1px solid #334155;
+    }
 
     /* Button */
     .amazon-btn {
-        background: linear-gradient(to bottom, #FFD814, #F7CA00);
-        color: black !important; padding: 12px 30px; border-radius: 50px;
-        text-decoration: none; font-weight: 800; display: inline-block; margin-top: 25px;
+        background: #F59E0B; color: black !important; padding: 15px 40px; 
+        border-radius: 4px; text-decoration: none; font-weight: 800; 
+        display: inline-block; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px;
+        transition: 0.2s;
     }
+    .amazon-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
 
-    .price-big { color: #FBBF24; font-weight: 900; font-size: 3em; line-height: 1; }
-    .score-badge { background: #172554; color: #60A5FA; padding: 5px 12px; border-radius: 8px; font-weight: bold; }
+    /* Alternatives */
+    .alt-row {
+        background: #11151C; border-bottom: 1px solid #222;
+        padding: 20px; display: flex; justify-content: space-between; align-items: center;
+        transition: 0.2s;
+    }
+    .alt-row:hover { background: #1A1F29; border-left: 3px solid #F59E0B; }
     
-    /* Progress Bars Custom Colors */
-    .stProgress > div > div > div > div { background: linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%); }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. SIDEBAR ---
+# --- 4. GRAPH FUNCTION (RADAR CHART) ---
+def create_radar_chart(row):
+    categories = ['Performance', 'Camera', 'Battery', 'Value']
+    values = [row['performance'], row['camera'], row['battery'], row['value']]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=values,
+        theta=categories,
+        fill='toself',
+        fillcolor='rgba(59, 130, 246, 0.2)',
+        line_color='#3B82F6',
+        linewidth=2
+    ))
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 10], color='#555'),
+            bgcolor='rgba(0,0,0,0)'
+        ),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=20, b=20),
+        height=300,
+        font=dict(color='#E2E8F0', family="Inter")
+    )
+    return fig
+
+def get_price_tier(price):
+    if price < 500: return "$"
+    elif price < 800: return "$$"
+    elif price < 1100: return "$$$"
+    else: return "$$$$"
+
+# --- 5. SIDEBAR ---
 with st.sidebar:
     st.title("⚡ TechChoose")
-    st.caption("AI Gadget Advisor")
+    st.caption("ANALYTICS MODE")
     st.write("---")
-    os_choice = st.selectbox("System", ["Any", "iOS", "Android"])
+    
+    os_choice = st.selectbox("OPERATING SYSTEM", ["Any", "iOS", "Android"])
     st.write("")
-    lifestyle = st.selectbox("Persona", ["🎮 Hardcore Gamer", "📸 Content Creator", "💼 Business / Work", "💰 Student / Budget Saver", "🛠️ Custom"])
+    lifestyle = st.selectbox("TARGET USER", ["🎮 Gamer", "📸 Creator", "💼 Pro", "💰 Student", "🛠️ Custom"])
     st.write("")
-    budget = st.slider("Max Budget ($)", 300, 2000, 2000, step=50)
+    budget = st.slider("MAX BUDGET (USD)", 300, 2000, 2000, step=50)
 
-    # Weights Logic
+    # Weights
     p, c, b, v = 5, 5, 5, 5
-    if lifestyle == "🎮 Hardcore Gamer": p,c,b,v = 10,3,8,5
-    elif lifestyle == "📸 Content Creator": p,c,b,v = 7,10,8,5
-    elif lifestyle == "💼 Business / Work": p,c,b,v = 8,6,9,6
-    elif lifestyle == "💰 Student / Budget Saver": p,c,b,v = 5,5,7,10
+    if "Gamer" in lifestyle: p,c,b,v = 10,3,8,5
+    elif "Creator" in lifestyle: p,c,b,v = 7,10,8,5
+    elif "Pro" in lifestyle: p,c,b,v = 8,6,9,6
+    elif "Student" in lifestyle: p,c,b,v = 5,5,7,10
     else: 
-        st.divider()
-        def score(l): return {"Ignore":1, "Nice":5, "Imp.":8, "Max":10}[l]
-        p = score(st.select_slider("Speed", ["Ignore","Nice","Imp.","Max"],"Imp."))
-        c = score(st.select_slider("Camera", ["Ignore","Nice","Imp.","Max"],"Imp."))
-        b = score(st.select_slider("Battery", ["Ignore","Nice","Imp.","Max"],"Nice"))
-        v = score(st.select_slider("Price", ["Ignore","Nice","Imp.","Max"],"Nice"))
-
+        p = st.slider("Perf", 1,10,8)
+        c = st.slider("Cam", 1,10,8)
+        b = st.slider("Batt", 1,10,5)
+        v = st.slider("Value", 1,10,5)
+    
     st.divider()
-    st.button("🔥 ANALYZE")
+    st.button("RUN ANALYSIS", type="primary", use_container_width=True)
 
-# --- 5. FUNCTIONS ---
-def generate_verdict(row, mode):
-    if "Gamer" in mode: return f"The <b>{row['name']}</b> is an absolute beast for gaming."
-    elif "Creator" in mode: return f"Top-tier camera system on the <b>{row['name']}</b> for pro-level content."
-    elif "Student" in mode: return f"<b>{row['name']}</b> gives you the best features for every dollar spent."
-    else: return f"<b>{row['name']}</b> is the perfect all-rounder for your daily tasks."
-
-# --- 6. MAIN LOGIC ---
+# --- 6. MAIN APP ---
 df = load_data()
 
 if not df.empty:
@@ -114,52 +164,54 @@ if not df.empty:
         winner = df.iloc[0]
         c1, c2 = st.columns([1.5, 1], gap="large")
 
-        # --- WINNER (Left) ---
         with c1:
+            tier = get_price_tier(winner['price'])
             st.markdown(f"""
             <div class='winner-card'>
-                <span style='color:#F59E0B; font-weight:800; letter-spacing:1px; text-transform:uppercase;'>🏆 Top Recommendation</span>
-                <h1 style='font-size:3.5em; margin:10px 0;'>{winner['name']}</h1>
-                <div class='price-big'>${winner['price']:,}</div>
-                <div style='margin-top:20px; font-size:1.1em; color:#CBD5E1;'>
-                    {generate_verdict(winner, lifestyle)}
+                <div style='color:#3B82F6; font-weight:bold; letter-spacing:2px; font-size:0.8em; margin-bottom:10px;'>TOP ANALYST PICK</div>
+                <div class='hero-name'>{winner['name']}</div>
+                <div class='price-tag'>
+                    ${winner['price']:,} <span class='tier-badge'>{tier} Tier</span>
                 </div>
-                <a href="{winner['link']}" target="_blank" class="amazon-btn">Check Price on Amazon ></a>
+                <div style='margin-top:20px;'>
+                    <span class='spec-tag'>🚀 Speed {winner['performance']}/10</span>
+                    <span class='spec-tag'>📸 Cam {winner['camera']}/10</span>
+                    <span class='spec-tag'>🔋 Batt {winner['battery']}/10</span>
+                </div>
+                <p style='margin-top:25px; color:#94A3B8; line-height:1.6;'>
+                    Based on your requirements for <b>{lifestyle}</b>, this device offers the optimal balance of specifications. 
+                    It achieves a <b>{winner['match']:.1f}% match score</b> against our algorithm.
+                </p>
+                <a href="{winner['link']}" target="_blank" class="amazon-btn">VIEW OFFER ></a>
             </div>
             """, unsafe_allow_html=True)
-            
-            # Stat Bars
-            st.write("")
-            st.caption("PERFORMANCE METRICS")
-            c_p, c_c, c_b = st.columns(3)
-            with c_p: st.progress(int(winner['performance']*10), f"Speed {winner['performance']}")
-            with c_c: st.progress(int(winner['camera']*10), f"Cam {winner['camera']}")
-            with c_b: st.progress(int(winner['battery']*10), f"Batt {winner['battery']}")
 
-        # --- ALTERNATIVES (Right) ---
         with c2:
-            st.markdown("### 🥈 Runner-ups")
+            # 🔥 ตรงนี้คือทีเด็ด: กราฟแมงมุม 🔥
+            st.markdown("### 📊 Performance Profile")
+            fig = create_radar_chart(winner)
+            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            
+            # Alternatives Table
+            st.markdown("### 📉 Market Alternatives")
             for i, row in df.iloc[1:5].iterrows():
                 diff = winner['price'] - row['price']
-                tag = f"<span style='color:#4ADE80; font-weight:bold; font-size:0.8em;'>Save ${diff:,}</span>" if diff > 0 else ""
+                save_tag = f"<span style='color:#4ADE80; font-weight:bold;'>Save ${diff:,}</span>" if diff > 0 else ""
                 
-                # HTML ชิดซ้าย แก้บั๊ก 100%
                 st.markdown(f"""
-<div class='alt-card'>
-<div style='display:flex; justify-content:space-between; align-items:center;'>
-<div>
-<div style='font-size:1.2em; font-weight:bold;'>{i}. {row['name']}</div>
-<div style='color:#94A3B8;'>Est. ${row['price']:,} {tag}</div>
-</div>
-<div style='text-align:right;'>
-<div class='score-badge'>{row['match']:.0f}% Match</div>
-<a href="{row['link']}" target="_blank" style='color:#F59E0B; font-size:0.8em; text-decoration:none; display:block; margin-top:5px;'>View ></a>
-</div>
-</div>
-</div>
-""", unsafe_allow_html=True)
+                <div class='alt-row'>
+                    <div>
+                        <div style='font-weight:bold; font-size:1.1em;'>{i}. {row['name']}</div>
+                        <div style='color:#666; font-family:"JetBrains Mono"; font-size:0.9em;'>${row['price']:,}</div>
+                    </div>
+                    <div style='text-align:right;'>
+                        <div style='color:#3B82F6; font-weight:bold;'>{row['match']:.0f}%</div>
+                        <a href="{row['link']}" target="_blank" style='color:#F59E0B; text-decoration:none; font-size:0.8em;'>View</a>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
                 
     else:
-        st.warning(f"No phones found under ${budget:,}")
+        st.warning(f"No match found under ${budget}")
 else:
     st.error("Data Error")
