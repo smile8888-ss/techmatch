@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Polish",
+    page_title="TechChoose - Final Pro",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -23,37 +23,43 @@ def load_data():
     except Exception:
         return pd.DataFrame()
 
-# --- 3. CSS (Final High Contrast Fix) ---
+# --- 3. CSS (Separated & Clean) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
-    /* --- SIDEBAR FINAL FIX (เจาะจงทุกจุด) --- */
+    /* --- SIDEBAR FIX (แก้ตัวหนังสือในกล่องให้ชัด) --- */
     section[data-testid="stSidebar"] { background-color: #050505; border-right: 1px solid #222; }
     
-    /* หัวข้อใหญ่ สีทอง */
-    section[data-testid="stSidebar"] h1, 
-    section[data-testid="stSidebar"] h2, 
-    section[data-testid="stSidebar"] h3 { 
-        color: #FBBF24 !important; 
+    /* หัวข้อใหญ่ */
+    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 { color: #FBBF24 !important; }
+    
+    /* Label ของตัวเลือก */
+    .stMarkdown label p { font-size: 1.1em; color: #FFFFFF !important; font-weight: 700; }
+    
+    /* กล่องเลือก (Dropdown) - บังคับพื้นหลังและตัวหนังสือ */
+    div[data-baseweb="select"] > div { 
+        background-color: #222222 !important; 
+        border: 1px solid #555 !important; 
+        color: #FFFFFF !important;
     }
     
-    /* ป้าย Label ทุกอัน สีขาวหนา */
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] .stMarkdown p {
-        color: #FFFFFF !important;
-        font-weight: 600 !important;
-        font-size: 1em !important;
+    /* ตัวหนังสือข้างในกล่องเลือก (สำคัญมาก!) */
+    div[data-baseweb="select"] span { 
+        color: #FFFFFF !important; 
+        font-weight: 600;
     }
-
-    /* Input Box Styling */
-    div[data-baseweb="select"] > div { background-color: #222 !important; border: 1px solid #555 !important; }
-    div[data-baseweb="select"] span { color: white !important; font-weight: 500; }
+    
+    /* ไอคอนลูกศร */
     div[data-baseweb="select"] svg { fill: #FBBF24 !important; }
     
-    /* --- MAIN CONTENT CSS --- */
+    /* เมนูที่เด้งออกมา */
+    ul[data-baseweb="menu"] { background-color: #222 !important; }
+    li[data-baseweb="option"] { color: #FFF !important; }
+    
+    /* --- MAIN CONTENT STYLES --- */
     .winner-box {
         background: radial-gradient(circle at top right, #111, #000);
         border: 2px solid #3B82F6;
@@ -89,7 +95,7 @@ st.markdown("""
     }
     .amazon-btn:hover { background: #2563EB; box-shadow: 0 0 30px rgba(59, 130, 246, 0.4); }
 
-    /* --- ALTERNATIVES & MINI BARS --- */
+    /* --- ALTERNATIVES STYLES (ย้าย Style มาไว้ที่นี่ กันโค้ดหลุด) --- */
     .alt-link { text-decoration: none; display: block; }
     .alt-row {
         background: #0A0A0A; border: 1px solid #222; padding: 20px; border-radius: 12px; 
@@ -97,11 +103,17 @@ st.markdown("""
     }
     .alt-row:hover { border-color: #FBBF24; background: #111; transform: scale(1.01); }
     
+    .save-tag { color: #10B981; font-weight: bold; font-size: 0.9em; margin-left: 10px; }
+    .buy-hint { color: #FBBF24; font-size: 0.8em; font-weight: bold; margin-top: 5px; }
+    
+    /* Mini Bars CSS */
     .mini-bar-container { display: flex; gap: 10px; margin-top: 10px; }
     .mini-stat { width: 50px; }
     .mini-label { font-size: 0.6em; color: #888; margin-bottom: 3px; font-weight:bold;}
     .mini-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
-    .mini-fill { height: 100%; border-radius: 2px; }
+    .mini-fill-blue { height: 100%; border-radius: 2px; background: #3B82F6; }
+    .mini-fill-purple { height: 100%; border-radius: 2px; background: #A855F7; }
+    .mini-fill-green { height: 100%; border-radius: 2px; background: #10B981; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -162,7 +174,6 @@ if not df.empty:
         c1, c2 = st.columns([1.5, 1], gap="large")
 
         with c1:
-            # Winner HTML (แยกส่วนประกอบ เพื่อความชัวร์)
             verdict_html = get_expert_verdict(winner, lifestyle)
             stats_html = f"{stat_bar_html('🚀 PERFORMANCE', winner['performance'], '#3B82F6')}{stat_bar_html('📸 CAMERA', winner['camera'], '#A855F7')}{stat_bar_html('🔋 BATTERY', winner['battery'], '#10B981')}"
             
@@ -173,17 +184,36 @@ if not df.empty:
             st.markdown("### 🥈 Top Alternatives")
             for i, row in df.iloc[1:6].iterrows():
                 diff = winner['price'] - row['price']
-                save_tag = f"<span style='color:#10B981; margin-left:10px;'>SAVE ${diff:,}</span>" if diff > 0 else ""
                 
-                # --- MINI BARS FIX (แยกสร้างทีละส่วน) ---
-                bar1 = f"<div class='mini-stat'><div class='mini-label'>🚀 {row['performance']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['performance']*10}%; background:#3B82F6;'></div></div></div>"
-                bar2 = f"<div class='mini-stat'><div class='mini-label'>📸 {row['camera']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['camera']*10}%; background:#A855F7;'></div></div></div>"
-                bar3 = f"<div class='mini-stat'><div class='mini-label'>🔋 {row['battery']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['battery']*10}%; background:#10B981;'></div></div></div>"
+                # --- แก้ไขจุดที่ HTML หลุด: ใช้ Class แทน Inline Style ---
+                # ก่อนหน้านี้เราเขียน style='color:...' ในนี้ มันเลยพัง
+                # ตอนนี้เราใช้ <span class='save-tag'> แทน
+                save_html = f"<span class='save-tag'>SAVE ${diff:,}</span>" if diff > 0 else ""
+                
+                # สร้าง Mini Bars แบบสะอาด (Clean HTML)
+                bar1 = f"<div class='mini-stat'><div class='mini-label'>🚀 {row['performance']}</div><div class='mini-track'><div class='mini-fill-blue' style='width:{row['performance']*10}%;'></div></div></div>"
+                bar2 = f"<div class='mini-stat'><div class='mini-label'>📸 {row['camera']}</div><div class='mini-track'><div class='mini-fill-purple' style='width:{row['camera']*10}%;'></div></div></div>"
+                bar3 = f"<div class='mini-stat'><div class='mini-label'>🔋 {row['battery']}</div><div class='mini-track'><div class='mini-fill-green' style='width:{row['battery']*10}%;'></div></div></div>"
+                
                 mini_bars_html = f"<div class='mini-bar-container'>{bar1}{bar2}{bar3}</div>"
                 
-                # Alt HTML Final Assembly
-                alt_final_html = f"""<a href='{row['link']}' target='_blank' class='alt-link'><div class='alt-row'><div><div style='font-weight:bold; font-size:1.1em; color:white;'>{i}. {row['name']}</div><div style='color:#FBBF24; font-weight:bold;'>${row['price']:,} {save_tag}</div>{mini_bars_html}<div style='font-size:0.8em; color:#666; margin-top:6px;'>AnTuTu: {int(row['antutu']):,}</div></div><div style='text-align:right'><div style='font-size:1.3em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div><div style='color:#FBBF24; font-size:0.8em; font-weight:bold; margin-top:5px;'>VIEW ></div></div></div></a>"""
-                
+                # รวมร่าง (ใช้ Class ทั้งหมด ไม่มีการเขียน Style ในนี้แล้ว)
+                alt_final_html = f"""
+<a href='{row['link']}' target='_blank' class='alt-link'>
+    <div class='alt-row'>
+        <div>
+            <div style='font-weight:bold; font-size:1.1em; color:white;'>{i}. {row['name']}</div>
+            <div style='color:#FBBF24; font-weight:bold;'>${row['price']:,} {save_html}</div>
+            {mini_bars_html}
+            <div style='font-size:0.8em; color:#666; margin-top:6px;'>AnTuTu: {int(row['antutu']):,}</div>
+        </div>
+        <div style='text-align:right'>
+            <div style='font-size:1.3em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div>
+            <div class='buy-hint'>VIEW ></div>
+        </div>
+    </div>
+</a>
+"""
                 st.markdown(alt_final_html, unsafe_allow_html=True)
 
     else:
