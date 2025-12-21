@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Polish",
+    page_title="TechChoose - Clean UI",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -17,6 +17,7 @@ def load_data():
         df = pd.read_csv(sheet_url)
         df['os_type'] = df['name'].apply(lambda x: 'iOS' if 'iPhone' in str(x) else 'Android')
         
+        # Scaling
         if 'antutu' in df.columns:
             df['perf_score'] = (df['antutu'] / df['antutu'].max()) * 10
         else:
@@ -105,18 +106,18 @@ with st.sidebar:
         "📸 Content Creator", 
         "💼 Business Pro", 
         "💰 Student / Budget", 
-        "🛠️ Custom"
+        "🛠️ Custom" # โหมดเดียวที่จะโชว์ Slider
     ])
     st.write("")
     
-    # --- 🔥 LOGIC: ซ่อน Budget เมื่อเลือก High-End ---
-    if "High-End" in lifestyle:
-        budget = 9999 # Unlimited Budget
-        st.info("💎 Mode: Unlimited Budget Enabled")
-    else:
+    # --- 🔥 LOGIC: ซ่อน Budget Slider ทุกโหมดยกเว้น Custom ---
+    if "Custom" in lifestyle:
         budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50)
+    else:
+        # โหมดอื่นๆ ให้งบไม่อั้น (AI จะไปตัดคะแนนเอาเองตาม Logic Student/Value)
+        budget = 9999 
 
-    # --- WEIGHTS ---
+    # --- WEIGHTS CALCULATION ---
     p, c, b, v = 5, 5, 5, 5
     price_penalty_threshold = 9999
     
@@ -134,10 +135,11 @@ with st.sidebar:
         p,c,b,v = 6, 6, 8, 20
         price_penalty_threshold = 800
 
-    # --- 🔥 CUSTOM: ชื่อเต็มๆ ไม่งง ---
+    # --- 🔥 CUSTOM MODE: โชว์ตัวปรับละเอียด ---
     if "Custom" in lifestyle:
         st.divider()
         st.markdown("### 🎛️ Adjust Preferences")
+        # ตรงนี้ปรับแค่ Weight (Budget อยู่ข้างบนแล้ว)
         p = st.slider("🚀 Performance (ความแรง)", 1, 10, 8)
         c = st.slider("📸 Camera Quality (กล้อง)", 1, 10, 8)
         b = st.slider("🔋 Battery Life (แบตเตอรี่)", 1, 10, 5)
@@ -157,11 +159,11 @@ def get_dynamic_badge(mode, price):
     else: return "⭐ TOP FLAGSHIP"
 
 def get_expert_verdict(row, mode):
-    if "High-End" in mode: return f"<b>No Compromise:</b> This device represents the pinnacle of technology. Maximum performance, best-in-class camera, and premium build quality."
+    if "High-End" in mode: return f"<b>No Compromise:</b> Maximum performance, best-in-class camera, and premium build quality."
     elif "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b> ensures lag-free gaming."
     elif "Creator" in mode: return f"Studio quality. Top-tier camera system for professional results."
-    elif "Business" in mode: return f"<b>All-day Reliability:</b> Prioritizes battery life and multitasking stability for professionals."
-    elif "General" in mode: return f"<b>The Perfect Balance:</b> Good camera, smooth performance, and decent battery. A jack of all trades."
+    elif "Business" in mode: return f"<b>All-day Reliability:</b> Prioritizes battery life and multitasking stability."
+    elif "General" in mode: return f"<b>The Perfect Balance:</b> Good camera, smooth performance, and decent battery."
     elif "Student" in mode: 
         if row['price'] > 800: return "<b>Luxury Pick:</b> Extremely powerful, but arguably overkill for a student budget."
         else: return "<b>Smart Choice:</b> High-end features at a fraction of the flagship price."
