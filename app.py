@@ -4,7 +4,7 @@ import datetime
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Mega Database",
+    page_title="TechChoose - Smart Reason",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -13,42 +13,32 @@ st.set_page_config(
 # --- 2. LOAD DATA ---
 @st.cache_data(ttl=60)
 def load_data():
-    # แนะนำให้พี่เอา CSV ด้านล่างไปใส่ Google Sheet แล้วเปลี่ยน Link ตรงนี้นะครับ
-    # แต่ตอนนี้ผมใส่ Fallback Data ไว้ให้เทสต์ได้เลยถ้า Link เสีย
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
     try:
         df = pd.read_csv(sheet_url)
     except Exception:
-        # กรณีโหลดไม่ได้ จะใช้ Empty DataFrame
         return pd.DataFrame()
 
-    # Data Preprocessing
     if not df.empty:
         df['os_type'] = df['name'].apply(lambda x: 'iOS' if 'iPhone' in str(x) else 'Android')
-        
-        # Scaling Logic
         if 'antutu' in df.columns:
-            # ใช้ 3.5 ล้านเป็นฐาน (iPhone 17 Pro Max)
             df['perf_score'] = (df['antutu'] / 3500000) * 10 
-            df['perf_score'] = df['perf_score'].clip(upper=10) # ห้ามเกิน 10
+            df['perf_score'] = df['perf_score'].clip(upper=10)
         else:
             df['perf_score'] = 8.0 
-            
         if 'camera' in df.columns: df['cam_score'] = df['camera']
         if 'battery' in df.columns: df['batt_score'] = df['battery']
-        
-        # Fallback for missing antutu
+        if 'award' not in df.columns: df['award'] = "Top Pick" # Fallback
         if 'antutu' not in df.columns: df['antutu'] = df['price'] * 2000
 
     return df
 
-# --- 3. CSS (Fixed & Clean) ---
+# --- 3. CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
-    /* Sidebar */
     section[data-testid="stSidebar"] { background-color: #050505; border-right: 1px solid #222; }
     section[data-testid="stSidebar"] * { color: #FFFFFF !important; }
     section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 { color: #FBBF24 !important; }
@@ -56,14 +46,12 @@ st.markdown("""
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="select"] svg { fill: #FBBF24 !important; }
 
-    /* Update Badge */
     .update-badge {
         background-color: #111; border: 1px solid #333; color: #00FF00;
         padding: 5px 10px; border-radius: 4px; font-size: 0.8em;
         text-align: center; margin-bottom: 20px; font-family: 'JetBrains Mono';
     }
 
-    /* Winner Box */
     .winner-box {
         background: radial-gradient(circle at top right, #111, #000);
         border: 2px solid #3B82F6; border-radius: 20px; padding: 40px;
@@ -93,7 +81,7 @@ st.markdown("""
     .amazon-btn:hover { background: #2563EB; }
     .deal-hint { text-align: center; color: #10B981; font-size: 0.9em; margin-top: 10px; font-weight: bold; }
 
-    /* Alternatives (FIXED HTML ERROR) */
+    /* Alternatives */
     .alt-link { text-decoration: none; display: block; }
     .alt-row { 
         background: #0A0A0A; border: 1px solid #222; padding: 20px; 
@@ -102,14 +90,33 @@ st.markdown("""
     }
     .alt-row:hover { border-color: #FBBF24; background: #111; transform: scale(1.01); }
     
+    .rank-wrap { display: flex; align-items: center; gap: 15px; }
+    .rank-circle {
+        width: 32px; height: 32px; border-radius: 8px; 
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 900; font-size: 1.1em;
+        background: #222; border: 1px solid #444; color: #888;
+    }
+    .rank-silver { background: linear-gradient(135deg, #E0E0E0, #999); color: black; border: none; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+    .rank-bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; border: none; box-shadow: 0 0 10px rgba(205,127,50,0.2); }
+    
+    /* 🔥 NEW: Reason Badge */
+    .reason-badge {
+        font-size: 0.75em; font-weight: bold; text-transform: uppercase;
+        padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle;
+    }
+    .reason-green { background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; }
+    .reason-purple { background: rgba(168, 85, 247, 0.2); color: #A855F7; border: 1px solid #A855F7; }
+    .reason-gray { background: #222; color: #BBB; border: 1px solid #444; }
+
     .save-tag-box { 
-        color: #10B981; font-weight: bold; margin-left: 10px; font-size: 0.9em;
+        color: #10B981; font-weight: bold; margin-left: 10px; font-size: 0.8em;
         background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 4px;
     }
     
-    .mini-bar-container { display: flex; gap: 10px; margin-top: 10px; }
-    .mini-stat { width: 50px; }
-    .mini-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
+    .mini-bar-container { display: flex; gap: 6px; margin-top: 8px; }
+    .mini-stat { width: 40px; }
+    .mini-track { width: 100%; height: 3px; background: #333; border-radius: 2px; }
     .mini-fill-blue { height: 100%; background: #3B82F6; border-radius: 2px;} 
     .mini-fill-purple { height: 100%; background: #A855F7; border-radius: 2px;} 
     .mini-fill-green { height: 100%; background: #10B981; border-radius: 2px;}
@@ -121,8 +128,6 @@ st.markdown("""
 # --- 4. SIDEBAR ---
 with st.sidebar:
     st.title("🛒 TechChoose")
-    
-    # --- 🔥 LAST UPDATED ---
     st.markdown("<div class='update-badge'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
     
     st.markdown("### ⚙️ Search Settings")
@@ -146,9 +151,8 @@ with st.sidebar:
     elif "Custom" in lifestyle:
         budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50)
     else:
-        budget = 9999 # Auto budget for presets
+        budget = 9999
 
-    # --- WEIGHTS ---
     p, c, b, v = 5, 5, 5, 5
     price_penalty_threshold = 9999
     
@@ -181,7 +185,6 @@ def get_dynamic_badge(mode, price):
     else: return "⭐ TOP FLAGSHIP"
 
 def get_expert_verdict(row, mode):
-    # Verdict Logic... (Shortened for brevity but keep your logic)
     if "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b>."
     return f"Excellent choice based on your preferences."
 
@@ -196,7 +199,6 @@ if not df.empty:
     elif "Android" in os_choice: df = df[df['os_type'] == 'Android']
     df = df[df['price'] <= budget]
 
-    # Score Calculation
     base_score = (df['perf_score']*p) + (df['cam_score']*c) + (df['batt_score']*b) + (df['value']*v)
     price_penalty = df['price'].apply(lambda x: (x - price_penalty_threshold) * 0.5 if x > price_penalty_threshold else 0)
     df['final_score'] = base_score - price_penalty
@@ -216,31 +218,47 @@ if not df.empty:
             
             btn_section = f"""<a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div class='deal-hint'>⚡ Click to check today's best price & coupons</div>"""
             
-            winner_html = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='msrp-label'>*Official MSRP. Check link for real-time pricing.</div><div class='expert-verdict'>{verdict_html}</div><div class='stat-container'>{stats_html}</div><div class='bench-row'><div class='bench-item'>🚀 AnTuTu: <span>{int(winner['antutu']):,}</span></div><div class='bench-item'>📸 DXO/Cam: <span>{int(winner['cam_score'])}/10</span></div></div>{btn_section}</div>"""
+            winner_html = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='msrp-label'>*Official MSRP. Check link for real-time pricing.</div><div class='expert-verdict'>{verdict_html}</div><div class='stat-container'>{stats_html}</div><div class='bench-row'><div class='bench-item'>🚀 AnTuTu: <span>{int(winner['antutu']):,}</span></div><div class='bench-item'>📸 Cam: <span>{int(winner['cam_score'])}/10</span></div></div>{btn_section}</div>"""
             st.markdown(winner_html, unsafe_allow_html=True)
 
         with c2:
             st.markdown("### 🥈 Top Alternatives")
             for i, row in df.iloc[1:6].iterrows():
                 diff = winner['price'] - row['price']
+                save_html = f"<span class='save-tag-box'>SAVE ${diff:,}</span>" if diff > 0 else ""
                 
-                # --- 🔥 FIXED HTML LEAK HERE ---
-                # สร้าง HTML string แบบที่ไม่มีการซ้อน Quote ที่จะทำให้พัง
-                if diff > 0:
-                    save_html = f"<span class='save-tag-box'>SAVE ${diff:,}</span>"
+                # --- 🔥 LOGIC: Smart Tags (Why this rank?) ---
+                rank_num = i + 1
+                if rank_num == 2: rank_badge = "<div class='rank-circle rank-silver'>🥈</div>"
+                elif rank_num == 3: rank_badge = "<div class='rank-circle rank-bronze'>🥉</div>"
+                else: rank_badge = f"<div class='rank-circle'>#{rank_num}</div>"
+
+                # หาจุดเด่นเทียบกับแชมป์
+                smart_tag = ""
+                if row['batt_score'] > winner['batt_score']:
+                    smart_tag = "<span class='reason-badge reason-green'>🔋 Better Battery</span>"
+                elif row['cam_score'] > winner['cam_score']:
+                    smart_tag = "<span class='reason-badge reason-purple'>📸 Better Camera</span>"
+                elif row['price'] < winner['price']:
+                    smart_tag = "<span class='reason-badge reason-green'>💰 Cheaper</span>"
                 else:
-                    save_html = ""
-                
+                    # ถ้าไม่มีอะไรชนะเลย ให้ดึงฉายา (Award) จาก CSV มาโชว์
+                    smart_tag = f"<span class='reason-badge reason-gray'>{row['award']}</span>"
+
                 mini_bars = f"""<div class='mini-bar-container'><div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div></div>"""
                 
                 alt_html = f"""
                 <a href="{row['link']}" target="_blank" class="alt-link">
                     <div class="alt-row">
-                        <div>
-                            <div style="font-weight:bold; font-size:1.1em; color:white;">{i}. {row['name']}</div>
-                            <div style="color:#FBBF24; font-weight:bold;">${row['price']:,} {save_html}</div>
-                            {mini_bars}
-                            <div style="font-size:0.8em; color:#666; margin-top:6px;">Match: {row['match']:.1f}%</div>
+                        <div class="rank-wrap">
+                            {rank_badge} 
+                            <div>
+                                <div style="font-weight:bold; font-size:1.1em; color:white;">
+                                    {row['name']} {smart_tag}
+                                </div>
+                                <div style="color:#FBBF24; font-weight:bold;">${row['price']:,} {save_html}</div>
+                                {mini_bars}
+                            </div>
                         </div>
                         <div style="text-align:right">
                             <div style="font-size:1.3em; font-weight:900; color:#3B82F6;">{row['match']:.0f}%</div>
