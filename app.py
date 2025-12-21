@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Master Fix",
+    page_title="TechChoose - Final Polish",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -23,30 +23,37 @@ def load_data():
     except Exception:
         return pd.DataFrame()
 
-# --- 3. CSS (Super Forced Contrast) ---
+# --- 3. CSS (Final High Contrast Fix) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
-    /* --- SIDEBAR FIX (ไม้ตาย) --- */
+    /* --- SIDEBAR FINAL FIX (เจาะจงทุกจุด) --- */
     section[data-testid="stSidebar"] { background-color: #050505; border-right: 1px solid #222; }
     
-    /* บังคับทุกอย่างใน Sidebar ให้เป็นสีขาว! */
-    section[data-testid="stSidebar"] * { color: #FFFFFF !important; }
-    
-    /* ยกเว้นหัวข้อให้เป็นสีทอง */
-    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 { 
+    /* หัวข้อใหญ่ สีทอง */
+    section[data-testid="stSidebar"] h1, 
+    section[data-testid="stSidebar"] h2, 
+    section[data-testid="stSidebar"] h3 { 
         color: #FBBF24 !important; 
     }
     
-    /* Input Box styling */
+    /* ป้าย Label ทุกอัน สีขาวหนา */
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] .stMarkdown p {
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        font-size: 1em !important;
+    }
+
+    /* Input Box Styling */
     div[data-baseweb="select"] > div { background-color: #222 !important; border: 1px solid #555 !important; }
-    div[data-baseweb="select"] span { color: white !important; }
+    div[data-baseweb="select"] span { color: white !important; font-weight: 500; }
     div[data-baseweb="select"] svg { fill: #FBBF24 !important; }
     
-    /* --- MAIN CONTENT --- */
+    /* --- MAIN CONTENT CSS --- */
     .winner-box {
         background: radial-gradient(circle at top right, #111, #000);
         border: 2px solid #3B82F6;
@@ -135,7 +142,6 @@ def get_expert_verdict(row, mode):
     return verdict
 
 def stat_bar_html(label, score, color):
-    # One-line HTML
     return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
 
 # --- 6. MAIN APP ---
@@ -156,9 +162,12 @@ if not df.empty:
         c1, c2 = st.columns([1.5, 1], gap="large")
 
         with c1:
-            # HTML String บรรทัดเดียว (แก้ 100%)
-            winner_html = f"<div class='winner-box'><div class='award-badge'>🏆 {winner['award']}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{get_expert_verdict(winner, lifestyle)}</div><div class='stat-container'>{stat_bar_html('🚀 PERFORMANCE', winner['performance'], '#3B82F6')}{stat_bar_html('📸 CAMERA', winner['camera'], '#A855F7')}{stat_bar_html('🔋 BATTERY', winner['battery'], '#10B981')}</div><div class='bench-row'><div class='bench-item'>🚀 AnTuTu: <span>{int(winner['antutu']):,}</span></div><div class='bench-item'>📸 DXOMARK: <span>{int(winner['dxomark'])}</span></div></div><a href='{winner['link']}' target='_blank' class='amazon-btn'>🛒 CHECK GLOBAL PRICE</a></div>"
-            st.markdown(winner_html, unsafe_allow_html=True)
+            # Winner HTML (แยกส่วนประกอบ เพื่อความชัวร์)
+            verdict_html = get_expert_verdict(winner, lifestyle)
+            stats_html = f"{stat_bar_html('🚀 PERFORMANCE', winner['performance'], '#3B82F6')}{stat_bar_html('📸 CAMERA', winner['camera'], '#A855F7')}{stat_bar_html('🔋 BATTERY', winner['battery'], '#10B981')}"
+            
+            winner_final_html = f"""<div class='winner-box'><div class='award-badge'>🏆 {winner['award']}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{verdict_html}</div><div class='stat-container'>{stats_html}</div><div class='bench-row'><div class='bench-item'>🚀 AnTuTu: <span>{int(winner['antutu']):,}</span></div><div class='bench-item'>📸 DXOMARK: <span>{int(winner['dxomark'])}</span></div></div><a href='{winner['link']}' target='_blank' class='amazon-btn'>🛒 CHECK GLOBAL PRICE</a></div>"""
+            st.markdown(winner_final_html, unsafe_allow_html=True)
 
         with c2:
             st.markdown("### 🥈 Top Alternatives")
@@ -166,14 +175,16 @@ if not df.empty:
                 diff = winner['price'] - row['price']
                 save_tag = f"<span style='color:#10B981; margin-left:10px;'>SAVE ${diff:,}</span>" if diff > 0 else ""
                 
-                # --- MINI BARS (One-Line String) ---
-                # เขียน HTML แบบบรรทัดเดียวยาวๆ ไปเลย เพื่อกันไม่ให้ Streamlit นึกว่าเป็น Code block
-                mini_bars = f"<div class='mini-bar-container'><div class='mini-stat'><div class='mini-label'>🚀 {row['performance']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['performance']*10}%; background:#3B82F6;'></div></div></div><div class='mini-stat'><div class='mini-label'>📸 {row['camera']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['camera']*10}%; background:#A855F7;'></div></div></div><div class='mini-stat'><div class='mini-label'>🔋 {row['battery']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['battery']*10}%; background:#10B981;'></div></div></div></div>"
+                # --- MINI BARS FIX (แยกสร้างทีละส่วน) ---
+                bar1 = f"<div class='mini-stat'><div class='mini-label'>🚀 {row['performance']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['performance']*10}%; background:#3B82F6;'></div></div></div>"
+                bar2 = f"<div class='mini-stat'><div class='mini-label'>📸 {row['camera']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['camera']*10}%; background:#A855F7;'></div></div></div>"
+                bar3 = f"<div class='mini-stat'><div class='mini-label'>🔋 {row['battery']}</div><div class='mini-track'><div class='mini-fill' style='width:{row['battery']*10}%; background:#10B981;'></div></div></div>"
+                mini_bars_html = f"<div class='mini-bar-container'>{bar1}{bar2}{bar3}</div>"
                 
-                # HTML รวมร่าง (One-Line)
-                alt_html = f"<a href='{row['link']}' target='_blank' class='alt-link'><div class='alt-row'><div><div style='font-weight:bold; font-size:1.1em; color:white;'>{i}. {row['name']}</div><div style='color:#FBBF24; font-weight:bold;'>${row['price']:,} {save_tag}</div>{mini_bars}<div style='font-size:0.8em; color:#666; margin-top:6px;'>AnTuTu: {int(row['antutu']):,}</div></div><div style='text-align:right'><div style='font-size:1.3em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div><div class='buy-hint' style='color:#FBBF24; font-size:0.8em; font-weight:bold; margin-top:5px;'>VIEW ></div></div></div></a>"
+                # Alt HTML Final Assembly
+                alt_final_html = f"""<a href='{row['link']}' target='_blank' class='alt-link'><div class='alt-row'><div><div style='font-weight:bold; font-size:1.1em; color:white;'>{i}. {row['name']}</div><div style='color:#FBBF24; font-weight:bold;'>${row['price']:,} {save_tag}</div>{mini_bars_html}<div style='font-size:0.8em; color:#666; margin-top:6px;'>AnTuTu: {int(row['antutu']):,}</div></div><div style='text-align:right'><div style='font-size:1.3em; font-weight:900; color:#3B82F6;'>{row['match']:.0f}%</div><div style='color:#FBBF24; font-size:0.8em; font-weight:bold; margin-top:5px;'>VIEW ></div></div></div></a>"""
                 
-                st.markdown(alt_html, unsafe_allow_html=True)
+                st.markdown(alt_final_html, unsafe_allow_html=True)
 
     else:
         st.warning(f"No devices found under ${budget}. Please adjust your filters.")
