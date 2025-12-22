@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Global Edition",
+    page_title="TechChoose - Final Pro",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -41,7 +41,7 @@ def load_data():
 
     return df
 
-# --- 3. CSS (Ultra Dark + Input Fix) ---
+# --- 3. CSS (Ultra Dark + Input Button Fix) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
@@ -54,11 +54,6 @@ st.markdown("""
         color: white !important;
         border: 1px solid #333 !important;
     }
-    div[data-testid="stExpander"] {
-        background-color: transparent !important;
-        border: none !important;
-        color: white !important;
-    }
     div[data-testid="stExpander"] details {
         background-color: #111 !important;
         border-color: #333 !important;
@@ -68,6 +63,7 @@ st.markdown("""
         color: white !important;
     }
     div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
+    div[data-testid="stExpander"] * { color: white !important; }
     div[data-testid="stExpander"] svg { fill: white !important; }
 
     /* 🔥 Labels */
@@ -99,20 +95,27 @@ st.markdown("""
         color: #FBBF24 !important;
     }
     
-    /* 🔥 NEW FIX: Number Inputs (Custom Mode) */
-    div[data-baseweb="input"] > div {
-        background-color: #111 !important; /* พื้นหลังดำ */
+    /* 🔥 FIX: Number Inputs & Buttons (+/-) */
+    /* 1. ตัวกล่อง Input หลัก */
+    div[data-testid="stNumberInput"] div[data-baseweb="input"] {
+        background-color: #111 !important;
         border: 1px solid #444 !important;
-        color: white !important; /* ตัวเลขขาว */
-    }
-    input {
-        color: white !important; 
-    }
-    /* ปุ่ม +/- */
-    button[kind="secondary"] {
-        background-color: #222 !important;
         color: white !important;
-        border: 1px solid #444 !important;
+    }
+    /* 2. ตัวเลขข้างใน */
+    div[data-testid="stNumberInput"] input {
+        background-color: transparent !important;
+        color: white !important;
+    }
+    /* 3. 🔥 เจาะจงปุ่ม +/- ให้ดำ (แก้จุดขาว) */
+    div[data-testid="stNumberInput"] button {
+        background-color: #222 !important; /* พื้นหลังปุ่มเป็นเทาเข้ม */
+        color: white !important; /* ไอคอนสีขาว */
+        border-color: #444 !important;
+    }
+    /* 4. เก็บตกพื้นหลังอื่นๆ ใน Input */
+    div[data-baseweb="input"] > div {
+        background-color: #111 !important;
     }
 
     /* Responsive */
