@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Smooth Compare",
+    page_title="TechChoose - Final Polished",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -42,12 +42,12 @@ def load_data():
 
     return df
 
-# --- 3. CSS (NUCLEAR DARK MODE) ---
+# --- 3. CSS (NUCLEAR DARK MODE + COLOR FIXES) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* Force Black Background */
+    /* Global Settings */
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
     
     /* Expander Fix */
@@ -63,27 +63,20 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border: 1px solid #333; }
 
-    /* Input Colors */
+    /* Inputs Colors */
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="popover"], ul[role="listbox"] { background-color: #111 !important; color: white !important; }
     li[role="option"] { background-color: #111 !important; color: white !important; }
     li[role="option"]:hover { background-color: #333 !important; color: #FBBF24 !important; }
-
-    /* Number Inputs */
     div[data-testid="stNumberInput"] div[data-baseweb="input"] { background-color: #111 !important; }
     div[data-testid="stNumberInput"] input { background-color: transparent !important; color: white !important; }
     div[data-testid="stNumberInput"] button { background-color: #222 !important; color: white !important; border-color: #444 !important; }
 
-    /* Form Submit Button */
+    /* Button */
     button[kind="secondaryFormSubmit"] {
-        background-color: #3B82F6 !important;
-        color: white !important;
-        border: none !important;
-        font-weight: 900 !important;
-        padding: 10px 20px !important;
-        border-radius: 8px !important;
-        width: 100% !important;
+        background-color: #3B82F6 !important; color: white !important; border: none !important;
+        font-weight: 900 !important; padding: 10px 20px !important; border-radius: 8px !important; width: 100% !important;
     }
     button[kind="secondaryFormSubmit"]:hover { background-color: #2563EB !important; }
 
@@ -108,9 +101,12 @@ st.markdown("""
     .val-win { color: #10B981; } 
     .rec-badge { background: #10B981; color: black; font-weight: 900; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 0.8em; }
 
-    .alt-link { text-decoration: none; display: block; }
+    /* Alt List Styling (Tab 1) */
+    .alt-link { text-decoration: none !important; color: inherit !important; display: block; } /* 🔥 FIX COLOR OVERRIDE */
     .alt-row { background: #0A0A0A; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
     .rank-circle { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; background: #222; border: 1px solid #444; color: #888; }
+    .rank-silver { background: linear-gradient(135deg, #E0E0E0, #999); color: black; border: none; }
+    .rank-bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; border: none; }
     .mini-bar-container { display: flex; gap: 4px; margin-top: 6px; }
     .mini-stat { width: 30px; }
     .mini-track { width: 100%; height: 3px; background: #333; border-radius: 2px; }
@@ -197,41 +193,39 @@ with tab1:
             st.write("")
             st.markdown("### 🥈 Top Alternatives")
             for i, row in df_f.iloc[1:6].iterrows():
-                rank_badge = f"<div class='rank-circle'>{i+1}</div>"
+                rank_num = i + 1
+                
+                # 🔥 FIX: คืนชีพเหรียญเงิน/เหรียญทองแดง
+                rank_cls = "rank-circle"
+                if rank_num == 2: rank_cls = "rank-circle rank-silver"
+                if rank_num == 3: rank_cls = "rank-circle rank-bronze"
+                
+                rank_badge = f"<div class='{rank_cls}'>{rank_num}</div>"
+                
                 mini_bars = f"""<div class='mini-bar-container'><div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div></div>"""
                 
-                alt_html = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-row"><div style="display:flex; align-items:center; gap:12px;">{rank_badge}<div><div style="font-weight:bold; font-size:1em; color:white;">{row['name']}</div><div style="color:#FBBF24; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>{mini_bars}</div></div><div style="text-align:right"><div style="font-size:1.1em; font-weight:900; color:#3B82F6;">{row['match']:.0f}%</div><div style="color:#FBBF24; font-size:0.7em; font-weight:bold;">VIEW ></div></div></div></a>"""
+                # 🔥 FIX: บังคับสีตัวอักษรไม่ให้กลืนกัน (style='color:white' / style='color:#FBBF24')
+                alt_html = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-row"><div style="display:flex; align-items:center; gap:12px;">{rank_badge}<div><div style="font-weight:bold; font-size:1em; color:white !important;">{row['name']}</div><div style="color:#FBBF24 !important; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>{mini_bars}</div></div><div style="text-align:right"><div style="font-size:1.1em; font-weight:900; color:#3B82F6 !important;">{row['match']:.0f}%</div><div style="color:#FBBF24 !important; font-size:0.7em; font-weight:bold;">VIEW ></div></div></div></a>"""
                 st.markdown(alt_html, unsafe_allow_html=True)
         else:
             st.warning("No phones found under this budget.")
 
 # ==========================================
-# TAB 2: VS MODE (STABLE FORM FIX)
+# TAB 2: VS MODE (STABLE & FORMATTED)
 # ==========================================
 with tab2:
     st.markdown("### 🥊 Head-to-Head Comparison")
     
-    # 🔥 FIX: ใช้ st.form เพื่อป้องกันการรีเฟรชหน้าเว็บตอนเลือก
     with st.form("vs_form"):
         st.caption("Select models and click Compare to see results.")
-        
         judge = st.selectbox("⚖️ Decide Winner By (ตัดสินจาก):", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
-        
-        # 🔥 FIX: เรียง A-Z
         all_models = sorted(df['name'].unique())
-        
         col_a, col_b = st.columns(2)
         with col_a: p1_name = st.selectbox("Select Phone A", all_models, index=0, key="p1")
-        
-        # Set default Phone B to be different from A if possible
         idx2 = 1 if len(all_models) > 1 else 0
         with col_b: p2_name = st.selectbox("Select Phone B", all_models, index=idx2, key="p2")
-        
-        # ปุ่มอยู่ใน Form กดแล้วถึงจะประมวลผล (แก้หน้าเด้ง)
         submitted = st.form_submit_button("⚡ COMPARE MODELS")
     
-    # แสดงผลเมื่อกดปุ่ม หรือ (เพื่อให้หน้าไม่ว่างตอนแรก) เราอาจจะแสดงผลเลยถ้ามีค่า Default
-    # แต่การใช้ submitted จะช่วยให้คนรู้ว่าต้องกด
     if submitted or (p1_name and p2_name): 
         r1 = df[df['name'] == p1_name].iloc[0]
         r2 = df[df['name'] == p2_name].iloc[0]
@@ -245,7 +239,6 @@ with tab2:
         s2 = (r2['perf_score']*w_p) + (r2['cam_score']*w_c) + (r2['batt_score']*w_b) + (r2['value']*w_v)
         
         win1 = s1 >= s2
-        
         cls1 = "vs-winner-border" if win1 else ""
         cls2 = "vs-winner-border" if not win1 else ""
         bad1 = "<div class='rec-badge'>👑 RECOMMENDED</div>" if win1 else "<div style='height:40px;'></div>"
@@ -255,12 +248,13 @@ with tab2:
 
         c1, c2 = st.columns(2)
         
+        # 🔥 FIX: ทศนิยม 1 ตำแหน่ง ({r1['perf_score']:.1f})
         with c1:
-            card1_html = f"""<div class='vs-card {cls1}'>{bad1}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div><a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
+            card1_html = f"""<div class='vs-card {cls1}'>{bad1}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div><a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card1_html, unsafe_allow_html=True)
 
         with c2:
-            card2_html = f"""<div class='vs-card {cls2}'>{bad2}<div class='vs-title'>{r2['name']}</div><div class='vs-price'>${r2['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r2['antutu'], r1['antutu'])}'>{int(r2['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r2['perf_score'], r1['perf_score'])}'>{r2['perf_score']}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r2['cam_score'], r1['cam_score'])}'>{r2['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r2['batt_score'], r1['batt_score'])}'>{r2['batt_score']}</span></div><a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
+            card2_html = f"""<div class='vs-card {cls2}'>{bad2}<div class='vs-title'>{r2['name']}</div><div class='vs-price'>${r2['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r2['antutu'], r1['antutu'])}'>{int(r2['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r2['perf_score'], r1['perf_score'])}'>{r2['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r2['cam_score'], r1['cam_score'])}'>{r2['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r2['batt_score'], r1['batt_score'])}'>{r2['batt_score']}</span></div><a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card2_html, unsafe_allow_html=True)
             
         st.write("---")
