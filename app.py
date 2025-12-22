@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Universal",
+    page_title="TechChoose - Universal Pro",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,7 +19,7 @@ def load_data():
         return pd.DataFrame()
 
     if not df.empty:
-        # 🔥 แก้จุดตาย 1: นับ iPad ให้เป็น iOS ด้วย
+        # 🔥 Logic แก้จุดตาย iPad/iPhone
         def get_os(name):
             name_str = str(name).lower()
             if 'iphone' in name_str or 'ipad' in name_str:
@@ -28,7 +28,6 @@ def load_data():
             
         df['os_type'] = df['name'].apply(get_os)
         
-        # Logic คะแนน
         if 'antutu' in df.columns:
             df['perf_score'] = (df['antutu'] / 3500000) * 10 
             df['perf_score'] = df['perf_score'].clip(upper=10)
@@ -46,7 +45,7 @@ def load_data():
 
     return df
 
-# --- 3. CSS (Mobile & Tablet Optimized) ---
+# --- 3. CSS (Responsive Fix) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
@@ -55,14 +54,14 @@ st.markdown("""
     .hero-title { font-size: 3.5em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 10px; }
     .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 5px; }
 
-    /* 🔥 แก้จุดตาย 2: เพิ่มขนาดจอ iPad (Tablet) */
+    /* 🔥 Tablet / iPad Fix */
     @media only screen and (max-width: 1024px) {
         .hero-title { font-size: 2.5em !important; }
         .hero-price { font-size: 2.5em !important; }
         .amazon-btn { padding: 18px !important; font-size: 1.2em !important; }
     }
     
-    /* ขนาดจอ Mobile (เล็กสุด) */
+    /* Mobile Fix */
     @media only screen and (max-width: 600px) {
         .hero-title { font-size: 2.0em !important; }
         .hero-price { font-size: 2.0em !important; }
@@ -140,6 +139,23 @@ with st.expander("🔍 **TAP HERE TO FILTER / เลือกงบและส�
 
 st.divider()
 
+# --- 5. FUNCTIONS (ส่วนที่หายไป ผมเติมให้แล้วครับ) ---
+def get_dynamic_badge(mode, price):
+    if "High-End" in mode: return "💎 ABSOLUTE BEST"
+    elif "Gamer" in mode: return "🏆 GAMING BEAST"
+    elif "Creator" in mode: return "🎥 CREATOR CHOICE"
+    elif "Student" in mode: return "💰 SMART SAVER"
+    elif "Business" in mode: return "💼 WORKHORSE"
+    elif "General" in mode: return "⭐ BALANCED PICK"
+    else: return "⭐ TOP FLAGSHIP"
+
+def get_expert_verdict(row, mode):
+    if "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b>."
+    return f"Excellent choice based on your preferences."
+
+def stat_bar_html(label, score, color):
+    return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
+
 # --- 6. MAIN APP ---
 df = load_data()
 
@@ -157,13 +173,13 @@ if not df.empty:
 
     if len(df) > 0:
         winner = df.iloc[0]
-        current_badge = "💎 BEST CHOICE" # Simplified for logic
+        current_badge = get_dynamic_badge(lifestyle, winner['price'])
         
         # HTML Rendering
         stats_html = f"{stat_bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATT', winner['batt_score'], '#10B981')}"
         btn_section = f"""<a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div class='deal-hint'>⚡ Check today's price</div>"""
         
-        winner_html = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>Excellent choice based on your needs.</div><div class='stat-container'>{stats_html}</div>{btn_section}</div>"""
+        winner_html = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{get_expert_verdict(winner, lifestyle)}</div><div class='stat-container'>{stats_html}</div>{btn_section}</div>"""
         st.markdown(winner_html, unsafe_allow_html=True)
 
         st.write("")
