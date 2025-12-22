@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Fixed",
+    page_title="TechChoose - Smooth Compare",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -50,37 +50,20 @@ st.markdown("""
     /* Force Black Background */
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
     
-    /* 🔥 FIX EXPANDER WHITE BAR */
-    .streamlit-expanderHeader {
-        background-color: #111 !important;
-        color: white !important;
-        border: 1px solid #333 !important;
-    }
-    div[data-testid="stExpander"] {
-        background-color: transparent !important;
-        border: none !important;
-    }
-    div[data-testid="stExpander"] details {
-        background-color: #111 !important;
-        border-color: #333 !important;
-    }
-    div[data-testid="stExpander"] summary {
-        background-color: #111 !important;
-        color: white !important;
-    }
-    div[data-testid="stExpander"] summary:hover {
-        color: #FBBF24 !important;
-    }
-    div[data-testid="stExpander"] * {
-        color: white !important;
-    }
+    /* Expander Fix */
+    .streamlit-expanderHeader { background-color: #111 !important; color: white !important; border: 1px solid #333 !important; }
+    div[data-testid="stExpander"] { background-color: transparent !important; border: none !important; }
+    div[data-testid="stExpander"] details { background-color: #111 !important; border-color: #333 !important; }
+    div[data-testid="stExpander"] summary { background-color: #111 !important; color: white !important; }
+    div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
+    div[data-testid="stExpander"] * { color: white !important; }
 
     /* Tabs Styling */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border: 1px solid #333; }
 
-    /* Inputs Colors */
+    /* Input Colors */
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="popover"], ul[role="listbox"] { background-color: #111 !important; color: white !important; }
@@ -92,21 +75,30 @@ st.markdown("""
     div[data-testid="stNumberInput"] input { background-color: transparent !important; color: white !important; }
     div[data-testid="stNumberInput"] button { background-color: #222 !important; color: white !important; border-color: #444 !important; }
 
-    /* Cards & Badges */
+    /* Form Submit Button */
+    button[kind="secondaryFormSubmit"] {
+        background-color: #3B82F6 !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 900 !important;
+        padding: 10px 20px !important;
+        border-radius: 8px !important;
+        width: 100% !important;
+    }
+    button[kind="secondaryFormSubmit"]:hover { background-color: #2563EB !important; }
+
+    /* Cards */
     .hero-title { font-size: 3.5em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 10px; }
     .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 5px; }
-    
     .winner-box { background: radial-gradient(circle at top right, #111, #000); border: 2px solid #3B82F6; border-radius: 20px; padding: 40px; box-shadow: 0 0 60px rgba(59, 130, 246, 0.25); }
-    
     .stat-box { background: #151515; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #333; }
     .stat-label { color: #888; font-size: 0.7em; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
     .stat-val { font-size: 1.2em; font-weight: 900; color: white; }
     .bar-bg { background: #333; height: 4px; border-radius: 2px; margin-top: 5px; overflow: hidden; }
-    
     .amazon-btn { background: #3B82F6; color: white !important; padding: 22px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.4em; margin-top: 20px; transition: 0.3s; }
     .deal-hint { text-align: center; color: #10B981; font-size: 0.9em; margin-top: 10px; font-weight: bold; }
 
-    /* VS Card Styles */
+    /* VS Card */
     .vs-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; height: 100%; }
     .vs-winner-border { border: 2px solid #10B981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
     .vs-title { font-size: 1.3em; font-weight: 900; margin-bottom: 5px; min-height: 50px; display:flex; align-items:center; justify-content:center;}
@@ -199,9 +191,7 @@ with tab1:
 
             stats_html = f"{bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{bar_html('🔋 BATT', winner['batt_score'], '#10B981')}"
             
-            # 🔥 FIX: NO INDENTATION HERE!
             winner_card_html = f"""<div class='winner-box'><div style='background:#F59E0B; color:black; padding:8px 16px; border-radius:50px; display:inline-block; font-weight:900; font-size:0.8em; margin-bottom:15px;'>{badge_txt}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div style='color:#888; font-style:italic; font-size:0.8em; margin-bottom:20px;'>*Official MSRP. Check link for real-time pricing.</div><div style='background:#111; border-left:5px solid #3B82F6; padding:15px; margin-bottom:25px; border-radius:0 10px 10px 0;'>Excellent choice based on your preferences.</div><div style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:25px;'>{stats_html}</div><a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div class='deal-hint'>⚡ Click to check today's best price & coupons</div></div>"""
-            
             st.markdown(winner_card_html, unsafe_allow_html=True)
             
             st.write("")
@@ -210,25 +200,39 @@ with tab1:
                 rank_badge = f"<div class='rank-circle'>{i+1}</div>"
                 mini_bars = f"""<div class='mini-bar-container'><div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div></div>"""
                 
-                # 🔥 FIX: NO INDENTATION HERE EITHER!
                 alt_html = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-row"><div style="display:flex; align-items:center; gap:12px;">{rank_badge}<div><div style="font-weight:bold; font-size:1em; color:white;">{row['name']}</div><div style="color:#FBBF24; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>{mini_bars}</div></div><div style="text-align:right"><div style="font-size:1.1em; font-weight:900; color:#3B82F6;">{row['match']:.0f}%</div><div style="color:#FBBF24; font-size:0.7em; font-weight:bold;">VIEW ></div></div></div></a>"""
                 st.markdown(alt_html, unsafe_allow_html=True)
         else:
             st.warning("No phones found under this budget.")
 
 # ==========================================
-# TAB 2: VS MODE
+# TAB 2: VS MODE (STABLE FORM FIX)
 # ==========================================
 with tab2:
     st.markdown("### 🥊 Head-to-Head Comparison")
     
-    judge = st.selectbox("⚖️ Decide Winner By (ตัดสินจาก):", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
+    # 🔥 FIX: ใช้ st.form เพื่อป้องกันการรีเฟรชหน้าเว็บตอนเลือก
+    with st.form("vs_form"):
+        st.caption("Select models and click Compare to see results.")
+        
+        judge = st.selectbox("⚖️ Decide Winner By (ตัดสินจาก):", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
+        
+        # 🔥 FIX: เรียง A-Z
+        all_models = sorted(df['name'].unique())
+        
+        col_a, col_b = st.columns(2)
+        with col_a: p1_name = st.selectbox("Select Phone A", all_models, index=0, key="p1")
+        
+        # Set default Phone B to be different from A if possible
+        idx2 = 1 if len(all_models) > 1 else 0
+        with col_b: p2_name = st.selectbox("Select Phone B", all_models, index=idx2, key="p2")
+        
+        # ปุ่มอยู่ใน Form กดแล้วถึงจะประมวลผล (แก้หน้าเด้ง)
+        submitted = st.form_submit_button("⚡ COMPARE MODELS")
     
-    col_a, col_b = st.columns(2)
-    with col_a: p1_name = st.selectbox("Select Phone A", df['name'].unique(), index=0, key="p1")
-    with col_b: p2_name = st.selectbox("Select Phone B", df['name'].unique(), index=1, key="p2")
-    
-    if p1_name and p2_name:
+    # แสดงผลเมื่อกดปุ่ม หรือ (เพื่อให้หน้าไม่ว่างตอนแรก) เราอาจจะแสดงผลเลยถ้ามีค่า Default
+    # แต่การใช้ submitted จะช่วยให้คนรู้ว่าต้องกด
+    if submitted or (p1_name and p2_name): 
         r1 = df[df['name'] == p1_name].iloc[0]
         r2 = df[df['name'] == p2_name].iloc[0]
         
@@ -252,7 +256,6 @@ with tab2:
         c1, c2 = st.columns(2)
         
         with c1:
-            # 🔥 FIX: NO INDENTATION!
             card1_html = f"""<div class='vs-card {cls1}'>{bad1}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div><a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card1_html, unsafe_allow_html=True)
 
