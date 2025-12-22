@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Dark Mode",
+    page_title="TechChoose - Global Edition",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -41,14 +41,14 @@ def load_data():
 
     return df
 
-# --- 3. CSS (Fix White Bar & All Dark Mode) ---
+# --- 3. CSS (Ultra Dark Mode) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
 
-    /* 🔥 แก้แถบขาว (Expander) แบบถอนรากถอนโคน */
+    /* Expander Fix */
     .streamlit-expanderHeader {
         background-color: #111 !important;
         color: white !important;
@@ -64,13 +64,12 @@ st.markdown("""
         border-color: #333 !important;
     }
     div[data-testid="stExpander"] summary {
-        background-color: #222 !important; /* สีพื้นหลังหัวข้อ */
+        background-color: #222 !important;
         color: white !important;
     }
     div[data-testid="stExpander"] summary:hover {
         color: #FBBF24 !important;
     }
-    /* บังคับตัวหนังสือข้างในให้ขาว */
     div[data-testid="stExpander"] * {
         color: white !important;
     }
@@ -78,14 +77,14 @@ st.markdown("""
         fill: white !important;
     }
 
-    /* 🔥 Labels หัวข้อ */
+    /* Labels */
     label[data-testid="stWidgetLabel"] p {
         color: #FFFFFF !important;
         font-size: 1.1rem !important;
         font-weight: 700 !important;
     }
     
-    /* 🔥 Dropdowns */
+    /* Dropdowns */
     div[data-baseweb="select"] > div {
         background-color: #111 !important;
         border: 1px solid #444 !important;
@@ -160,12 +159,13 @@ st.markdown("""
 st.title("🛒 TechChoose")
 st.markdown("<div class='update-badge'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
 
-with st.expander("🔍 **TAP HERE TO FILTER / เลือกงบและสเปก**", expanded=True):
+# 🔥 แก้ภาษาไทยออกหมดแล้วครับ (English Only)
+with st.expander("🔍 **TAP HERE TO FILTER & CUSTOMIZE**", expanded=True):
     col_filter1, col_filter2 = st.columns(2)
     with col_filter1:
-        os_choice = st.selectbox("Operating System (ระบบปฏิบัติการ)", ["Any", "iOS (Apple)", "Android"])
+        os_choice = st.selectbox("📱 Operating System", ["Any", "iOS (Apple)", "Android"])
     with col_filter2:
-        lifestyle = st.selectbox("User Persona (รูปแบบการใช้งาน)", ["💎 Ultimate High-End", "🏠 General Use", "🎮 Hardcore Gamer", "📸 Content Creator", "💼 Business Pro", "💰 Student / Budget", "🛠️ Custom"])
+        lifestyle = st.selectbox("👤 User Persona", ["💎 Ultimate High-End", "🏠 General Use", "🎮 Hardcore Gamer", "📸 Content Creator", "💼 Business Pro", "💰 Student / Budget", "🛠️ Custom"])
 
     if "High-End" in lifestyle: budget = 9999 
     elif "Custom" in lifestyle: budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50)
