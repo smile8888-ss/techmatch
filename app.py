@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Polished",
+    page_title="TechChoose - Final Master",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -42,12 +42,12 @@ def load_data():
 
     return df
 
-# --- 3. CSS (NUCLEAR DARK MODE + COLOR FIXES) ---
+# --- 3. CSS (NUCLEAR DARK MODE + COLOR ENFORCEMENT) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* Global Settings */
+    /* Global Background */
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
     
     /* Expander Fix */
@@ -63,7 +63,7 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border: 1px solid #333; }
 
-    /* Inputs Colors */
+    /* Input Colors */
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="popover"], ul[role="listbox"] { background-color: #111 !important; color: white !important; }
@@ -76,7 +76,7 @@ st.markdown("""
     /* Button */
     button[kind="secondaryFormSubmit"] {
         background-color: #3B82F6 !important; color: white !important; border: none !important;
-        font-weight: 900 !important; padding: 10px 20px !important; border-radius: 8px !important; width: 100% !important;
+        font-weight: 900 !important; padding: 12px 20px !important; border-radius: 8px !important; width: 100% !important;
     }
     button[kind="secondaryFormSubmit"]:hover { background-color: #2563EB !important; }
 
@@ -102,11 +102,13 @@ st.markdown("""
     .rec-badge { background: #10B981; color: black; font-weight: 900; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 0.8em; }
 
     /* Alt List Styling (Tab 1) */
-    .alt-link { text-decoration: none !important; color: inherit !important; display: block; } /* 🔥 FIX COLOR OVERRIDE */
+    .alt-link { text-decoration: none !important; display: block; }
     .alt-row { background: #0A0A0A; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    
     .rank-circle { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; background: #222; border: 1px solid #444; color: #888; }
     .rank-silver { background: linear-gradient(135deg, #E0E0E0, #999); color: black; border: none; }
     .rank-bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; border: none; }
+    
     .mini-bar-container { display: flex; gap: 4px; margin-top: 6px; }
     .mini-stat { width: 30px; }
     .mini-track { width: 100%; height: 3px; background: #333; border-radius: 2px; }
@@ -130,7 +132,7 @@ df = load_data()
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
 # ==========================================
-# TAB 1: FIND BEST MATCH
+# TAB 1: FIND BEST MATCH (Fixed Rankings & Colors)
 # ==========================================
 with tab1:
     with st.expander("🔍 **TAP HERE TO FILTER & CUSTOMIZE**", expanded=True):
@@ -182,6 +184,7 @@ with tab1:
             elif "Gamer" in lifestyle: badge_txt = "🏆 GAMING BEAST"
             else: badge_txt = "⭐ TOP RECOMMENDATION"
             
+            # 🔥 FIX: ทศนิยม 1 ตำแหน่ง
             def bar_html(lbl, val, col):
                 return f"<div class='stat-box'><div class='stat-label'>{lbl}</div><div class='stat-val'>{val:.1f}/10</div><div class='bar-bg'><div style='width:{val*10}%; height:100%; background:{col};'></div></div></div>"
 
@@ -195,37 +198,43 @@ with tab1:
             for i, row in df_f.iloc[1:6].iterrows():
                 rank_num = i + 1
                 
-                # 🔥 FIX: คืนชีพเหรียญเงิน/เหรียญทองแดง
+                # 🔥 FIX: ให้อันดับ 2, 3 มีสีต่างกัน (เงิน/ทองแดง)
                 rank_cls = "rank-circle"
                 if rank_num == 2: rank_cls = "rank-circle rank-silver"
-                if rank_num == 3: rank_cls = "rank-circle rank-bronze"
+                elif rank_num == 3: rank_cls = "rank-circle rank-bronze"
                 
                 rank_badge = f"<div class='{rank_cls}'>{rank_num}</div>"
-                
                 mini_bars = f"""<div class='mini-bar-container'><div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div></div>"""
                 
-                # 🔥 FIX: บังคับสีตัวอักษรไม่ให้กลืนกัน (style='color:white' / style='color:#FBBF24')
+                # 🔥 FIX: บังคับสีตัวอักษร ขาว / ทอง / ฟ้า ไม่ให้กลืนกัน
                 alt_html = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-row"><div style="display:flex; align-items:center; gap:12px;">{rank_badge}<div><div style="font-weight:bold; font-size:1em; color:white !important;">{row['name']}</div><div style="color:#FBBF24 !important; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>{mini_bars}</div></div><div style="text-align:right"><div style="font-size:1.1em; font-weight:900; color:#3B82F6 !important;">{row['match']:.0f}%</div><div style="color:#FBBF24 !important; font-size:0.7em; font-weight:bold;">VIEW ></div></div></div></a>"""
                 st.markdown(alt_html, unsafe_allow_html=True)
         else:
             st.warning("No phones found under this budget.")
 
 # ==========================================
-# TAB 2: VS MODE (STABLE & FORMATTED)
+# TAB 2: VS MODE (STABLE & NO JUMP)
 # ==========================================
 with tab2:
     st.markdown("### 🥊 Head-to-Head Comparison")
     
+    # 🔥 FIX: ใช้ Form เพื่อลดการกระตุก แต่จัด UI ให้สวย
     with st.form("vs_form"):
         st.caption("Select models and click Compare to see results.")
+        
         judge = st.selectbox("⚖️ Decide Winner By (ตัดสินจาก):", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
+        
+        # Sorted A-Z
         all_models = sorted(df['name'].unique())
+        
         col_a, col_b = st.columns(2)
         with col_a: p1_name = st.selectbox("Select Phone A", all_models, index=0, key="p1")
         idx2 = 1 if len(all_models) > 1 else 0
         with col_b: p2_name = st.selectbox("Select Phone B", all_models, index=idx2, key="p2")
+        
         submitted = st.form_submit_button("⚡ COMPARE MODELS")
     
+    # Logic แสดงผล (จะโชว์ค้างไว้แม้กดปุ่มแล้ว)
     if submitted or (p1_name and p2_name): 
         r1 = df[df['name'] == p1_name].iloc[0]
         r2 = df[df['name'] == p2_name].iloc[0]
@@ -248,7 +257,7 @@ with tab2:
 
         c1, c2 = st.columns(2)
         
-        # 🔥 FIX: ทศนิยม 1 ตำแหน่ง ({r1['perf_score']:.1f})
+        # 🔥 FIX: ทศนิยม 1 ตำแหน่ง ตรง Speed ({r1['perf_score']:.1f})
         with c1:
             card1_html = f"""<div class='vs-card {cls1}'>{bad1}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div><a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card1_html, unsafe_allow_html=True)
