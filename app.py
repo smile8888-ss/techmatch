@@ -4,7 +4,7 @@ import datetime
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Smart Reason",
+    page_title="TechChoose - Stable Pro",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -13,6 +13,7 @@ st.set_page_config(
 # --- 2. LOAD DATA ---
 @st.cache_data(ttl=60)
 def load_data():
+    # 🔥 IMPORTANT: เปลี่ยน Link ตรงนี้เป็นของ Google Sheet พี่นะครับ
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
     try:
         df = pd.read_csv(sheet_url)
@@ -22,26 +23,38 @@ def load_data():
     if not df.empty:
         df['os_type'] = df['name'].apply(lambda x: 'iOS' if 'iPhone' in str(x) else 'Android')
         if 'antutu' in df.columns:
+            # คำนวณ Score จาก AnTuTu
             df['perf_score'] = (df['antutu'] / 3500000) * 10 
             df['perf_score'] = df['perf_score'].clip(upper=10)
         else:
             df['perf_score'] = 8.0 
+        
+        # ใช้ข้อมูลจาก CSV
         if 'camera' in df.columns: df['cam_score'] = df['camera']
         if 'battery' in df.columns: df['batt_score'] = df['battery']
-        if 'award' not in df.columns: df['award'] = "Top Pick" # Fallback
+        if 'award' not in df.columns: df['award'] = "Top Pick"
+        
+        # ถ้าไม่มี AnTuTu ให้สร้าง Fake ขึ้นมากัน Error
         if 'antutu' not in df.columns: df['antutu'] = df['price'] * 2000
+
+        # 🔥 ฝังรหัส Affiliate (สำคัญมาก)
+        my_tag = "techchoose-20"
+        df['link'] = df['link'].apply(lambda x: f"{x}&tag={my_tag}" if '?' in str(x) else f"{x}?tag={my_tag}")
 
     return df
 
-# --- 3. CSS ---
+# --- 3. CSS (Clean & Stable) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
+    /* Sidebar Fix */
     section[data-testid="stSidebar"] { background-color: #050505; border-right: 1px solid #222; }
     section[data-testid="stSidebar"] * { color: #FFFFFF !important; }
     section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 { color: #FBBF24 !important; }
+    
+    /* Input Styling */
     div[data-baseweb="select"] > div { background-color: #222 !important; border: 1px solid #555 !important; }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="select"] svg { fill: #FBBF24 !important; }
@@ -52,6 +65,7 @@ st.markdown("""
         text-align: center; margin-bottom: 20px; font-family: 'JetBrains Mono';
     }
 
+    /* Winner Box */
     .winner-box {
         background: radial-gradient(circle at top right, #111, #000);
         border: 2px solid #3B82F6; border-radius: 20px; padding: 40px;
@@ -100,7 +114,6 @@ st.markdown("""
     .rank-silver { background: linear-gradient(135deg, #E0E0E0, #999); color: black; border: none; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
     .rank-bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; border: none; box-shadow: 0 0 10px rgba(205,127,50,0.2); }
     
-    /* 🔥 NEW: Reason Badge */
     .reason-badge {
         font-size: 0.75em; font-weight: bold; text-transform: uppercase;
         padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle;
