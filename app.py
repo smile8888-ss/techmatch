@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Perfection",
+    page_title="TechChoose - Pro Hierarchy",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -59,7 +59,7 @@ def get_expert_verdict(row, mode):
 def stat_bar_html(label, score, color):
     return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
 
-# --- 4. CSS (ULTRA DARK PRO THEME) ---
+# --- 4. CSS (HIERARCHICAL PRO THEME) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
@@ -67,23 +67,19 @@ st.markdown("""
     /* GLOBAL DARKNESS */
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
     
-    /* 🔥 FIX: EXPANDER WHITE BAR REMOVED */
+    /* EXPANDER & TABS */
     .streamlit-expanderHeader { background-color: #111 !important; color: white !important; border: 1px solid #333 !important; }
-    div[data-testid="stExpander"] { background-color: transparent !important; border: none !important; }
     div[data-testid="stExpander"] details { background-color: #111 !important; border-color: #333 !important; }
     div[data-testid="stExpander"] summary { background-color: #111 !important; color: white !important; }
     div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
     div[data-testid="stExpander"] svg { fill: white !important; }
-
-    /* TEXT VISIBILITY FIX */
-    label, p, .stMarkdown { color: #FFFFFF !important; opacity: 1 !important; }
     
-    /* TABS */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border: 1px solid #333; }
 
     /* INPUTS */
+    label, p, .stMarkdown { color: #FFFFFF !important; }
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="popover"], ul[role="listbox"] { background-color: #111 !important; color: white !important; }
@@ -105,57 +101,54 @@ st.markdown("""
     .stat-label { color: #888; font-size: 0.7em; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
     .stat-val { font-size: 1.2em; font-weight: 900; color: white; }
     .bar-bg { background: #333; height: 4px; border-radius: 2px; margin-top: 5px; overflow: hidden; }
-    
-    .amazon-btn {
-        background: #3B82F6; color: white !important; padding: 18px; display: block;
-        text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none;
-        font-size: 1.2em; margin-top: 20px; transition: 0.3s;
-    }
+    .amazon-btn { background: #3B82F6; color: white !important; padding: 18px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.2em; margin-top: 20px; transition: 0.3s; }
     .amazon-btn:hover { background: #2563EB; }
 
-    /* PRO ALTERNATIVE CARDS (UNIFIED DESIGN) */
+    /* 🔥🔥🔥 NEW HIERARCHICAL ALTERNATIVE CARDS 🔥🔥🔥 */
     .alt-link { text-decoration: none !important; display: block; }
     
-    .alt-card {
-        background: #111;
-        border: 1px solid #333;
-        border-radius: 12px;
-        padding: 18px 25px;
-        margin-bottom: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    /* BASE CARD STYLE */
+    .alt-card-base {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 15px 20px; margin-bottom: 12px; border-radius: 12px;
         transition: all 0.2s ease;
     }
-    .alt-card:hover {
-        border-color: #555;
-        transform: translateX(5px);
-        background: #161616;
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
-    }
     
-    .rank-box {
-        width: 35px; height: 35px;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: 900; border-radius: 8px; font-size: 1.2em;
-        margin-right: 20px;
+    /* 🥈🥉 PREMIUM CARDS (Rank 2 & 3) - เด่น! */
+    .alt-premium {
+        background: #141414; /* สว่างกว่านิดนึง */
+        border: 1px solid #444;
     }
-    /* 🔥 RANK COLORS */
-    .rank-2 { background: linear-gradient(135deg, #E0E0E0, #999); color: black; border: 1px solid #FFF; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
-    .rank-3 { background: linear-gradient(135deg, #E6AC75, #A0522D); color: black; border: 1px solid #FFD700; box-shadow: 0 0 10px rgba(205,127,50,0.2); }
-    .rank-norm { background: #222; color: #888; border: 1px solid #444; }
+    .alt-premium:hover { transform: translateX(5px); background: #1A1A1A; }
+    .silver-glow { border-color: rgba(192, 192, 192, 0.5); box-shadow: 0 0 15px rgba(192, 192, 192, 0.1); }
+    .bronze-glow { border-color: rgba(205, 127, 50, 0.5); box-shadow: 0 0 15px rgba(205, 127, 50, 0.1); }
+
+    /* 🏅 STANDARD CARDS (Rank 4+) - เรียบๆ */
+    .alt-standard {
+        background: #0A0A0A; /* มืดตึ๊ด */
+        border: 1px solid #222;
+        padding: 12px 20px; /* เล็กลงนิดนึง */
+    }
+    .alt-standard:hover { border-color: #333; background: #111; }
+
+    /* BADGES */
+    .rank-box { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 8px; font-size: 1.2em; margin-right: 20px; }
+    .rank-2 { background: linear-gradient(135deg, #E0E0E0, #999); color: black; border: 1px solid #FFF; }
+    .rank-3 { background: linear-gradient(135deg, #E6AC75, #A0522D); color: black; border: 1px solid #FFD700; }
+    .rank-norm { background: #222; color: #888; border: 1px solid #444; font-size: 1em; width: 30px; height: 30px; }
 
     .alt-info { flex-grow: 1; }
-    .alt-name { color: white; font-weight: 700; font-size: 1.2em; margin-bottom: 4px; }
+    .alt-name { color: white; font-weight: 700; font-size: 1.1em; margin-bottom: 4px; }
     .alt-price { color: #FBBF24; font-family: 'JetBrains Mono'; font-weight: bold; font-size: 1em; }
-    
-    .view-btn {
-        color: #FF9900; /* Orange Link */
-        font-weight: 900;
-        font-size: 0.9em;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
+    .view-btn { color: #FF9900; font-weight: 900; font-size: 0.8em; }
+
+    /* MINI BARS (For Premium Cards Only) */
+    .mini-bar-container { display: flex; gap: 4px; margin-top: 8px; opacity: 0.8; }
+    .mini-stat { width: 25px; }
+    .mini-track { width: 100%; height: 3px; background: #333; border-radius: 2px; }
+    .mini-fill-blue { height: 100%; background: #3B82F6; } 
+    .mini-fill-purple { height: 100%; background: #A855F7; } 
+    .mini-fill-green { height: 100%; background: #10B981; }
 
     /* VS CARD */
     .vs-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 25px; text-align: center; height: 100%; }
@@ -165,20 +158,7 @@ st.markdown("""
     .vs-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 12px 0; font-size: 0.95em; color: #BBB; }
     .val-win { color: #10B981; font-weight: 900; }
     .val-lose { color: #555; }
-    
-    /* 🔥 GOLD RECOMMENDED BADGE */
-    .rec-badge { 
-        background: linear-gradient(135deg, #FFD700, #F59E0B); /* Gold Gradient */
-        color: black; 
-        font-weight: 900; 
-        padding: 8px 20px; 
-        border-radius: 50px; 
-        display: inline-block; 
-        margin-bottom: 20px; 
-        font-size: 0.85em; 
-        letter-spacing: 1px;
-        box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
-    }
+    .rec-badge { background: linear-gradient(135deg, #FFD700, #F59E0B); color: black; font-weight: 900; padding: 8px 20px; border-radius: 50px; display: inline-block; margin-bottom: 20px; font-size: 0.85em; letter-spacing: 1px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
 
     @media only screen and (max-width: 600px) {
         .hero-title { font-size: 2.0em !important; }
@@ -198,7 +178,7 @@ df = load_data()
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
 # ==========================================
-# TAB 1: FIND BEST MATCH
+# TAB 1: FIND BEST MATCH (Hierarchical Design)
 # ==========================================
 with tab1:
     with st.expander("🔍 **TAP HERE TO FILTER & CUSTOMIZE**", expanded=True):
@@ -249,9 +229,7 @@ with tab1:
             current_badge = get_dynamic_badge(lifestyle, winner['price'])
             
             stats_html = f"{stat_bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATT', winner['batt_score'], '#10B981')}"
-            
-            # Winner Card
-            winner_card = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{get_expert_verdict(winner, lifestyle)}</div><div class='stat-container'>{stats_html}</div><a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div class='deal-hint'>⚡ Check today's price</div></div>"""
+            winner_card = f"""<div class='winner-box'><div style='background:#F59E0B; color:black; padding:8px 16px; border-radius:50px; display:inline-block; font-weight:900; font-size:0.8em; margin-bottom:15px;'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{get_expert_verdict(winner, lifestyle)}</div><div style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:25px;'>{stats_html}</div><a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div class='deal-hint'>⚡ Check today's price</div></div>"""
             st.markdown(winner_card, unsafe_allow_html=True)
 
             st.write("")
@@ -260,19 +238,32 @@ with tab1:
             for i, row in df_f.iloc[1:6].iterrows():
                 rank_num = i + 1
                 
-                # Rank Badge Logic
-                if rank_num == 2: rank_cls = "rank-2"
-                elif rank_num == 3: rank_cls = "rank-3"
-                else: rank_cls = "rank-norm"
+                # 🔥 Determine Card Style based on Rank
+                if rank_num == 2:
+                    card_cls = "alt-card-base alt-premium silver-glow"
+                    rank_cls = "rank-2"
+                    is_premium = True
+                elif rank_num == 3:
+                    card_cls = "alt-card-base alt-premium bronze-glow"
+                    rank_cls = "rank-3"
+                    is_premium = True
+                else:
+                    card_cls = "alt-card-base alt-standard"
+                    rank_cls = "rank-norm"
+                    is_premium = False
                 
-                # 🔥 PRO ALT CARD HTML (Beautiful & Consistent)
-                alt_card = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-card"><div style="display:flex; align-items:center;"><div class="rank-box {rank_cls}">{rank_num}</div><div class="alt-info"><div class="alt-name">{row['name']}</div><div class="alt-price">${row['price']:,}</div></div></div><div class="view-btn">VIEW ></div></div></a>"""
+                # 🔥 Add Mini Bars ONLY for Premium Cards
+                mini_bars_html = ""
+                if is_premium:
+                    mini_bars_html = f"""<div class='mini-bar-container'><div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div></div>"""
+
+                alt_card = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="{card_cls}"><div style="display:flex; align-items:center;"><div class="rank-box {rank_cls}">{rank_num}</div><div class="alt-info"><div class="alt-name">{row['name']}</div><div class="alt-price">${row['price']:,}</div>{mini_bars_html}</div></div><div class="view-btn">VIEW ></div></div></a>"""
                 st.markdown(alt_card, unsafe_allow_html=True)
         else:
             st.warning("No phones found under this budget.")
 
 # ==========================================
-# TAB 2: VS MODE (Standard State = NO ERROR)
+# TAB 2: VS MODE (Stable Standard State)
 # ==========================================
 with tab2:
     st.markdown("### 🥊 Head-to-Head Comparison")
@@ -282,7 +273,7 @@ with tab2:
     all_models = sorted(df['name'].unique())
     col_a, col_b = st.columns(2)
     
-    # Simple Selectboxes (Most Stable Way)
+    # Simple Selectboxes (Stable)
     with col_a: p1_name = st.selectbox("Select Phone A", all_models, index=0, key="p1_final")
     with col_b: 
         def_idx = 1 if len(all_models) > 1 else 0
