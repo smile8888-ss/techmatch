@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Complete",
+    page_title="TechChoose - Final Precision",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -27,10 +27,14 @@ def load_data():
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
-        # Smart Score Calculation
+        # Smart Scoring (Calculated Logic)
         if 'antutu' in df.columns:
-            df['perf_score'] = (df['antutu'] / 3500000) * 10 
-            df['perf_score'] = df['perf_score'].clip(upper=10)
+            # Curve Logic: 800k=7.0, 1.5M=9.0, 2.8M=10.0
+            def calc_speed(score):
+                if score >= 2800000: return 10.0
+                elif score >= 1500000: return 9.0 + ((score-1500000)/1300000)
+                else: return 7.0 + ((score-800000)/700000)*2
+            df['perf_score'] = df['antutu'].apply(calc_speed).clip(upper=10.0)
         else: df['perf_score'] = 8.0 
         
         if 'camera' in df.columns: df['cam_score'] = df['camera']
@@ -52,47 +56,56 @@ def get_dynamic_badge(mode, price):
     else: return "⭐ TOP FLAGSHIP"
 
 def get_expert_verdict(row, mode):
-    if "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b>."
+    if "Gamer" in mode: return f"Speed Monster: <b>AnTuTu {int(row['antutu']):,}</b>"
     return f"Excellent choice based on your preferences."
-
-def get_star_rating(score):
-    if score >= 9.5: return "★★★★★"      
-    elif score >= 8.5: return "★★★★½"    
-    elif score >= 7.5: return "★★★★☆"    
-    elif score >= 6.5: return "★★★½☆"    
-    elif score >= 5.0: return "★★★☆☆"    
-    else: return "★★☆☆☆"
 
 def stat_bar_html(label, score, color):
     return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
 
-# 🔥 NEW: COMPARE LOGIC (หาจุดเด่นเทียบกับที่ 1)
+# 🔥 NEW: LOGIC เปรียบเทียบราคา/สเปก
 def get_reason_badge(winner_row, current_row):
-    # 1. เช็คราคา (ถูกกว่าเยอะไหม?)
     price_diff = winner_row['price'] - current_row['price']
     if price_diff >= 100:
         return f"<span class='reason-tag tag-save'>💰 SAVE ${int(price_diff):,}</span>"
-    
-    # 2. เช็คสเปก (อันไหนชนะขาด?)
     if current_row['batt_score'] > (winner_row['batt_score'] + 0.5):
         return "<span class='reason-tag tag-spec'>🔋 BETTER BATT</span>"
-    if current_row['perf_score'] > (winner_row['perf_score'] + 0.5):
-        return "<span class='reason-tag tag-spec'>🚀 FASTER</span>"
     if current_row['cam_score'] > (winner_row['cam_score'] + 0.5):
         return "<span class='reason-tag tag-spec'>📸 BETTER CAM</span>"
-    
-    # 3. ถ้าไม่มีจุดเด่นชัดเจน
     return ""
 
-# --- 4. CSS (THEME) ---
+# 🔥 NEW: SCORE BADGE (แทนดาว)
+def get_score_badge(icon, label, score):
+    # Color Coding
+    if score >= 9.0: 
+        color = "#10B981" # Green
+        border = "rgba(16, 185, 129, 0.3)"
+    elif score >= 8.0: 
+        color = "#3B82F6" # Blue
+        border = "rgba(59, 130, 246, 0.3)"
+    else: 
+        color = "#F59E0B" # Orange
+        border = "rgba(245, 158, 11, 0.3)"
+        
+    return f"""
+    <div style="
+        display: inline-flex; align-items: center; 
+        background: rgba(0,0,0,0.4); border: 1px solid {border}; 
+        border-radius: 6px; padding: 4px 8px; margin-right: 8px;
+    ">
+        <span style="font-size: 1.1em; margin-right: 5px;">{icon}</span>
+        <span style="color: #AAA; font-size: 0.7em; font-weight: 700; margin-right: 5px; text-transform: uppercase;">{label}</span>
+        <span style="color: {color}; font-weight: 900; font-family: 'JetBrains Mono'; font-size: 0.9em;">{score:.1f}</span>
+    </div>
+    """
+
+# --- 4. CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
 
-    /* UI ELEMENTS */
+    /* UI TWEAKS */
     .streamlit-expanderHeader { background-color: #111 !important; color: white !important; border: 1px solid #333 !important; }
-    div[data-testid="stExpander"] { background-color: transparent !important; border: none !important; }
     div[data-testid="stExpander"] details { background-color: #111 !important; border-color: #333 !important; }
     div[data-testid="stExpander"] summary { background-color: #111 !important; color: white !important; }
     div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
@@ -125,13 +138,13 @@ st.markdown("""
     .amazon-btn { background: #3B82F6; color: white !important; padding: 18px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.2em; margin-top: 20px; transition: 0.3s; }
     .amazon-btn:hover { background: #2563EB; }
 
-    /* 🔥 REASON BADGES (สิ่งที่หายไป กลับมาแล้ว!) */
+    /* BADGES */
     .reason-tag {
-        font-size: 0.75em; font-weight: 900; padding: 4px 10px; border-radius: 4px;
-        margin-left: 10px; vertical-align: middle; display: inline-block;
+        font-size: 0.7em; font-weight: 800; padding: 4px 8px; border-radius: 4px;
+        margin-left: 10px; vertical-align: middle; display: inline-block; letter-spacing: 0.5px;
     }
-    .tag-save { background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; } /* Green */
-    .tag-spec { background: rgba(59, 130, 246, 0.2); color: #3B82F6; border: 1px solid #3B82F6; } /* Blue */
+    .tag-save { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid #10B981; }
+    .tag-spec { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid #3B82F6; }
 
     /* ALT CARDS */
     .alt-link { text-decoration: none !important; display: block; }
@@ -147,11 +160,10 @@ st.markdown("""
     .rank-norm { background: #222; color: #888; border: 1px solid #444; }
 
     .alt-info { flex-grow: 1; }
-    .alt-name { color: white; font-weight: 700; font-size: 1.2em; margin-bottom: 5px; }
+    .alt-name { color: white; font-weight: 700; font-size: 1.2em; margin-bottom: 8px; }
     .alt-price { color: #FBBF24; font-family: 'JetBrains Mono'; font-weight: bold; font-size: 1.1em; }
-    .star-row { display: flex; gap: 15px; margin-top: 8px; font-size: 0.9em; color: #AAA; }
-    .star-item span { color: #FFD700; margin-left: 5px; letter-spacing: 1px; font-size: 1.1em; } 
-    .view-btn { color: #FF9900; font-weight: 900; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .view-btn { color: #FF9900; font-weight: 900; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; }
 
     /* VS CARD */
     .vs-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 25px; text-align: center; height: 100%; }
@@ -164,7 +176,8 @@ st.markdown("""
 
     @media only screen and (max-width: 600px) {
         .hero-title { font-size: 2.0em !important; }
-        .star-row { flex-direction: column; gap: 2px; }
+        .alt-card { flex-direction: column; align-items: flex-start; }
+        .view-btn { margin-top: 10px; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -175,7 +188,7 @@ st.markdown("<div class='update-badge'>✅ Data Verified: 20 Dec 2025</div>", un
 
 df = load_data()
 
-# --- 6. TABS SYSTEM ---
+# --- 6. TABS ---
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
 # ==========================================
@@ -240,18 +253,16 @@ with tab1:
             for i, row in df_f.iloc[1:6].iterrows():
                 rank_num = i + 1
                 
-                # Badge Color
+                # Colors
                 if rank_num == 2: rank_cls = "rank-2"
                 elif rank_num == 3: rank_cls = "rank-3"
                 else: rank_cls = "rank-norm"
                 
-                # 🔥 REASON BADGE (The Missing Piece!)
+                # 🔥 BADGES
                 reason_badge = get_reason_badge(winner, row)
-                
-                # Stars
-                s_speed = get_star_rating(row['perf_score'])
-                s_cam = get_star_rating(row['cam_score'])
-                s_batt = get_star_rating(row['batt_score'])
+                b_speed = get_score_badge("🚀", "Speed", row['perf_score'])
+                b_cam = get_score_badge("📸", "Cam", row['cam_score'])
+                b_batt = get_score_badge("🔋", "Batt", row['batt_score'])
                 
                 alt_card = f"""
                 <a href="{row['link']}" target="_blank" class="alt-link">
@@ -261,10 +272,8 @@ with tab1:
                             <div class="alt-info">
                                 <div class="alt-name">{row['name']} {reason_badge}</div>
                                 <div class="alt-price">${row['price']:,}</div>
-                                <div class="star-row">
-                                    <div class="star-item">🚀 <span>{s_speed}</span></div>
-                                    <div class="star-item">📸 <span>{s_cam}</span></div>
-                                    <div class="star-item">🔋 <span>{s_batt}</span></div>
+                                <div style="margin-top:10px;">
+                                    {b_speed}{b_cam}{b_batt}
                                 </div>
                             </div>
                             <div class="view-btn">VIEW ></div>
@@ -284,7 +293,7 @@ with tab2:
     judge = st.selectbox("⚖️ Decide Winner By:", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
     all_models = sorted(df['name'].unique())
     
-    # Init & Stable Select (No Callback)
+    # Stable State
     if 'p1' not in st.session_state: st.session_state.p1 = all_models[0]
     if 'p2' not in st.session_state: st.session_state.p2 = all_models[1] if len(all_models) > 1 else all_models[0]
 
