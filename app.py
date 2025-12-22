@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Pro",
+    page_title="TechChoose - Final Dark",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -19,20 +19,18 @@ def load_data():
         return pd.DataFrame()
 
     if not df.empty:
-        # 🔥 Logic แก้จุดตาย iPad/iPhone
+        # 🔥 iPad/iPhone Logic
         def get_os(name):
             name_str = str(name).lower()
-            if 'iphone' in name_str or 'ipad' in name_str:
-                return 'iOS'
+            if 'iphone' in name_str or 'ipad' in name_str: return 'iOS'
             return 'Android'
-            
         df['os_type'] = df['name'].apply(get_os)
         
+        # Scoring Logic
         if 'antutu' in df.columns:
             df['perf_score'] = (df['antutu'] / 3500000) * 10 
             df['perf_score'] = df['perf_score'].clip(upper=10)
-        else:
-            df['perf_score'] = 8.0 
+        else: df['perf_score'] = 8.0 
         
         if 'camera' in df.columns: df['cam_score'] = df['camera']
         if 'battery' in df.columns: df['batt_score'] = df['battery']
@@ -45,31 +43,60 @@ def load_data():
 
     return df
 
-# --- 3. CSS (Responsive & Color Fix) ---
+# --- 3. CSS (Super Dark Mode) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
+    
+    /* พื้นหลังหลัก */
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
-    /* 🔥 Fix Input/Select Box Colors (แก้กล่องขาวให้เป็นดำ) */
-    div[data-baseweb="select"] > div { background-color: #111 !important; border: 1px solid #333 !important; color: white !important; }
-    div[data-baseweb="select"] span { color: white !important; }
-    div[data-baseweb="select"] svg { fill: #FBBF24 !important; }
-    div[data-baseweb="base-input"] { background-color: #111 !important; }
-    input { color: white !important; }
+    /* 🔥 แก้แถบ Expander (ที่เคยขาว) ให้ดำ */
+    div[data-testid="stExpander"] details {
+        background-color: #111 !important;
+        border: 1px solid #333 !important;
+        border-radius: 8px !important;
+        color: white !important;
+    }
+    div[data-testid="stExpander"] summary {
+        color: white !important; /* ตัวหนังสือขาว */
+        background-color: #222 !important; /* พื้นหลังเทาเข้ม */
+    }
+    div[data-testid="stExpander"] summary:hover {
+        color: #FBBF24 !important; /* เมาส์ชี้เป็นสีทอง */
+    }
+    div[data-testid="stExpander"] svg {
+        fill: white !important; /* ลูกศรสีขาว */
+    }
+
+    /* 🔥 แก้กล่องเลือก (Selectbox) ให้ดำสนิท */
+    div[data-baseweb="select"] > div {
+        background-color: #111 !important;
+        border: 1px solid #444 !important;
+        color: white !important;
+    }
+    div[data-baseweb="select"] span {
+        color: white !important; /* ตัวหนังสือในกล่องขาว */
+    }
+    /* แก้พื้นหลังเวลากดเลือก (Dropdown Menu) */
+    div[data-baseweb="popover"], div[data-baseweb="menu"], ul[role="listbox"] {
+        background-color: #111 !important;
+        color: white !important;
+    }
+    li[role="option"] {
+        color: white !important; /* ตัวเลือกสีขาว */
+    }
     
-    /* Responsive Text Sizes */
+    /* Responsive Sizes */
     .hero-title { font-size: 3.5em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 10px; }
     .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 5px; }
 
-    /* Tablet / iPad */
+    /* Tablet & Mobile Tweaks */
     @media only screen and (max-width: 1024px) {
         .hero-title { font-size: 2.5em !important; }
         .hero-price { font-size: 2.5em !important; }
         .amazon-btn { padding: 18px !important; font-size: 1.2em !important; }
     }
-    
-    /* Mobile */
     @media only screen and (max-width: 600px) {
         .hero-title { font-size: 2.0em !important; }
         .hero-price { font-size: 2.0em !important; }
@@ -90,7 +117,6 @@ st.markdown("""
     .amazon-btn { background: #3B82F6; color: white !important; padding: 22px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.4em; margin-top: 20px; transition: 0.3s; }
     .deal-hint { text-align: center; color: #10B981; font-size: 0.9em; margin-top: 10px; font-weight: bold; }
 
-    /* Alternatives */
     .alt-link { text-decoration: none; display: block; }
     .alt-row { background: #0A0A0A; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
     .rank-wrap { display: flex; align-items: center; gap: 12px; }
