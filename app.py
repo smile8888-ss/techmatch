@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Universal Pro",
+    page_title="TechChoose - Final Pro",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -45,23 +45,31 @@ def load_data():
 
     return df
 
-# --- 3. CSS (Responsive Fix) ---
+# --- 3. CSS (Responsive & Color Fix) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
     
+    /* 🔥 Fix Input/Select Box Colors (แก้กล่องขาวให้เป็นดำ) */
+    div[data-baseweb="select"] > div { background-color: #111 !important; border: 1px solid #333 !important; color: white !important; }
+    div[data-baseweb="select"] span { color: white !important; }
+    div[data-baseweb="select"] svg { fill: #FBBF24 !important; }
+    div[data-baseweb="base-input"] { background-color: #111 !important; }
+    input { color: white !important; }
+    
+    /* Responsive Text Sizes */
     .hero-title { font-size: 3.5em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 10px; }
     .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 5px; }
 
-    /* 🔥 Tablet / iPad Fix */
+    /* Tablet / iPad */
     @media only screen and (max-width: 1024px) {
         .hero-title { font-size: 2.5em !important; }
         .hero-price { font-size: 2.5em !important; }
         .amazon-btn { padding: 18px !important; font-size: 1.2em !important; }
     }
     
-    /* Mobile Fix */
+    /* Mobile */
     @media only screen and (max-width: 600px) {
         .hero-title { font-size: 2.0em !important; }
         .hero-price { font-size: 2.0em !important; }
@@ -139,7 +147,7 @@ with st.expander("🔍 **TAP HERE TO FILTER / เลือกงบและส�
 
 st.divider()
 
-# --- 5. FUNCTIONS (ส่วนที่หายไป ผมเติมให้แล้วครับ) ---
+# --- 5. FUNCTIONS ---
 def get_dynamic_badge(mode, price):
     if "High-End" in mode: return "💎 ABSOLUTE BEST"
     elif "Gamer" in mode: return "🏆 GAMING BEAST"
