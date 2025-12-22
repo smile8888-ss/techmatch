@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Compare Fix",
+    page_title="TechChoose - Stable",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -27,7 +27,7 @@ def load_data():
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
-        # --- Brand Score ---
+        # Brand Score (ช่วยดันคะแนนรุ่นท็อป)
         def get_brand_score(name):
             n = str(name).lower()
             if 'iphone' in n or 'apple' in n: return 10.0
@@ -36,7 +36,7 @@ def load_data():
             return 9.0 
         df['brand_score'] = df['name'].apply(get_brand_score)
         
-        # --- Relative Scoring (เทียบกับตัวท็อป) ---
+        # Relative Scoring
         max_antutu = df['antutu'].max() if 'antutu' in df.columns else 1
         max_cam = df['camera'].max() if 'camera' in df.columns else 10
         max_batt = df['battery'].max() if 'battery' in df.columns else 10
@@ -57,7 +57,7 @@ def load_data():
 
 # --- 3. HELPER FUNCTIONS ---
 def get_dynamic_badge(mode, price):
-    if "High-End" in mode: return "💎 ABSOLUTE BEST"
+    if "High-End" in mode: return "💎 MARKET LEADER"
     elif "Gamer" in mode: return "🏆 GAMING BEAST"
     elif "Creator" in mode: return "🎥 CREATOR CHOICE"
     elif "Student" in mode: return "💰 SMART SAVER"
@@ -68,22 +68,24 @@ def get_expert_verdict(row, mode):
 
 def stat_bar_html(label, score, color):
     width = min(score * 10, 100)
-    return f"""<div class="stat-box"><div class="stat-label">{label}</div><div class="stat-val">{score:.1f}/10</div><div class="bar-bg"><div style="width:{width}%;height:100%;background:{color};"></div></div></div>"""
+    return f"""<div style='background:#151515;padding:8px;border-radius:8px;text-align:center;border:1px solid #333;'><div style='color:#888;font-size:0.65em;font-weight:700;margin-bottom:4px;'>{label}</div><div style='font-size:1.1em;font-weight:900;color:white;'>{score:.1f}</div><div style='background:#333;height:4px;border-radius:2px;margin-top:4px;overflow:hidden;'><div style='width:{width}%;height:100%;background:{color};'></div></div></div>"""
 
 def get_reason_badge(winner_row, current_row):
     badges = ""
+    # Price
     price_diff = winner_row['price'] - current_row['price']
     if price_diff >= 50:
-        badges += f"""<span style="background:rgba(16,185,129,0.2);color:#10B981;border:1px solid #10B981;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;">SAVE ${int(price_diff):,}</span>"""
+        badges += f"""<span style='background:rgba(16,185,129,0.2);color:#10B981;border:1px solid #10B981;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>SAVE ${int(price_diff):,}</span>"""
+    # Spec
     if current_row['perf_score'] > (winner_row['perf_score'] + 0.3):
-        badges += """<span style="background:rgba(59,130,246,0.2);color:#3B82F6;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;">🚀 FASTER</span>"""
+        badges += """<span style='background:rgba(59,130,246,0.2);color:#3B82F6;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>🚀 FASTER</span>"""
     return badges
 
 def get_score_badge(icon, label, score):
     if score >= 9.5: color = "#10B981"; border = "rgba(16,185,129,0.4)" 
     elif score >= 8.5: color = "#3B82F6"; border = "rgba(59,130,246,0.4)" 
     else: color = "#F59E0B"; border = "rgba(245,158,11,0.4)" 
-    return f"""<div style="display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {border};border-radius:6px;padding:3px 8px;margin-right:6px;"><span style="font-size:1em;margin-right:4px;">{icon}</span><span style="color:#888;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;">{label}</span><span style="color:{color};font-weight:900;font-family:'JetBrains Mono',monospace;font-size:0.9em;">{score:.1f}</span></div>"""
+    return f"""<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {border};border-radius:6px;padding:3px 8px;margin-right:6px;'><span style='font-size:1em;margin-right:4px;'>{icon}</span><span style='color:#888;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;'>{label}</span><span style='color:{color};font-weight:900;font-family:monospace;font-size:0.9em;'>{score:.1f}</span></div>"""
 
 # --- 4. CSS ---
 st.markdown("""
@@ -91,7 +93,7 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
 
-    /* UI Fixes */
+    /* UI TWEAKS */
     .streamlit-expanderHeader { background-color: #111 !important; color: white !important; border: 1px solid #333 !important; }
     div[data-testid="stExpander"] { background-color: transparent !important; border: none !important; }
     div[data-testid="stExpander"] details { background-color: #111 !important; border-color: #333 !important; }
@@ -115,10 +117,6 @@ st.markdown("""
     .winner-box { background: radial-gradient(circle at top right, #111, #000); border: 2px solid #3B82F6; border-radius: 20px; padding: 30px; box-shadow: 0 0 60px rgba(59, 130, 246, 0.25); margin-bottom: 30px; }
     .hero-title { font-size: 2.8em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 10px; }
     .hero-price { color: #FBBF24; font-size: 2.2em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 15px; }
-    .stat-box { background: #151515; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #333; }
-    .stat-label { color: #888; font-size: 0.7em; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
-    .stat-val { font-size: 1.2em; font-weight: 900; color: white; }
-    .bar-bg { background: #333; height: 4px; border-radius: 2px; margin-top: 5px; overflow: hidden; }
     .amazon-btn { background: #3B82F6; color: white !important; padding: 15px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.1em; margin-top: 20px; transition: 0.3s; }
     .amazon-btn:hover { background: #2563EB; }
 
@@ -138,16 +136,16 @@ st.markdown("""
     
     .view-btn { color: #FF9900; font-weight: 900; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; }
 
-    /* VS CARD STYLES (FIXED SPACING) */
+    /* VS CARD */
     .vs-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 25px; text-align: center; height: 100%; }
     .vs-winner-border { border: 2px solid #10B981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); }
     .vs-title { font-size: 1.4em; font-weight: 900; margin-bottom: 5px; min-height: 50px; display:flex; align-items:center; justify-content:center; color: white !important;}
     .vs-price { font-family: 'JetBrains Mono'; color: #FBBF24; font-size: 1.5em; margin-bottom: 20px; font-weight: bold; }
     
-    /* 🔥 FIX: Spaced Out Rows using Flexbox */
+    /* 🔥 FIX: FLEXBOX SPACING FOR COMPARE ROWS */
     .vs-row { 
         display: flex; 
-        justify-content: space-between; /* ดันซ้าย-ขวาแยกกัน */
+        justify-content: space-between; /* ดันซ้าย-ขวา */
         align-items: center;
         border-bottom: 1px solid #222; 
         padding: 12px 0; 
@@ -156,7 +154,7 @@ st.markdown("""
     }
     .vs-label { display: flex; align-items: center; gap: 8px; font-weight: bold; }
     .val-win { color: #10B981; font-weight: 900; font-family: 'JetBrains Mono'; } 
-    .val-lose { color: #555; font-family: 'JetBrains Mono'; font-weight: bold;}
+    .val-lose { color: #555; font-family: 'JetBrains Mono'; font-weight: bold; }
 
     @media only screen and (max-width: 600px) {
         .hero-title { font-size: 2.0em !important; }
@@ -187,7 +185,6 @@ with tab1:
         elif "Custom" in lifestyle: budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50, key="t1_bud")
         else: budget = 9999
 
-        # Balanced Weights
         p, c, b, v, br = 5, 5, 5, 5, 2 
         price_penalty_threshold = 9999
         
@@ -227,6 +224,7 @@ with tab1:
             current_badge = get_dynamic_badge(lifestyle, winner['price'])
             
             stats_html = f"""<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;'>{stat_bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATT', winner['batt_score'], '#10B981')}</div>"""
+            
             winner_card = f"""<div class='winner-box'><div style='background:#F59E0B; color:black; padding:6px 14px; border-radius:50px; display:inline-block; font-weight:900; font-size:0.75em; margin-bottom:15px; letter-spacing:1px;'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div style='background:#111; border-left:4px solid #3B82F6; padding:12px; margin-bottom:20px; font-size:0.9em; color:#CCC;'>{get_expert_verdict(winner, lifestyle)}</div>{stats_html}<a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div style='text-align:center; color:#10B981; font-size:0.85em; margin-top:10px; font-weight:bold;'>⚡ Check today's price</div></div>"""
             st.markdown(winner_card, unsafe_allow_html=True)
 
@@ -258,17 +256,15 @@ with tab2:
     judge = st.selectbox("⚖️ Decide Winner By:", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
     all_models = sorted(df['name'].unique())
     
-    # 🔥 ANTI-JUMP: ใช้ Session State เก็บค่า
-    if 'p1_idx' not in st.session_state: st.session_state.p1_idx = 0
-    if 'p2_idx' not in st.session_state: st.session_state.p2_idx = 1 if len(all_models) > 1 else 0
-
+    # 🔥 ANTI-JUMP: ใช้ key ในการคุม state โดยตรง (ไม่รีเซ็ต)
     c1, c2 = st.columns(2)
     with c1: 
-        p1_name = st.selectbox("Select Phone A", all_models, index=st.session_state.p1_idx, key="p1_select")
-        st.session_state.p1_idx = all_models.index(p1_name) # Update State
+        # Default index 0
+        p1_name = st.selectbox("Select Phone A", all_models, index=0, key="p1_select")
     with c2: 
-        p2_name = st.selectbox("Select Phone B", all_models, index=st.session_state.p2_idx, key="p2_select")
-        st.session_state.p2_idx = all_models.index(p2_name) # Update State
+        # Default index 1
+        idx2 = 1 if len(all_models) > 1 else 0
+        p2_name = st.selectbox("Select Phone B", all_models, index=idx2, key="p2_select")
     
     if p1_name and p2_name: 
         r1 = df[df['name'] == p1_name].iloc[0]
@@ -292,34 +288,30 @@ with tab2:
 
         col_card1, col_card2 = st.columns(2)
         
-        # 🔥 UI FIX: Spacing & Alignment
-        def get_row_html(label, icon, val1, val2):
-            cls1 = val_col(val1, val2)
-            cls2 = val_col(val2, val1)
-            # เราใช้ฟังก์ชันนี้สร้าง row สำหรับแต่ละการ์ด (แยกกัน)
-            return "" 
+        # 🔥 UI FIX: สร้าง Rows แบบมีช่องว่าง (Spacing)
+        def create_rows(r_self, r_opp):
+            html_rows = ""
+            for lbl, ico, k in [("AnTuTu","🚀","antutu"), ("Speed","⚡","perf_score"), ("Camera","📸","cam_score"), ("Battery","🔋","batt_score")]:
+                v_self = r_self[k]; v_opp = r_opp[k]
+                val_str = f"{int(v_self):,}" if k == "antutu" else f"{v_self:.1f}"
+                cls = "val-win" if v_self >= v_opp else "val-lose"
+                
+                # เขียน HTML แบบ Flexbox ชัดเจน
+                html_rows += f"""
+                <div class='vs-row'>
+                    <div class='vs-label'><span style='font-size:1.2em;'>{ico}</span> {lbl}</div>
+                    <div class='{cls}'>{val_str}</div>
+                </div>
+                """
+            return html_rows
 
-        # สร้างการ์ดซ้าย
         with col_card1:
-            rows_html = ""
-            for lbl, ico, k in [("AnTuTu","🚀","antutu"), ("Speed","⚡","perf_score"), ("Camera","📸","cam_score"), ("Battery","🔋","batt_score")]:
-                v1 = r1[k]; v2 = r2[k]
-                val_str = f"{int(v1):,}" if k == "antutu" else f"{v1:.1f}"
-                cls = "val-win" if v1 >= v2 else "val-lose"
-                rows_html += f"""<div class='vs-row'><div class='vs-label'><span>{ico}</span> {lbl}</div><div class='{cls}'>{val_str}</div></div>"""
-            
-            st.markdown(f"""<div class='vs-card {c1_cls}'>{b1_html}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div>{rows_html}<a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>""", unsafe_allow_html=True)
+            rows1 = create_rows(r1, r2)
+            st.markdown(f"""<div class='vs-card {c1_cls}'>{b1_html}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div>{rows1}<a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>""", unsafe_allow_html=True)
 
-        # สร้างการ์ดขวา
         with col_card2:
-            rows_html = ""
-            for lbl, ico, k in [("AnTuTu","🚀","antutu"), ("Speed","⚡","perf_score"), ("Camera","📸","cam_score"), ("Battery","🔋","batt_score")]:
-                v1 = r1[k]; v2 = r2[k]
-                val_str = f"{int(v2):,}" if k == "antutu" else f"{v2:.1f}"
-                cls = "val-win" if v2 >= v1 else "val-lose"
-                rows_html += f"""<div class='vs-row'><div class='vs-label'><span>{ico}</span> {lbl}</div><div class='{cls}'>{val_str}</div></div>"""
-            
-            st.markdown(f"""<div class='vs-card {c2_cls}'>{b2_html}<div class='vs-title'>{r2['name']}</div><div class='vs-price'>${r2['price']:,}</div>{rows_html}<a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>""", unsafe_allow_html=True)
+            rows2 = create_rows(r2, r1)
+            st.markdown(f"""<div class='vs-card {c2_cls}'>{b2_html}<div class='vs-title'>{r2['name']}</div><div class='vs-price'>${r2['price']:,}</div>{rows2}<a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>""", unsafe_allow_html=True)
             
         st.write("---")
         winner_name = r1['name'] if win1 else r2['name']
