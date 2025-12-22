@@ -3,58 +3,68 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final UI Fix",
+    page_title="TechChoose - Final Blackout",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS (แก้ UI แบบเจาะจงทุกจุด) ---
+# --- 2. CSS (แก้กล่องขาว & ตัวหนังสือกลืน แบบเจาะจงลึก) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* 1. พื้นหลังแอป */
-    .stApp { background-color: #000000 !important; color: white !important; }
+    /* 1. บังคับพื้นหลังดำสนิททั้งแอป */
+    .stApp { background-color: #000000 !important; }
 
-    /* 2. แก้ตัวหนังสือ Label (Operating System / User Persona) ให้ขาว */
-    .stMarkdown, .stSelectbox label, p {
+    /* 2. 🔥 แก้ตัวหนังสือกลืน (Operating System / User Persona) */
+    /* บังคับให้ Label ทุกตัวในแอปเป็นสีขาว */
+    .stSelectbox label, .stNumberInput label, .stTextInput label {
         color: #FFFFFF !important;
+        font-weight: bold !important;
+    }
+    /* บังคับข้อความทั่วไปเป็นสีขาว */
+    p, span, div {
+        color: #FFFFFF;
     }
 
-    /* 3. 🔥🔥🔥 FIX EXPANDER HEADER (หัวข้อ Tap to Customize) 🔥🔥🔥 */
-    /* บังคับหัวข้อให้พื้นหลังดำ + ตัวหนังสือขาว */
-    .streamlit-expanderHeader {
-        background-color: #111111 !important;
-        color: #FFFFFF !important;
+    /* 3. 🔥🔥🔥 แก้กล่องขาว (TAP TO CUSTOMIZE) แบบถอนรากถอนโคน 🔥🔥🔥 */
+    /* ส่วนหัว (ที่พี่เห็นเป็นสีขาว) */
+    div[data-testid="stExpander"] details summary {
+        background-color: #111111 !important; /* ถมดำ */
+        color: #FFFFFF !important; /* ตัวหนังสือขาว */
         border: 1px solid #333 !important;
         border-radius: 8px !important;
     }
-    /* บังคับไอคอนลูกศรให้ขาว */
-    .streamlit-expanderHeader svg {
+    
+    /* เนื้อหาข้างในหลังจากกดเปิด */
+    div[data-testid="stExpander"] details {
+        background-color: #111111 !important;
+        border-color: #333 !important;
+        border-radius: 8px !important;
+    }
+    
+    /* เนื้อหาข้างในสุด (ป้องกันสีขาวหลุดรอด) */
+    div[data-testid="stExpander"] div[data-testid="stVerticalBlock"] {
+        background-color: #111111 !important;
+    }
+
+    /* ไอคอนลูกศร > ให้เป็นสีขาว */
+    div[data-testid="stExpander"] details summary svg {
         fill: #FFFFFF !important;
     }
-    /* ตอนเอาเมาส์ชี้ */
-    .streamlit-expanderHeader:hover {
-        color: #FBBF24 !important;
+    
+    /* ตอนเอาเมาส์ชี้ (Hover) ให้เปลี่ยนสีเส้น */
+    div[data-testid="stExpander"] details summary:hover {
         border-color: #FBBF24 !important;
+        color: #FBBF24 !important;
     }
-    .streamlit-expanderHeader:hover svg {
+    div[data-testid="stExpander"] details summary:hover svg {
         fill: #FBBF24 !important;
     }
 
-    /* 4. 🔥 FIX EXPANDER BODY (เนื้อหาข้างใน) */
-    div[data-testid="stExpander"] {
-        background-color: #111111 !important;
-        border: none !important;
-        color: white !important;
-    }
-    div[data-testid="stExpander"] details {
-        background-color: #111111 !important;
-    }
-
-    /* 5. แก้กล่องเลือก (Dropdown) ให้ดำ */
-    div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
+    /* 4. กล่องตัวเลือก (Dropdown) ให้ดำ */
+    div[data-baseweb="select"] > div {
         background-color: #222222 !important;
         border: 1px solid #444 !important;
         color: white !important;
@@ -62,39 +72,39 @@ st.markdown("""
     div[data-baseweb="select"] span {
         color: white !important;
     }
-    /* แก้ลิสต์รายการเวลาดรอปดาวน์ลงมา */
+    /* รายการใน Dropdown */
     li[role="option"] {
         background-color: #222222 !important;
         color: white !important;
     }
 
-    /* 6. Tabs */
+    /* 5. Tabs */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
-    .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; border: 1px solid #333; }
-    .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border-color: #3B82F6 !important; }
+    .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; border: 1px solid #333; color: #888; }
+    .stTabs [aria-selected="true"] { background-color: #222 !important; border-color: #3B82F6 !important; color: white !important; }
 
-    /* 7. Form */
+    /* 6. Form Background */
     div[data-testid="stForm"] { background-color: #0e0e0e !important; border: 1px solid #333; padding: 20px; border-radius: 12px; }
 
-    /* Cards */
+    /* Cards Styling */
     .winner-box { background: radial-gradient(circle at top right, #111, #000); border: 2px solid #3B82F6; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.2); }
-    .hero-title { font-size: 2.5em; font-weight: 900; color: white; margin-bottom: 5px; }
-    .hero-price { color: #FBBF24; font-size: 2em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 15px; }
-    .amazon-btn { background: #3B82F6; color: white !important; padding: 12px; display: block; text-align: center; border-radius: 8px; font-weight: 900; text-decoration: none; margin-top: 15px; transition: 0.3s; }
-    .amazon-btn:hover { background: #2563EB; }
+    .hero-title { font-size: 2.5em !important; font-weight: 900; color: white !important; margin-bottom: 5px; }
+    .hero-price { color: #FBBF24 !important; font-size: 2em !important; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 15px; }
+    .amazon-btn { background: #3B82F6 !important; color: white !important; padding: 12px; display: block; text-align: center; border-radius: 8px; font-weight: 900; text-decoration: none; margin-top: 15px; transition: 0.3s; }
+    .amazon-btn:hover { background: #2563EB !important; }
 
-    /* Alt List */
+    /* Alt Cards */
     .alt-link { text-decoration: none !important; display: block; }
-    .alt-card { background: #111; border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-    .alt-card:hover { border-color: #555; background: #161616; transform: translateX(5px); }
+    .alt-card { background: #111 !important; border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+    .alt-card:hover { border-color: #555; background: #161616 !important; transform: translateX(5px); }
 
     /* VS Card */
-    .vs-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; height: 100%; }
+    .vs-card { background: #111 !important; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; height: 100%; }
     .vs-winner-border { border: 2px solid #10B981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); }
     .vs-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding: 12px 0; }
-    .vs-label { display: flex; align-items: center; gap: 8px; color: #CCC; font-weight: bold; font-size: 0.9em; }
-    .val-win { color: #10B981; font-weight: 900; font-family: 'JetBrains Mono'; font-size: 1.1em; }
-    .val-lose { color: #555; font-weight: 900; font-family: 'JetBrains Mono'; font-size: 1.1em; }
+    .vs-label { display: flex; align-items: center; gap: 8px; color: #CCC !important; font-weight: bold; font-size: 0.9em; }
+    .val-win { color: #10B981 !important; font-weight: 900; font-family: 'JetBrains Mono'; font-size: 1.1em; }
+    .val-lose { color: #555 !important; font-weight: 900; font-family: 'JetBrains Mono'; font-size: 1.1em; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -150,26 +160,26 @@ def get_dynamic_badge(mode, price):
 
 def stat_bar_html(label, score, color):
     width = min(score * 10, 100)
-    return f"<div style='background:#151515;padding:8px;border-radius:8px;text-align:center;border:1px solid #333;margin-bottom:5px;'><div style='color:#888;font-size:0.65em;font-weight:700;margin-bottom:4px;'>{label}</div><div style='font-size:1.1em;font-weight:900;color:white;'>{score:.1f}</div><div style='background:#333;height:4px;border-radius:2px;margin-top:4px;overflow:hidden;'><div style='width:{width}%;height:100%;background:{color};'></div></div></div>"
+    return f"<div style='background:#151515;padding:8px;border-radius:8px;text-align:center;border:1px solid #333;margin-bottom:5px;'><div style='color:#888 !important;font-size:0.65em;font-weight:700;margin-bottom:4px;'>{label}</div><div style='font-size:1.1em;font-weight:900;color:white !important;'>{score:.1f}</div><div style='background:#333;height:4px;border-radius:2px;margin-top:4px;overflow:hidden;'><div style='width:{width}%;height:100%;background:{color};'></div></div></div>"
 
 def get_reason_badge_html(winner_row, current_row):
     badges = ""
     diff = winner_row['price'] - current_row['price']
     if diff >= 50:
-        badges += f"<span style='background:rgba(16,185,129,0.2);color:#10B981;border:1px solid #10B981;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>SAVE ${int(diff):,}</span>"
+        badges += f"<span style='background:rgba(16,185,129,0.2);color:#10B981 !important;border:1px solid #10B981;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>SAVE ${int(diff):,}</span>"
     if current_row['perf_score'] > (winner_row['perf_score'] + 0.3):
-        badges += "<span style='background:rgba(59,130,246,0.2);color:#3B82F6;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>🚀 FASTER</span>"
+        badges += "<span style='background:rgba(59,130,246,0.2);color:#3B82F6 !important;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>🚀 FASTER</span>"
     return badges
 
 def get_score_badge_html(icon, label, score):
     if score >= 9.5: c, b = "#10B981", "rgba(16,185,129,0.4)"
     elif score >= 8.5: c, b = "#3B82F6", "rgba(59,130,246,0.4)"
     else: c, b = "#F59E0B", "rgba(245,158,11,0.4)"
-    return f"<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {b};border-radius:6px;padding:3px 8px;margin-right:6px;'><span style='font-size:1em;margin-right:4px;'>{icon}</span><span style='color:#888;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;'>{label}</span><span style='color:{c};font-weight:900;font-family:monospace;font-size:0.9em;'>{score:.1f}</span></div>"
+    return f"<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {b};border-radius:6px;padding:3px 8px;margin-right:6px;'><span style='font-size:1em;margin-right:4px;'>{icon}</span><span style='color:#888 !important;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;'>{label}</span><span style='color:{c} !important;font-weight:900;font-family:monospace;font-size:0.9em;'>{score:.1f}</span></div>"
 
 # --- 5. MAIN APP ---
 st.title("🛒 TechChoose")
-st.markdown("<div style='margin-bottom:20px; color:#888;'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom:20px; color:#888 !important;'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
@@ -177,7 +187,7 @@ tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 # TAB 1: FIND BEST MATCH
 # ==========================================
 with tab1:
-    # 🔥 EXPANDER FIXED
+    # 🔥 EXPANDER FIXED: ใช้ container แทนการ wrap ด้วย expander เพื่อให้ CSS ทำงานเต็มที่
     with st.expander("🔍 **TAP TO CUSTOMIZE**", expanded=True):
         c1, c2 = st.columns(2)
         with c1: os_choice = st.selectbox("Operating System", ["Any", "iOS", "Android"], key="t1_os")
@@ -218,7 +228,7 @@ with tab1:
             
             st.markdown(f"""
             <div class='winner-box'>
-                <div style='background:#F59E0B;color:black;padding:5px 15px;border-radius:20px;display:inline-block;font-weight:900;font-size:0.8em;margin-bottom:10px;'>{get_dynamic_badge(lifestyle, winner['price'])}</div>
+                <div style='background:#F59E0B;color:black !important;padding:5px 15px;border-radius:20px;display:inline-block;font-weight:900;font-size:0.8em;margin-bottom:10px;'>{get_dynamic_badge(lifestyle, winner['price'])}</div>
                 <div class='hero-title'>{winner['name']}</div>
                 <div class='hero-price'>${winner['price']:,}</div>
                 {stats}
@@ -238,27 +248,27 @@ with tab1:
                 <a href='{row['link']}' target='_blank' class='alt-link'>
                     <div class='alt-card'>
                         <div style='display:flex;align-items:center;'>
-                            <div style='width:35px;height:35px;background:{rank_col};color:{'black' if rank_num<4 else '#888'};display:flex;align-items:center;justify-content:center;font-weight:900;border-radius:8px;margin-right:15px;font-size:1.2em;'>{rank_num}</div>
+                            <div style='width:35px;height:35px;background:{rank_col};color:{'black' if rank_num<4 else '#888'} !important;display:flex;align-items:center;justify-content:center;font-weight:900;border-radius:8px;margin-right:15px;font-size:1.2em;'>{rank_num}</div>
                             <div style='flex-grow:1;'>
-                                <div style='color:white;font-weight:bold;font-size:1.1em;margin-bottom:5px;'>{row['name']} {badges}</div>
-                                <div style='color:#FBBF24;font-weight:bold;'>${row['price']:,}</div>
+                                <div style='color:white !important;font-weight:bold;font-size:1.1em;margin-bottom:5px;'>{row['name']} {badges}</div>
+                                <div style='color:#FBBF24 !important;font-weight:bold;'>${row['price']:,}</div>
                                 <div style='margin-top:8px;'>{scores}</div>
                             </div>
-                            <div style='color:#F59E0B;font-weight:bold;font-size:0.8em;'>VIEW ></div>
+                            <div style='color:#F59E0B !important;font-weight:bold;font-size:0.8em;'>VIEW ></div>
                         </div>
                     </div>
                 </a>
                 """, unsafe_allow_html=True)
 
 # ==========================================
-# TAB 2: VS MODE (LOCKED FORM)
+# TAB 2: VS MODE (LOCKED FORM - NO JUMPING)
 # ==========================================
 with tab2:
     st.subheader("🥊 Head-to-Head Comparison")
     
     all_models = sorted(df['name'].unique())
     
-    # 🔥 FORM: ล็อกการเลือกไว้ในนี้ ไม่เด้งแน่นอน
+    # 🔥🔥🔥 FORM: ล็อกการเลือกไว้ในนี้ ไม่เด้งแน่นอน
     with st.form("compare_form"):
         c1, c2 = st.columns(2)
         with c1: p1_name = st.selectbox("Select Phone A", all_models, index=0)
@@ -284,8 +294,8 @@ with tab2:
         
         c1_cls = "vs-winner-border" if win1 else ""
         c2_cls = "vs-winner-border" if not win1 else ""
-        rec1 = "<div style='color:#10B981;font-weight:900;margin-bottom:10px;'>👑 WINNER</div>" if win1 else "<div style='height:29px'></div>"
-        rec2 = "<div style='color:#10B981;font-weight:900;margin-bottom:10px;'>👑 WINNER</div>" if not win1 else "<div style='height:29px'></div>"
+        rec1 = "<div style='color:#10B981 !important;font-weight:900;margin-bottom:10px;'>👑 WINNER</div>" if win1 else "<div style='height:29px'></div>"
+        rec2 = "<div style='color:#10B981 !important;font-weight:900;margin-bottom:10px;'>👑 WINNER</div>" if not win1 else "<div style='height:29px'></div>"
 
         def create_vs_row(icon, label, v1, v2, is_fmt=False):
             val1 = f"{int(v1):,}" if is_fmt else f"{v1:.1f}"
@@ -295,13 +305,13 @@ with tab2:
             return f"<div class='vs-row'><div class='vs-label'><span>{icon}</span> {label}</div><div class='{c1}'>{val1}</div></div>", \
                    f"<div class='vs-row'><div class='vs-label'><span>{icon}</span> {label}</div><div class='{c2}'>{val2}</div></div>"
 
-        # Check for chipset
+        # Check for chipset (if exists)
         r_chip = ("", "")
         if 'chipset' in df.columns:
              t1 = r1['chipset'] if pd.notna(r1['chipset']) else "-"
              t2 = r2['chipset'] if pd.notna(r2['chipset']) else "-"
-             r_chip = (f"<div class='vs-row'><div class='vs-label'><span>🧠</span> Chipset</div><div style='color:white;font-weight:bold;'>{t1}</div></div>",
-                       f"<div class='vs-row'><div class='vs-label'><span>🧠</span> Chipset</div><div style='color:white;font-weight:bold;'>{t2}</div></div>")
+             r_chip = (f"<div class='vs-row'><div class='vs-label'><span>🧠</span> Chipset</div><div style='color:white !important;font-weight:bold;'>{t1}</div></div>",
+                       f"<div class='vs-row'><div class='vs-label'><span>🧠</span> Chipset</div><div style='color:white !important;font-weight:bold;'>{t2}</div></div>")
 
         r_antutu = create_vs_row("🚀", "AnTuTu", r1['antutu'], r2['antutu'], True)
         r_speed = create_vs_row("⚡", "Speed", r1['perf_score'], r2['perf_score'])
@@ -315,8 +325,8 @@ with tab2:
             st.markdown(f"""
             <div class='vs-card {c1_cls}'>
                 {rec1}
-                <div class='hero-title' style='font-size:1.5em;'>{r1['name']}</div>
-                <div class='hero-price' style='font-size:1.5em;'>${r1['price']:,}</div>
+                <div class='hero-title' style='font-size:1.5em !important;'>{r1['name']}</div>
+                <div class='hero-price' style='font-size:1.5em !important;'>${r1['price']:,}</div>
                 {r_chip[0]}{r_antutu[0]}{r_speed[0]}{r_cam[0]}{r_batt[0]}
                 <a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
             </div>
@@ -326,13 +336,9 @@ with tab2:
             st.markdown(f"""
             <div class='vs-card {c2_cls}'>
                 {rec2}
-                <div class='hero-title' style='font-size:1.5em;'>{r2['name']}</div>
-                <div class='hero-price' style='font-size:1.5em;'>${r2['price']:,}</div>
+                <div class='hero-title' style='font-size:1.5em !important;'>{r2['name']}</div>
+                <div class='hero-price' style='font-size:1.5em !important;'>${r2['price']:,}</div>
                 {r_chip[1]}{r_antutu[1]}{r_speed[1]}{r_cam[1]}{r_batt[1]}
                 <a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
             </div>
             """, unsafe_allow_html=True)
-        
-        st.write("---")
-        winner_name = r1['name'] if win1 else r2['name']
-        st.success(f"**AI Verdict:** Based on **{judge}**, the **{winner_name}** wins.")
