@@ -1,92 +1,64 @@
 import streamlit as st
 import pandas as pd
+import random
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Blackout",
-    page_icon="📱",
+    page_title="TechChoose - Final Blackout (AI & Color Mod)",
+    page_icon="🤖",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS (แก้กล่องขาว & ตัวหนังสือกลืน แบบเจาะจงลึก) ---
+# --- 2. CSS (แก้กล่องขาว & ปรับสีค่าพลังใหม่ & เพิ่ม AI Style) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;900&display=swap');
     
     /* 1. บังคับพื้นหลังดำสนิททั้งแอป */
     .stApp { background-color: #000000 !important; }
 
-    /* 2. 🔥 แก้ตัวหนังสือกลืน (Operating System / User Persona) */
-    /* บังคับให้ Label ทุกตัวในแอปเป็นสีขาว */
+    /* 2. แก้ตัวหนังสือกลืน */
     .stSelectbox label, .stNumberInput label, .stTextInput label {
         color: #FFFFFF !important;
         font-weight: bold !important;
     }
-    /* บังคับข้อความทั่วไปเป็นสีขาว */
-    p, span, div {
-        color: #FFFFFF;
-    }
+    p, span, div { color: #FFFFFF; }
 
-    /* 3. 🔥🔥🔥 แก้กล่องขาว (TAP TO CUSTOMIZE) แบบถอนรากถอนโคน 🔥🔥🔥 */
-    /* ส่วนหัว (ที่พี่เห็นเป็นสีขาว) */
+    /* 3. แก้กล่องขาว Expander */
     div[data-testid="stExpander"] details summary {
-        background-color: #111111 !important; /* ถมดำ */
-        color: #FFFFFF !important; /* ตัวหนังสือขาว */
+        background-color: #111111 !important;
+        color: #FFFFFF !important;
         border: 1px solid #333 !important;
         border-radius: 8px !important;
     }
-    
-    /* เนื้อหาข้างในหลังจากกดเปิด */
     div[data-testid="stExpander"] details {
         background-color: #111111 !important;
         border-color: #333 !important;
         border-radius: 8px !important;
     }
-    
-    /* เนื้อหาข้างในสุด (ป้องกันสีขาวหลุดรอด) */
     div[data-testid="stExpander"] div[data-testid="stVerticalBlock"] {
         background-color: #111111 !important;
     }
-
-    /* ไอคอนลูกศร > ให้เป็นสีขาว */
-    div[data-testid="stExpander"] details summary svg {
-        fill: #FFFFFF !important;
-    }
-    
-    /* ตอนเอาเมาส์ชี้ (Hover) ให้เปลี่ยนสีเส้น */
+    div[data-testid="stExpander"] details summary svg { fill: #FFFFFF !important; }
     div[data-testid="stExpander"] details summary:hover {
-        border-color: #FBBF24 !important;
-        color: #FBBF24 !important;
-    }
-    div[data-testid="stExpander"] details summary:hover svg {
-        fill: #FBBF24 !important;
+        border-color: #FBBF24 !important; color: #FBBF24 !important;
     }
 
-    /* 4. กล่องตัวเลือก (Dropdown) ให้ดำ */
+    /* 4. Dropdown */
     div[data-baseweb="select"] > div {
-        background-color: #222222 !important;
-        border: 1px solid #444 !important;
-        color: white !important;
+        background-color: #222222 !important; border: 1px solid #444 !important; color: white !important;
     }
-    div[data-baseweb="select"] span {
-        color: white !important;
-    }
-    /* รายการใน Dropdown */
-    li[role="option"] {
-        background-color: #222222 !important;
-        color: white !important;
-    }
+    div[data-baseweb="select"] span { color: white !important; }
+    li[role="option"] { background-color: #222222 !important; color: white !important; }
 
     /* 5. Tabs */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; border: 1px solid #333; color: #888; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; border-color: #3B82F6 !important; color: white !important; }
 
-    /* 6. Form Background */
+    /* 6. Cards & Layout */
     div[data-testid="stForm"] { background-color: #0e0e0e !important; border: 1px solid #333; padding: 20px; border-radius: 12px; }
-
-    /* Cards Styling */
     .winner-box { background: radial-gradient(circle at top right, #111, #000); border: 2px solid #3B82F6; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.2); }
     .hero-title { font-size: 2.5em !important; font-weight: 900; color: white !important; margin-bottom: 5px; }
     .hero-price { color: #FBBF24 !important; font-size: 2em !important; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 15px; }
@@ -100,11 +72,48 @@ st.markdown("""
 
     /* VS Card */
     .vs-card { background: #111 !important; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; height: 100%; }
-    .vs-winner-border { border: 2px solid #10B981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); }
+    .vs-winner-border { border: 2px solid #00FF99; box-shadow: 0 0 30px rgba(0, 255, 153, 0.15); } /* เปลี่ยนขอบเป็นสีเขียวนีออน */
+    
     .vs-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding: 12px 0; }
     .vs-label { display: flex; align-items: center; gap: 8px; color: #CCC !important; font-weight: bold; font-size: 0.9em; }
-    .val-win { color: #10B981 !important; font-weight: 900; font-family: 'JetBrains Mono'; font-size: 1.1em; }
-    .val-lose { color: #555 !important; font-weight: 900; font-family: 'JetBrains Mono'; font-size: 1.1em; }
+    
+    /* 🔥🔥🔥 7. ปรับสีค่าพลัง (Values) ตรงนี้ 🔥🔥🔥 */
+    .val-win { 
+        color: #00FF99 !important; /* เขียวนีออนสว่าง */
+        font-weight: 900; 
+        font-family: 'JetBrains Mono'; 
+        font-size: 1.1em;
+        text-shadow: 0 0 10px rgba(0, 255, 153, 0.3); /* ใส่แสงเรืองรอง */
+    }
+    .val-lose { 
+        color: #FF4444 !important; /* แดง */
+        font-weight: 900; 
+        font-family: 'JetBrains Mono'; 
+        font-size: 1.1em; 
+        opacity: 0.8;
+    }
+    
+    /* 🔥 NEW: AI Analysis Box */
+    .ai-box {
+        background-color: #0f172a;
+        border-left: 4px solid #3B82F6;
+        padding: 20px;
+        border-radius: 4px;
+        margin-top: 25px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.95em;
+        line-height: 1.6;
+        color: #e2e8f0 !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .ai-header {
+        color: #3B82F6 !important;
+        font-weight: 900;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -151,7 +160,7 @@ def load_data():
 
 df = load_data()
 
-# --- 4. HELPERS ---
+# --- 4. HELPERS & AI LOGIC ---
 def get_dynamic_badge(mode, price):
     if "High-End" in mode: return "💎 MARKET LEADER"
     elif "Gamer" in mode: return "🏆 GAMING BEAST"
@@ -177,9 +186,41 @@ def get_score_badge_html(icon, label, score):
     else: c, b = "#F59E0B", "rgba(245,158,11,0.4)"
     return f"<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {b};border-radius:6px;padding:3px 8px;margin-right:6px;'><span style='font-size:1em;margin-right:4px;'>{icon}</span><span style='color:#888 !important;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;'>{label}</span><span style='color:{c} !important;font-weight:900;font-family:monospace;font-size:0.9em;'>{score:.1f}</span></div>"
 
+# 🔥 AI LOGIC
+def generate_ai_analysis(winner, loser, reason_mode):
+    w_name = winner['name']
+    l_name = loser['name']
+    
+    perf_diff = ((winner['perf_score'] - loser['perf_score']) / loser['perf_score']) * 100
+    price_diff = winner['price'] - loser['price']
+    
+    analysis = []
+    
+    openers = [
+        f"Based on the data, **{w_name}** emerges as the superior choice for {reason_mode.lower()}.",
+        f"After analyzing the specs, **{w_name}** takes the crown here.",
+        f"For users prioritizing {reason_mode}, **{w_name}** wins this battle."
+    ]
+    analysis.append(random.choice(openers))
+    
+    if perf_diff > 15:
+        analysis.append(f"It completely dominates with a **{perf_diff:.1f}% performance advantage**, making it a beast for heavy tasks.")
+    elif perf_diff > 5:
+        analysis.append(f"It offers a noticeable **{perf_diff:.1f}% speed boost**.")
+    
+    if winner['cam_score'] > loser['cam_score'] + 1:
+        analysis.append(f"Photography enthusiasts will prefer its superior camera system (Score: {winner['cam_score']:.1f}).")
+        
+    if price_diff < 0:
+        analysis.append(f"Best of all, it costs **${abs(price_diff):,} less** than the {l_name}, offering incredible value.")
+    elif price_diff > 0:
+        analysis.append(f"Although it costs **${price_diff:,} more**, the performance justifies the premium.")
+        
+    return " ".join(analysis)
+
 # --- 5. MAIN APP ---
-st.title("🛒 TechChoose")
-st.markdown("<div style='margin-bottom:20px; color:#888 !important;'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
+st.title("🛒 TechChoose AI")
+st.markdown("<div style='margin-bottom:20px; color:#888 !important;'>✅ Data Verified: 20 Dec 2025 | 🤖 AI Engine: Active</div>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
@@ -187,7 +228,6 @@ tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 # TAB 1: FIND BEST MATCH
 # ==========================================
 with tab1:
-    # 🔥 EXPANDER FIXED: ใช้ container แทนการ wrap ด้วย expander เพื่อให้ CSS ทำงานเต็มที่
     with st.expander("🔍 **TAP TO CUSTOMIZE**", expanded=True):
         c1, c2 = st.columns(2)
         with c1: os_choice = st.selectbox("Operating System", ["Any", "iOS", "Android"], key="t1_os")
@@ -261,14 +301,13 @@ with tab1:
                 """, unsafe_allow_html=True)
 
 # ==========================================
-# TAB 2: VS MODE (LOCKED FORM - NO JUMPING)
+# TAB 2: VS MODE (AI ANALYST + COLOR VALUES)
 # ==========================================
 with tab2:
     st.subheader("🥊 Head-to-Head Comparison")
     
     all_models = sorted(df['name'].unique())
     
-    # 🔥🔥🔥 FORM: ล็อกการเลือกไว้ในนี้ ไม่เด้งแน่นอน
     with st.form("compare_form"):
         c1, c2 = st.columns(2)
         with c1: p1_name = st.selectbox("Select Phone A", all_models, index=0)
@@ -276,10 +315,8 @@ with tab2:
         
         judge = st.selectbox("Decide Winner By:", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality"])
         
-        # ปุ่มนี้คือกุญแจกันหน้าเด้ง
-        submitted = st.form_submit_button("⚔️ COMPARE NOW", type="primary", use_container_width=True)
+        submitted = st.form_submit_button("⚔️ ANALYZE & COMPARE", type="primary", use_container_width=True)
     
-    # 🔥 Logic ทำงานหลังกดปุ่ม
     if submitted:
         r1 = df[df['name'] == p1_name].iloc[0]
         r2 = df[df['name'] == p2_name].iloc[0]
@@ -290,22 +327,31 @@ with tab2:
         
         s1 = (r1['perf_score']*w_p) + (r1['cam_score']*w_c) + (r1['batt_score']*w_b) + (r1['value']*w_v) + (r1['brand_score']*w_br)
         s2 = (r2['perf_score']*w_p) + (r2['cam_score']*w_c) + (r2['batt_score']*w_b) + (r2['value']*w_v) + (r2['brand_score']*w_br)
-        win1 = s1 >= s2
         
-        c1_cls = "vs-winner-border" if win1 else ""
-        c2_cls = "vs-winner-border" if not win1 else ""
-        rec1 = "<div style='color:#10B981 !important;font-weight:900;margin-bottom:10px;'>👑 WINNER</div>" if win1 else "<div style='height:29px'></div>"
-        rec2 = "<div style='color:#10B981 !important;font-weight:900;margin-bottom:10px;'>👑 WINNER</div>" if not win1 else "<div style='height:29px'></div>"
+        if s1 >= s2:
+            win_row, lose_row = r1, r2
+            win_idx = 1
+        else:
+            win_row, lose_row = r2, r1
+            win_idx = 2
+
+        # --- Visual Comparison Block ---
+        c1_cls = "vs-winner-border" if win_idx == 1 else ""
+        c2_cls = "vs-winner-border" if win_idx == 2 else ""
+        rec1 = "<div style='color:#00FF99 !important;font-weight:900;margin-bottom:10px;'>👑 WINNER</div>" if win_idx == 1 else "<div style='height:29px'></div>"
+        rec2 = "<div style='color:#00FF99 !important;font-weight:900;margin-bottom:10px;'>👑 WINNER</div>" if win_idx == 2 else "<div style='height:29px'></div>"
 
         def create_vs_row(icon, label, v1, v2, is_fmt=False):
             val1 = f"{int(v1):,}" if is_fmt else f"{v1:.1f}"
             val2 = f"{int(v2):,}" if is_fmt else f"{v2:.1f}"
+            
+            # 🔥 Logic เลือก Class สี (เขียว vs แดง)
             c1 = "val-win" if v1 >= v2 else "val-lose"
             c2 = "val-win" if v2 >= v1 else "val-lose"
+            
             return f"<div class='vs-row'><div class='vs-label'><span>{icon}</span> {label}</div><div class='{c1}'>{val1}</div></div>", \
                    f"<div class='vs-row'><div class='vs-label'><span>{icon}</span> {label}</div><div class='{c2}'>{val2}</div></div>"
 
-        # Check for chipset (if exists)
         r_chip = ("", "")
         if 'chipset' in df.columns:
              t1 = r1['chipset'] if pd.notna(r1['chipset']) else "-"
@@ -319,8 +365,21 @@ with tab2:
         r_batt = create_vs_row("🔋", "Batt", r1['batt_score'], r2['batt_score'])
 
         st.divider()
-        col_a, col_b = st.columns(2)
         
+        # 🔥 AI Verdict (เพิ่มกลับมาให้)
+        ai_text = generate_ai_analysis(win_row, lose_row, judge)
+        st.markdown(f"""
+        <div class='ai-box'>
+            <div class='ai-header'>
+                <span>🤖</span> AI ANALYST VERDICT
+            </div>
+            {ai_text}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.write("") 
+
+        col_a, col_b = st.columns(2)
         with col_a:
             st.markdown(f"""
             <div class='vs-card {c1_cls}'>
