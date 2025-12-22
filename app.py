@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Fix",
+    page_title="TechChoose - Final Fixed",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -42,37 +42,40 @@ def load_data():
 
     return df
 
-# --- 3. CSS (NUCLEAR DARK MODE FIX) ---
+# --- 3. CSS (NUCLEAR DARK MODE) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* Force Black Background Everywhere */
+    /* Force Black Background */
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
     
-    /* 🔥 FIX 1: แก้แถบขาวใน Expander */
+    /* 🔥 FIX EXPANDER WHITE BAR */
+    .streamlit-expanderHeader {
+        background-color: #111 !important;
+        color: white !important;
+        border: 1px solid #333 !important;
+    }
     div[data-testid="stExpander"] {
         background-color: transparent !important;
         border: none !important;
     }
     div[data-testid="stExpander"] details {
         background-color: #111 !important;
-        border: 1px solid #333 !important;
-        border-radius: 8px !important;
+        border-color: #333 !important;
     }
-    div[data-testid="stExpander"] > details > summary {
-        background-color: #111 !important; /* บังคับหัวข้อให้ดำ */
+    div[data-testid="stExpander"] summary {
+        background-color: #111 !important;
         color: white !important;
-        border-radius: 8px !important;
     }
-    div[data-testid="stExpander"] > details > summary:hover {
-        color: #FBBF24 !important; /* Hover สีทอง */
+    div[data-testid="stExpander"] summary:hover {
+        color: #FBBF24 !important;
     }
-    div[data-testid="stExpander"] svg {
-        fill: white !important;
+    div[data-testid="stExpander"] * {
+        color: white !important;
     }
 
-    /* 🔥 FIX 2: Tabs Styling */
+    /* Tabs Styling */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border: 1px solid #333; }
@@ -108,24 +111,19 @@ st.markdown("""
     .vs-winner-border { border: 2px solid #10B981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
     .vs-title { font-size: 1.3em; font-weight: 900; margin-bottom: 5px; min-height: 50px; display:flex; align-items:center; justify-content:center;}
     .vs-price { font-family: 'JetBrains Mono'; color: #FBBF24; font-size: 1.5em; margin-bottom: 15px; font-weight: bold; }
-    
     .vs-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 8px 0; font-size: 0.9em; }
     .vs-val { color: white; font-weight: 900; }
     .val-win { color: #10B981; } 
     .rec-badge { background: #10B981; color: black; font-weight: 900; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 0.8em; }
 
-    /* Top Alternatives List */
     .alt-link { text-decoration: none; display: block; }
     .alt-row { background: #0A0A0A; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
     .rank-circle { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; background: #222; border: 1px solid #444; color: #888; }
     .mini-bar-container { display: flex; gap: 4px; margin-top: 6px; }
     .mini-stat { width: 30px; }
     .mini-track { width: 100%; height: 3px; background: #333; border-radius: 2px; }
-    .mini-fill-blue { height: 100%; background: #3B82F6; } 
-    .mini-fill-purple { height: 100%; background: #A855F7; } 
-    .mini-fill-green { height: 100%; background: #10B981; }
+    .mini-fill-blue { height: 100%; background: #3B82F6; } .mini-fill-purple { height: 100%; background: #A855F7; } .mini-fill-green { height: 100%; background: #10B981; }
 
-    /* Responsive */
     @media only screen and (max-width: 600px) {
         .hero-title { font-size: 2.0em !important; }
         .hero-price { font-size: 2.0em !important; }
@@ -144,7 +142,7 @@ df = load_data()
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
 # ==========================================
-# TAB 1: FIND BEST MATCH (แก้ HTML หลุด)
+# TAB 1: FIND BEST MATCH
 # ==========================================
 with tab1:
     with st.expander("🔍 **TAP HERE TO FILTER & CUSTOMIZE**", expanded=True):
@@ -192,37 +190,18 @@ with tab1:
 
         if len(df_f) > 0:
             winner = df_f.iloc[0]
-            
             if "High-End" in lifestyle: badge_txt = "💎 ABSOLUTE BEST"
             elif "Gamer" in lifestyle: badge_txt = "🏆 GAMING BEAST"
             else: badge_txt = "⭐ TOP RECOMMENDATION"
             
-            # Helper for HTML bars
             def bar_html(lbl, val, col):
                 return f"<div class='stat-box'><div class='stat-label'>{lbl}</div><div class='stat-val'>{val:.1f}/10</div><div class='bar-bg'><div style='width:{val*10}%; height:100%; background:{col};'></div></div></div>"
 
             stats_html = f"{bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{bar_html('🔋 BATT', winner['batt_score'], '#10B981')}"
             
-            # 🔥 FIX: แยก HTML string ออกมาให้ชัดเจน ป้องกัน syntax error
-            winner_card_html = f"""
-            <div class='winner-box'>
-                <div style='background:#F59E0B; color:black; padding:8px 16px; border-radius:50px; display:inline-block; font-weight:900; font-size:0.8em; margin-bottom:15px;'>{badge_txt}</div>
-                <div class='hero-title'>{winner['name']}</div>
-                <div class='hero-price'>${winner['price']:,}</div>
-                <div style='color:#888; font-style:italic; font-size:0.8em; margin-bottom:20px;'>*Official MSRP. Check link for real-time pricing.</div>
-                
-                <div style='background:#111; border-left:5px solid #3B82F6; padding:15px; margin-bottom:25px; border-radius:0 10px 10px 0;'>
-                    Excellent choice based on your preferences.
-                </div>
-                
-                <div style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:25px;'>
-                    {stats_html}
-                </div>
-                
-                <a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a>
-                <div class='deal-hint'>⚡ Click to check today's best price & coupons</div>
-            </div>
-            """
+            # 🔥 FIX: NO INDENTATION HERE!
+            winner_card_html = f"""<div class='winner-box'><div style='background:#F59E0B; color:black; padding:8px 16px; border-radius:50px; display:inline-block; font-weight:900; font-size:0.8em; margin-bottom:15px;'>{badge_txt}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div style='color:#888; font-style:italic; font-size:0.8em; margin-bottom:20px;'>*Official MSRP. Check link for real-time pricing.</div><div style='background:#111; border-left:5px solid #3B82F6; padding:15px; margin-bottom:25px; border-radius:0 10px 10px 0;'>Excellent choice based on your preferences.</div><div style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:25px;'>{stats_html}</div><a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div class='deal-hint'>⚡ Click to check today's best price & coupons</div></div>"""
+            
             st.markdown(winner_card_html, unsafe_allow_html=True)
             
             st.write("")
@@ -231,29 +210,14 @@ with tab1:
                 rank_badge = f"<div class='rank-circle'>{i+1}</div>"
                 mini_bars = f"""<div class='mini-bar-container'><div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div></div>"""
                 
-                alt_html = f"""
-                <a href="{row['link']}" target="_blank" class="alt-link">
-                    <div class="alt-row">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            {rank_badge} 
-                            <div>
-                                <div style="font-weight:bold; font-size:1em; color:white;">{row['name']}</div>
-                                <div style="color:#FBBF24; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>
-                                {mini_bars}
-                            </div>
-                        </div>
-                        <div style="text-align:right">
-                            <div style="font-size:1.1em; font-weight:900; color:#3B82F6;">{row['match']:.0f}%</div>
-                            <div style="color:#FBBF24; font-size:0.7em; font-weight:bold;">VIEW ></div>
-                        </div>
-                    </div>
-                </a>"""
+                # 🔥 FIX: NO INDENTATION HERE EITHER!
+                alt_html = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-row"><div style="display:flex; align-items:center; gap:12px;">{rank_badge}<div><div style="font-weight:bold; font-size:1em; color:white;">{row['name']}</div><div style="color:#FBBF24; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>{mini_bars}</div></div><div style="text-align:right"><div style="font-size:1.1em; font-weight:900; color:#3B82F6;">{row['match']:.0f}%</div><div style="color:#FBBF24; font-size:0.7em; font-weight:bold;">VIEW ></div></div></div></a>"""
                 st.markdown(alt_html, unsafe_allow_html=True)
         else:
             st.warning("No phones found under this budget.")
 
 # ==========================================
-# TAB 2: VS MODE (Pro Version)
+# TAB 2: VS MODE
 # ==========================================
 with tab2:
     st.markdown("### 🥊 Head-to-Head Comparison")
@@ -288,34 +252,12 @@ with tab2:
         c1, c2 = st.columns(2)
         
         with c1:
-            # 🔥 Fix: ใช้ตัวแปร html แยกออกมาเพื่อความชัวร์
-            card1_html = f"""
-            <div class='vs-card {cls1}'>
-                {bad1}
-                <div class='vs-title'>{r1['name']}</div>
-                <div class='vs-price'>${r1['price']:,}</div>
-                <div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div>
-                <div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']}</span></div>
-                <div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div>
-                <div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div>
-                <a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
-            </div>
-            """
+            # 🔥 FIX: NO INDENTATION!
+            card1_html = f"""<div class='vs-card {cls1}'>{bad1}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div><a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card1_html, unsafe_allow_html=True)
 
         with c2:
-            card2_html = f"""
-            <div class='vs-card {cls2}'>
-                {bad2}
-                <div class='vs-title'>{r2['name']}</div>
-                <div class='vs-price'>${r2['price']:,}</div>
-                <div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r2['antutu'], r1['antutu'])}'>{int(r2['antutu']):,}</span></div>
-                <div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r2['perf_score'], r1['perf_score'])}'>{r2['perf_score']}</span></div>
-                <div class='vs-row'><span>📸 Camera</span><span class='{val_col(r2['cam_score'], r1['cam_score'])}'>{r2['cam_score']}</span></div>
-                <div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r2['batt_score'], r1['batt_score'])}'>{r2['batt_score']}</span></div>
-                <a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
-            </div>
-            """
+            card2_html = f"""<div class='vs-card {cls2}'>{bad2}<div class='vs-title'>{r2['name']}</div><div class='vs-price'>${r2['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r2['antutu'], r1['antutu'])}'>{int(r2['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r2['perf_score'], r1['perf_score'])}'>{r2['perf_score']}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r2['cam_score'], r1['cam_score'])}'>{r2['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r2['batt_score'], r1['batt_score'])}'>{r2['batt_score']}</span></div><a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card2_html, unsafe_allow_html=True)
             
         st.write("---")
