@@ -3,13 +3,13 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Star Edition",
+    page_title="TechChoose - Smart Scoring",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. LOAD DATA ---
+# --- 2. SMART DATA LOADER (หัวใจสำคัญ ❤️) ---
 @st.cache_data(ttl=60)
 def load_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
@@ -27,11 +27,25 @@ def load_data():
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
+        # ----------------------------------------------------
+        # 🔥 SMART SCORING LOGIC (สูตรคำนวณแบบกูรู)
+        # ----------------------------------------------------
+        def calculate_smart_speed(antutu):
+            # เกณฑ์ขั้นบันได (Tiered System)
+            if antutu >= 2800000: return 10.0  # แรงทะลุโลก = เต็ม
+            elif antutu >= 2000000: return 9.5 # แรงระดับ Pro = 9.5
+            elif antutu >= 1500000: return 9.0 # แรงหายห่วง = 9.0
+            elif antutu >= 1000000: return 8.0 # เล่นเกมลื่น = 8.0
+            elif antutu >= 700000: return 7.0  # ใช้งานทั่วไปดี = 7.0
+            else: return (antutu / 1000000) * 10 # ต่ำกว่านั้นคิดตามจริง
+            
         if 'antutu' in df.columns:
-            df['perf_score'] = (df['antutu'] / 3500000) * 10 
-            df['perf_score'] = df['perf_score'].clip(upper=10)
-        else: df['perf_score'] = 8.0 
+            # ใช้สูตรใหม่แทนการหารดื้อๆ
+            df['perf_score'] = df['antutu'].apply(calculate_smart_speed)
+        else: 
+            df['perf_score'] = 8.0 
         
+        # Normalize อื่นๆ (Camera/Batt ใช้ค่าใน Sheet เลย เพราะเป็นคะแนนดิบอยู่แล้ว)
         if 'camera' in df.columns: df['cam_score'] = df['camera']
         if 'battery' in df.columns: df['batt_score'] = df['battery']
         if 'value' not in df.columns: df['value'] = 8.0
@@ -54,45 +68,40 @@ def get_expert_verdict(row, mode):
     if "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b>."
     return f"Excellent choice based on your preferences."
 
-# 🔥 NEW: LOGIC คำนวณดาว (มีครึ่งดวง)
+# 🔥 Logic ดาวแบบละเอียด (ครึ่งดาว)
 def get_star_rating(score):
-    # แปลงคะแนนเต็ม 10 -> เต็ม 5
-    rating = score / 2
-    full_stars = int(rating) # จำนวนดาวเต็ม
-    remainder = rating - full_stars
-    
-    # ถ้าเศษเกิน 0.5 ให้ปัดเป็นครึ่งดาว (½)
-    half_star = "½" if remainder >= 0.25 and remainder < 0.75 else ""
-    if remainder >= 0.75: # ถ้าเกือบเต็ม ให้ปัดเป็นดาวเต็มไปเลย
-        full_stars += 1
-        half_star = ""
-        
-    empty_stars = "☆" * (5 - full_stars - (1 if half_star else 0))
-    
-    return f"{'★' * full_stars}{half_star}{empty_stars}"
+    if score >= 9.8: return "★★★★★"      
+    elif score >= 8.8: return "★★★★½"    
+    elif score >= 7.8: return "★★★★☆"    
+    elif score >= 6.8: return "★★★½☆"    
+    elif score >= 5.0: return "★★★☆☆"    
+    else: return "★★☆☆☆"
 
 def stat_bar_html(label, score, color):
-    return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
+    # ปรับหลอดพลังให้เต็ม 10 เสมอถ้าระดับ Pro
+    display_width = min(score * 10, 100) 
+    return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{display_width}%; height:100%; background:{color};'></div></div></div>"
 
-# --- 4. CSS (STAR THEME PRO) ---
+# --- 4. CSS (ULTRA DARK THEME) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
-    
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
 
-    /* UI Fixes */
+    /* EXPANDER & TABS */
     .streamlit-expanderHeader { background-color: #111 !important; color: white !important; border: 1px solid #333 !important; }
     div[data-testid="stExpander"] { background-color: transparent !important; border: none !important; }
     div[data-testid="stExpander"] details { background-color: #111 !important; border-color: #333 !important; }
     div[data-testid="stExpander"] summary { background-color: #111 !important; color: white !important; }
     div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
+    div[data-testid="stExpander"] svg { fill: white !important; }
     
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border: 1px solid #333; }
 
-    label, p, .stMarkdown { color: #FFFFFF !important; }
+    /* TEXT & INPUTS */
+    label, p, .stMarkdown { color: #FFFFFF !important; opacity: 1 !important; }
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="popover"], ul[role="listbox"] { background-color: #111 !important; color: white !important; }
@@ -116,7 +125,7 @@ st.markdown("""
     .amazon-btn { background: #3B82F6; color: white !important; padding: 18px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.2em; margin-top: 20px; transition: 0.3s; }
     .amazon-btn:hover { background: #2563EB; }
 
-    /* 🔥 STAR CARDS (Consistent Design) */
+    /* ALT CARDS */
     .alt-link { text-decoration: none !important; display: block; }
     .alt-card {
         background: #111; border: 1px solid #333; border-radius: 12px; padding: 20px; margin-bottom: 15px;
@@ -132,11 +141,8 @@ st.markdown("""
     .alt-info { flex-grow: 1; }
     .alt-name { color: white; font-weight: 700; font-size: 1.2em; margin-bottom: 5px; }
     .alt-price { color: #FBBF24; font-family: 'JetBrains Mono'; font-weight: bold; font-size: 1.1em; }
-    
-    /* 🔥 STAR ROW STYLE */
     .star-row { display: flex; gap: 15px; margin-top: 8px; font-size: 0.9em; color: #AAA; }
     .star-item span { color: #FFD700; margin-left: 5px; letter-spacing: 1px; font-size: 1.1em; } 
-
     .view-btn { color: #FF9900; font-weight: 900; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
 
     /* VS CARD */
@@ -165,7 +171,7 @@ df = load_data()
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
 # ==========================================
-# TAB 1: FIND BEST MATCH (STAR EDITION)
+# TAB 1: FIND BEST MATCH
 # ==========================================
 with tab1:
     with st.expander("🔍 **TAP HERE TO FILTER & CUSTOMIZE**", expanded=True):
@@ -226,12 +232,12 @@ with tab1:
             for i, row in df_f.iloc[1:6].iterrows():
                 rank_num = i + 1
                 
-                # Badge Color Logic
+                # Badge Color
                 if rank_num == 2: rank_cls = "rank-2"
                 elif rank_num == 3: rank_cls = "rank-3"
                 else: rank_cls = "rank-norm"
                 
-                # 🔥 GENERATE STARS (HALF STAR INCLUDED)
+                # Stars
                 s_speed = get_star_rating(row['perf_score'])
                 s_cam = get_star_rating(row['cam_score'])
                 s_batt = get_star_rating(row['batt_score'])
@@ -259,7 +265,7 @@ with tab1:
             st.warning("No phones found under this budget.")
 
 # ==========================================
-# TAB 2: VS MODE (FIXED & STABLE)
+# TAB 2: VS MODE (STABLE)
 # ==========================================
 with tab2:
     st.markdown("### 🥊 Head-to-Head Comparison")
@@ -267,25 +273,23 @@ with tab2:
     judge = st.selectbox("⚖️ Decide Winner By:", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
     all_models = sorted(df['name'].unique())
     
-    # 🔥 STABLE SELECTBOXES (Using Key Persistence)
-    col_a, col_b = st.columns(2)
-    
-    # Default Indices logic
-    idx1 = 0
-    idx2 = 1 if len(all_models) > 1 else 0
-    
-    # Check if we have session state for these, otherwise use defaults
-    if 'vs_p1' not in st.session_state: st.session_state.vs_p1 = all_models[idx1]
-    if 'vs_p2' not in st.session_state: st.session_state.vs_p2 = all_models[idx2]
+    # 🔥 STABLE SELECTBOX (Using st.session_state without callback)
+    if 'p1' not in st.session_state: st.session_state.p1 = all_models[0]
+    if 'p2' not in st.session_state: st.session_state.p2 = all_models[1] if len(all_models) > 1 else all_models[0]
 
-    with col_a: 
-        p1_name = st.selectbox("Select Phone A", all_models, key="vs_p1")
-    with col_b: 
-        p2_name = st.selectbox("Select Phone B", all_models, key="vs_p2")
+    c1, c2 = st.columns(2)
+    with c1: 
+        # Update session state manually when user selects
+        sel_p1 = st.selectbox("Select Phone A", all_models, index=all_models.index(st.session_state.p1), key="p1_select")
+        st.session_state.p1 = sel_p1
+        
+    with c2: 
+        sel_p2 = st.selectbox("Select Phone B", all_models, index=all_models.index(st.session_state.p2), key="p2_select")
+        st.session_state.p2 = sel_p2
     
-    if p1_name and p2_name: 
-        r1 = df[df['name'] == p1_name].iloc[0]
-        r2 = df[df['name'] == p2_name].iloc[0]
+    if st.session_state.p1 and st.session_state.p2: 
+        r1 = df[df['name'] == st.session_state.p1].iloc[0]
+        r2 = df[df['name'] == st.session_state.p2].iloc[0]
         
         w_p, w_c, w_b, w_v = 1, 1, 1, 1
         if "Gaming" in judge: w_p, w_c, w_b, w_v = 10, 0, 3, 1
@@ -298,19 +302,18 @@ with tab2:
         win1 = s1 >= s2
         c1_cls = "vs-winner-border" if win1 else ""
         c2_cls = "vs-winner-border" if not win1 else ""
-        # 🔥 GOLD BADGE
         b1_html = "<div class='rec-badge'>👑 RECOMMENDED</div>" if win1 else "<div style='height:40px;'></div>"
         b2_html = "<div class='rec-badge'>👑 RECOMMENDED</div>" if not win1 else "<div style='height:40px;'></div>"
         
         def val_col(v1, v2): return "val-win" if v1 >= v2 else "val-lose"
 
-        c1, c2 = st.columns(2)
+        col_card1, col_card2 = st.columns(2)
         
-        with c1:
+        with col_card1:
             card1 = f"""<div class='vs-card {c1_cls}'>{b1_html}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div><a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card1, unsafe_allow_html=True)
 
-        with c2:
+        with col_card2:
             card2 = f"""<div class='vs-card {c2_cls}'>{b2_html}<div class='vs-title'>{r2['name']}</div><div class='vs-price'>${r2['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r2['antutu'], r1['antutu'])}'>{int(r2['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r2['perf_score'], r1['perf_score'])}'>{r2['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r2['cam_score'], r1['cam_score'])}'>{r2['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r2['batt_score'], r1['batt_score'])}'>{r2['batt_score']}</span></div><a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card2, unsafe_allow_html=True)
             
