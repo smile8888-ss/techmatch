@@ -4,18 +4,18 @@ import random
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Blackout (AI & Color Mod)",
+    page_title="TechChoose - Logic Fixed",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS (แก้กล่องขาว & ปรับสีค่าพลังใหม่ & เพิ่ม AI Style) ---
+# --- 2. CSS (Blackout + Neon Green Winner + AI Box) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;900&display=swap');
     
-    /* 1. บังคับพื้นหลังดำสนิททั้งแอป */
+    /* 1. บังคับพื้นหลังดำสนิท */
     .stApp { background-color: #000000 !important; }
 
     /* 2. แก้ตัวหนังสือกลืน */
@@ -72,28 +72,28 @@ st.markdown("""
 
     /* VS Card */
     .vs-card { background: #111 !important; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; height: 100%; }
-    .vs-winner-border { border: 2px solid #00FF99; box-shadow: 0 0 30px rgba(0, 255, 153, 0.15); } /* เปลี่ยนขอบเป็นสีเขียวนีออน */
+    .vs-winner-border { border: 2px solid #00FF99; box-shadow: 0 0 30px rgba(0, 255, 153, 0.15); } /* Neon Green Border */
     
     .vs-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding: 12px 0; }
     .vs-label { display: flex; align-items: center; gap: 8px; color: #CCC !important; font-weight: bold; font-size: 0.9em; }
     
-    /* 🔥🔥🔥 7. ปรับสีค่าพลัง (Values) ตรงนี้ 🔥🔥🔥 */
+    /* Values Coloring */
     .val-win { 
-        color: #00FF99 !important; /* เขียวนีออนสว่าง */
+        color: #00FF99 !important; /* Neon Green */
         font-weight: 900; 
         font-family: 'JetBrains Mono'; 
         font-size: 1.1em;
-        text-shadow: 0 0 10px rgba(0, 255, 153, 0.3); /* ใส่แสงเรืองรอง */
+        text-shadow: 0 0 10px rgba(0, 255, 153, 0.3);
     }
     .val-lose { 
-        color: #FF4444 !important; /* แดง */
+        color: #FF4444 !important; /* Soft Red */
         font-weight: 900; 
         font-family: 'JetBrains Mono'; 
         font-size: 1.1em; 
         opacity: 0.8;
     }
     
-    /* 🔥 NEW: AI Analysis Box */
+    /* AI Analysis Box */
     .ai-box {
         background-color: #0f172a;
         border-left: 4px solid #3B82F6;
@@ -117,7 +117,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. DATA ---
+# --- 3. DATA & LOGIC FIX ---
 @st.cache_data(ttl=60)
 def load_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
@@ -128,12 +128,15 @@ def load_data():
 
     if not df.empty:
         df = df.dropna(subset=['name', 'price'])
+        
+        # 1. OS
         def get_os(name):
             name_str = str(name).lower()
             if 'iphone' in name_str or 'ipad' in name_str: return 'iOS'
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
+        # 2. Brand
         def get_brand_score(name):
             n = str(name).lower()
             if 'iphone' in n or 'apple' in n: return 10.0
@@ -142,16 +145,30 @@ def load_data():
             return 9.0 
         df['brand_score'] = df['name'].apply(get_brand_score)
         
+        # 3. Calculate Norm Scores
         max_antutu = df['antutu'].max() if 'antutu' in df.columns else 1
         max_cam = df['camera'].max() if 'camera' in df.columns else 10
         max_batt = df['battery'].max() if 'battery' in df.columns else 10
+        max_price = df['price'].max() if 'price' in df.columns else 2000
         
         if 'antutu' in df.columns: df['perf_score'] = (df['antutu'] / max_antutu) * 10
-        else: df['perf_score'] = 8.0 
+        else: df['perf_score'] = 5.0 
         
         if 'camera' in df.columns: df['cam_score'] = (df['camera'] / max_cam) * 10
+        else: df['cam_score'] = 5.0
+        
         if 'battery' in df.columns: df['batt_score'] = (df['battery'] / max_batt) * 10
-        if 'value' not in df.columns: df['value'] = 8.0
+        else: df['batt_score'] = 5.0
+
+        # 🔥 4. FIXED: DYNAMIC VALUE SCORE 🔥
+        # สูตร: คะแนนเต็ม 10 - ((ราคา / ราคาแพงสุด) * 10) -> ยิ่งแพง คะแนนยิ่งน้อย
+        if max_price > 0:
+            df['value'] = 10 * (1 - (df['price'] / max_price)) + 1 # +1 กันได้ 0
+            df['value'] = df['value'].clip(0, 10)
+        else:
+            df['value'] = 5.0
+            
+        # Optional Fill
         if 'antutu' not in df.columns: df['antutu'] = df['price'] * 2000
 
         my_tag = "techchoose-20"
@@ -160,12 +177,13 @@ def load_data():
 
 df = load_data()
 
-# --- 4. HELPERS & AI LOGIC ---
+# --- 4. HELPERS & AI ---
 def get_dynamic_badge(mode, price):
     if "High-End" in mode: return "💎 MARKET LEADER"
     elif "Gamer" in mode: return "🏆 GAMING BEAST"
     elif "Creator" in mode: return "🎥 CREATOR CHOICE"
-    else: return "⭐ TOP FLAGSHIP"
+    elif "Student" in mode: return "💰 BEST VALUE"
+    else: return "⭐ TOP PICK"
 
 def stat_bar_html(label, score, color):
     width = min(score * 10, 100)
@@ -186,7 +204,6 @@ def get_score_badge_html(icon, label, score):
     else: c, b = "#F59E0B", "rgba(245,158,11,0.4)"
     return f"<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {b};border-radius:6px;padding:3px 8px;margin-right:6px;'><span style='font-size:1em;margin-right:4px;'>{icon}</span><span style='color:#888 !important;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;'>{label}</span><span style='color:{c} !important;font-weight:900;font-family:monospace;font-size:0.9em;'>{score:.1f}</span></div>"
 
-# 🔥 AI LOGIC
 def generate_ai_analysis(winner, loser, reason_mode):
     w_name = winner['name']
     l_name = loser['name']
@@ -225,7 +242,7 @@ st.markdown("<div style='margin-bottom:20px; color:#888 !important;'>✅ Data Ve
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
 # ==========================================
-# TAB 1: FIND BEST MATCH
+# TAB 1: FIND BEST MATCH (LOGIC TUNED)
 # ==========================================
 with tab1:
     with st.expander("🔍 **TAP TO CUSTOMIZE**", expanded=True):
@@ -242,18 +259,24 @@ with tab1:
         if "iOS" in os_choice: df_f = df_f[df_f['os_type']=='iOS']
         elif "Android" in os_choice: df_f = df_f[df_f['os_type']=='Android']
         
+        # 🔥 WEIGHTING LOGIC FIX 🔥
         p, c, b, v, br = 5, 5, 5, 5, 2 
+        
         if "High-End" in lifestyle: 
-            p,c,b,v,br = 10, 10, 8, 0, 4 
+            p,c,b,v,br = 10, 10, 8, 1, 4  # ไม่สนความคุ้มค่า (v น้อย)
             budget = 9999
         elif "Gamer" in lifestyle: 
             p,c,b,v,br = 20, 5, 10, 5, 1
             budget = 2000
-        elif "Student" in lifestyle:
-            budget = 800
-            p,c,b,v,br = 6, 6, 8, 20, 1
-        else:
+        elif "Creator" in lifestyle:
+            p,c,b,v,br = 6, 20, 8, 5, 2
             budget = 2000
+        elif "Student" in lifestyle:
+            budget = 900 # จำกัดงบ
+            p,c,b,v,br = 3, 5, 8, 40, 1 # 🔥 เน้นความคุ้มค่า (v=40)
+        else: # General Use
+            budget = 1500
+            p,c,b,v,br = 5, 5, 5, 25, 2 # 🔥 เน้นความคุ้มค่า (v=25)
             
         df_f = df_f[df_f['price'] <= budget]
         df_f['final_score'] = (df_f['perf_score']*p) + (df_f['cam_score']*c) + (df_f['batt_score']*b) + (df_f['value']*v) + (df_f['brand_score']*br)
@@ -301,7 +324,7 @@ with tab1:
                 """, unsafe_allow_html=True)
 
 # ==========================================
-# TAB 2: VS MODE (AI ANALYST + COLOR VALUES)
+# TAB 2: VS MODE
 # ==========================================
 with tab2:
     st.subheader("🥊 Head-to-Head Comparison")
@@ -345,7 +368,6 @@ with tab2:
             val1 = f"{int(v1):,}" if is_fmt else f"{v1:.1f}"
             val2 = f"{int(v2):,}" if is_fmt else f"{v2:.1f}"
             
-            # 🔥 Logic เลือก Class สี (เขียว vs แดง)
             c1 = "val-win" if v1 >= v2 else "val-lose"
             c2 = "val-win" if v2 >= v1 else "val-lose"
             
@@ -366,7 +388,7 @@ with tab2:
 
         st.divider()
         
-        # 🔥 AI Verdict (เพิ่มกลับมาให้)
+        # 🔥 AI Verdict
         ai_text = generate_ai_analysis(win_row, lose_row, judge)
         st.markdown(f"""
         <div class='ai-box'>
