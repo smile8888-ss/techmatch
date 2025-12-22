@@ -3,13 +3,13 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Smart Scoring",
+    page_title="TechChoose - Final Complete",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. SMART DATA LOADER (หัวใจสำคัญ ❤️) ---
+# --- 2. LOAD DATA ---
 @st.cache_data(ttl=60)
 def load_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
@@ -27,25 +27,12 @@ def load_data():
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
-        # ----------------------------------------------------
-        # 🔥 SMART SCORING LOGIC (สูตรคำนวณแบบกูรู)
-        # ----------------------------------------------------
-        def calculate_smart_speed(antutu):
-            # เกณฑ์ขั้นบันได (Tiered System)
-            if antutu >= 2800000: return 10.0  # แรงทะลุโลก = เต็ม
-            elif antutu >= 2000000: return 9.5 # แรงระดับ Pro = 9.5
-            elif antutu >= 1500000: return 9.0 # แรงหายห่วง = 9.0
-            elif antutu >= 1000000: return 8.0 # เล่นเกมลื่น = 8.0
-            elif antutu >= 700000: return 7.0  # ใช้งานทั่วไปดี = 7.0
-            else: return (antutu / 1000000) * 10 # ต่ำกว่านั้นคิดตามจริง
-            
+        # Smart Score Calculation
         if 'antutu' in df.columns:
-            # ใช้สูตรใหม่แทนการหารดื้อๆ
-            df['perf_score'] = df['antutu'].apply(calculate_smart_speed)
-        else: 
-            df['perf_score'] = 8.0 
+            df['perf_score'] = (df['antutu'] / 3500000) * 10 
+            df['perf_score'] = df['perf_score'].clip(upper=10)
+        else: df['perf_score'] = 8.0 
         
-        # Normalize อื่นๆ (Camera/Batt ใช้ค่าใน Sheet เลย เพราะเป็นคะแนนดิบอยู่แล้ว)
         if 'camera' in df.columns: df['cam_score'] = df['camera']
         if 'battery' in df.columns: df['batt_score'] = df['battery']
         if 'value' not in df.columns: df['value'] = 8.0
@@ -68,40 +55,53 @@ def get_expert_verdict(row, mode):
     if "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b>."
     return f"Excellent choice based on your preferences."
 
-# 🔥 Logic ดาวแบบละเอียด (ครึ่งดาว)
 def get_star_rating(score):
-    if score >= 9.8: return "★★★★★"      
-    elif score >= 8.8: return "★★★★½"    
-    elif score >= 7.8: return "★★★★☆"    
-    elif score >= 6.8: return "★★★½☆"    
+    if score >= 9.5: return "★★★★★"      
+    elif score >= 8.5: return "★★★★½"    
+    elif score >= 7.5: return "★★★★☆"    
+    elif score >= 6.5: return "★★★½☆"    
     elif score >= 5.0: return "★★★☆☆"    
     else: return "★★☆☆☆"
 
 def stat_bar_html(label, score, color):
-    # ปรับหลอดพลังให้เต็ม 10 เสมอถ้าระดับ Pro
-    display_width = min(score * 10, 100) 
-    return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{display_width}%; height:100%; background:{color};'></div></div></div>"
+    return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
 
-# --- 4. CSS (ULTRA DARK THEME) ---
+# 🔥 NEW: COMPARE LOGIC (หาจุดเด่นเทียบกับที่ 1)
+def get_reason_badge(winner_row, current_row):
+    # 1. เช็คราคา (ถูกกว่าเยอะไหม?)
+    price_diff = winner_row['price'] - current_row['price']
+    if price_diff >= 100:
+        return f"<span class='reason-tag tag-save'>💰 SAVE ${int(price_diff):,}</span>"
+    
+    # 2. เช็คสเปก (อันไหนชนะขาด?)
+    if current_row['batt_score'] > (winner_row['batt_score'] + 0.5):
+        return "<span class='reason-tag tag-spec'>🔋 BETTER BATT</span>"
+    if current_row['perf_score'] > (winner_row['perf_score'] + 0.5):
+        return "<span class='reason-tag tag-spec'>🚀 FASTER</span>"
+    if current_row['cam_score'] > (winner_row['cam_score'] + 0.5):
+        return "<span class='reason-tag tag-spec'>📸 BETTER CAM</span>"
+    
+    # 3. ถ้าไม่มีจุดเด่นชัดเจน
+    return ""
+
+# --- 4. CSS (THEME) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
 
-    /* EXPANDER & TABS */
+    /* UI ELEMENTS */
     .streamlit-expanderHeader { background-color: #111 !important; color: white !important; border: 1px solid #333 !important; }
     div[data-testid="stExpander"] { background-color: transparent !important; border: none !important; }
     div[data-testid="stExpander"] details { background-color: #111 !important; border-color: #333 !important; }
     div[data-testid="stExpander"] summary { background-color: #111 !important; color: white !important; }
     div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
-    div[data-testid="stExpander"] svg { fill: white !important; }
     
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border: 1px solid #333; }
 
-    /* TEXT & INPUTS */
-    label, p, .stMarkdown { color: #FFFFFF !important; opacity: 1 !important; }
+    label, p, .stMarkdown { color: #FFFFFF !important; }
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="popover"], ul[role="listbox"] { background-color: #111 !important; color: white !important; }
@@ -124,6 +124,14 @@ st.markdown("""
     .bar-bg { background: #333; height: 4px; border-radius: 2px; margin-top: 5px; overflow: hidden; }
     .amazon-btn { background: #3B82F6; color: white !important; padding: 18px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.2em; margin-top: 20px; transition: 0.3s; }
     .amazon-btn:hover { background: #2563EB; }
+
+    /* 🔥 REASON BADGES (สิ่งที่หายไป กลับมาแล้ว!) */
+    .reason-tag {
+        font-size: 0.75em; font-weight: 900; padding: 4px 10px; border-radius: 4px;
+        margin-left: 10px; vertical-align: middle; display: inline-block;
+    }
+    .tag-save { background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; } /* Green */
+    .tag-spec { background: rgba(59, 130, 246, 0.2); color: #3B82F6; border: 1px solid #3B82F6; } /* Blue */
 
     /* ALT CARDS */
     .alt-link { text-decoration: none !important; display: block; }
@@ -237,6 +245,9 @@ with tab1:
                 elif rank_num == 3: rank_cls = "rank-3"
                 else: rank_cls = "rank-norm"
                 
+                # 🔥 REASON BADGE (The Missing Piece!)
+                reason_badge = get_reason_badge(winner, row)
+                
                 # Stars
                 s_speed = get_star_rating(row['perf_score'])
                 s_cam = get_star_rating(row['cam_score'])
@@ -248,7 +259,7 @@ with tab1:
                         <div style="display:flex; align-items:center; width:100%;">
                             <div class="rank-box {rank_cls}">{rank_num}</div>
                             <div class="alt-info">
-                                <div class="alt-name">{row['name']}</div>
+                                <div class="alt-name">{row['name']} {reason_badge}</div>
                                 <div class="alt-price">${row['price']:,}</div>
                                 <div class="star-row">
                                     <div class="star-item">🚀 <span>{s_speed}</span></div>
@@ -273,16 +284,14 @@ with tab2:
     judge = st.selectbox("⚖️ Decide Winner By:", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
     all_models = sorted(df['name'].unique())
     
-    # 🔥 STABLE SELECTBOX (Using st.session_state without callback)
+    # Init & Stable Select (No Callback)
     if 'p1' not in st.session_state: st.session_state.p1 = all_models[0]
     if 'p2' not in st.session_state: st.session_state.p2 = all_models[1] if len(all_models) > 1 else all_models[0]
 
     c1, c2 = st.columns(2)
     with c1: 
-        # Update session state manually when user selects
         sel_p1 = st.selectbox("Select Phone A", all_models, index=all_models.index(st.session_state.p1), key="p1_select")
         st.session_state.p1 = sel_p1
-        
     with c2: 
         sel_p2 = st.selectbox("Select Phone B", all_models, index=all_models.index(st.session_state.p2), key="p2_select")
         st.session_state.p2 = sel_p2
