@@ -3,13 +3,30 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Master Fixed",
+    page_title="TechChoose - Final Color Fix",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. LOAD DATA ---
+# --- 2. HELPER FUNCTIONS (ย้ายมาบนสุด กัน Error) ---
+def get_dynamic_badge(mode, price):
+    if "High-End" in mode: return "💎 ABSOLUTE BEST"
+    elif "Gamer" in mode: return "🏆 GAMING BEAST"
+    elif "Creator" in mode: return "🎥 CREATOR CHOICE"
+    elif "Student" in mode: return "💰 SMART SAVER"
+    elif "Business" in mode: return "💼 WORKHORSE"
+    elif "General" in mode: return "⭐ BALANCED PICK"
+    else: return "⭐ TOP FLAGSHIP"
+
+def get_expert_verdict(row, mode):
+    if "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b>."
+    return f"Excellent choice based on your preferences."
+
+def stat_bar_html(label, score, color):
+    return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
+
+# --- 3. LOAD DATA ---
 @st.cache_data(ttl=60)
 def load_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
@@ -42,33 +59,24 @@ def load_data():
 
     return df
 
-# --- 3. HELPER FUNCTIONS (ย้ายมาไว้ตรงนี้ กัน Error) ---
-def get_dynamic_badge(mode, price):
-    if "High-End" in mode: return "💎 ABSOLUTE BEST"
-    elif "Gamer" in mode: return "🏆 GAMING BEAST"
-    elif "Creator" in mode: return "🎥 CREATOR CHOICE"
-    elif "Student" in mode: return "💰 SMART SAVER"
-    elif "Business" in mode: return "💼 WORKHORSE"
-    elif "General" in mode: return "⭐ BALANCED PICK"
-    else: return "⭐ TOP FLAGSHIP"
-
-def get_expert_verdict(row, mode):
-    if "Gamer" in mode: return f"Built for speed. <b>AnTuTu {int(row['antutu']):,}</b>."
-    return f"Excellent choice based on your preferences."
-
-def stat_bar_html(label, score, color):
-    return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
-
-# --- 4. CSS (NUCLEAR DARK MODE) ---
+# --- 4. CSS (NUCLEAR COLOR FIXES) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
 
+    /* 🔥 FIX LABEL VISIBILITY (บังคับสีขาว) */
+    label, .stSelectbox label, .stNumberInput label, p {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+    }
+    div[data-testid="stMarkdownContainer"] p {
+        color: #FFFFFF !important;
+    }
+
     /* EXPANDER & TABS */
     .streamlit-expanderHeader { background-color: #111 !important; color: white !important; border: 1px solid #333 !important; }
-    div[data-testid="stExpander"] { background-color: transparent !important; border: none !important; }
     div[data-testid="stExpander"] details { background-color: #111 !important; border-color: #333 !important; }
     div[data-testid="stExpander"] summary { background-color: #111 !important; color: white !important; }
     div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
@@ -100,9 +108,9 @@ st.markdown("""
     /* VS CARD */
     .vs-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; height: 100%; }
     .vs-winner-border { border: 2px solid #10B981; box-shadow: 0 0 25px rgba(16, 185, 129, 0.2); }
-    .vs-title { font-size: 1.4em; font-weight: 900; margin-bottom: 5px; min-height: 50px; display:flex; align-items:center; justify-content:center;}
+    .vs-title { font-size: 1.4em; font-weight: 900; margin-bottom: 5px; min-height: 50px; display:flex; align-items:center; justify-content:center; color: white !important; }
     .vs-price { font-family: 'JetBrains Mono'; color: #FBBF24; font-size: 1.5em; margin-bottom: 15px; font-weight: bold; }
-    .vs-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 10px 0; font-size: 0.95em; }
+    .vs-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 10px 0; font-size: 0.95em; color: #BBB; }
     .val-win { color: #10B981; font-weight: 900; } 
     .val-lose { color: #777; font-weight: bold; }
     .rec-badge { background: #10B981; color: black; font-weight: 900; padding: 6px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 0.8em; letter-spacing: 1px; }
@@ -126,6 +134,15 @@ st.markdown("""
     .mini-fill-blue { height: 100%; background: #3B82F6; } 
     .mini-fill-purple { height: 100%; background: #A855F7; } 
     .mini-fill-green { height: 100%; background: #10B981; }
+
+    /* 🔥 ORANGE LINK BUTTON */
+    .orange-link {
+        color: #FF9900 !important; /* ส้ม */
+        font-weight: 900;
+        font-size: 0.8em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 
     @media only screen and (max-width: 600px) {
         .hero-title { font-size: 2.0em !important; }
@@ -152,7 +169,7 @@ def update_p2(): st.session_state.p2 = st.session_state.widget_p2
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
 # ==========================================
-# TAB 1: FIND BEST MATCH (Restored Best Version)
+# TAB 1: FIND BEST MATCH
 # ==========================================
 with tab1:
     with st.expander("🔍 **TAP HERE TO FILTER & CUSTOMIZE**", expanded=True):
@@ -204,7 +221,6 @@ with tab1:
             
             stats_html = f"{stat_bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATT', winner['batt_score'], '#10B981')}"
             
-            # 🔥 FIX: No Indentation for HTML String!
             winner_card = f"""<div class='winner-box'><div class='award-badge'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{get_expert_verdict(winner, lifestyle)}</div><div class='stat-container'>{stats_html}</div><a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div class='deal-hint'>⚡ Check today's price</div></div>"""
             st.markdown(winner_card, unsafe_allow_html=True)
 
@@ -222,14 +238,14 @@ with tab1:
                 rank_html = f"<div class='rank-badge {rank_cls}'>{rank_num}</div>"
                 mini_bars = f"""<div class='mini-bar-container'><div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div></div>"""
                 
-                # 🔥 FIX: No Indentation + Explicit Color
-                alt_card = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-row"><div style="display:flex; align-items:center; gap:15px;">{rank_html}<div><div style="font-weight:bold; font-size:1.1em; color:white !important;">{row['name']}</div><div style="color:#FBBF24 !important; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>{mini_bars}</div></div><div style="text-align:right"><div style="font-size:1.1em; font-weight:900; color:#3B82F6 !important;">{row['match']:.0f}%</div><div style="color:#666; font-size:0.7em; font-weight:bold;">VIEW ></div></div></div></a>"""
+                # 🔥 FIX: สีชื่อขาว (white), ราคา (FBBF24), ลิงก์ (orange-link)
+                alt_card = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-row"><div style="display:flex; align-items:center; gap:15px;">{rank_html}<div><div style="font-weight:bold; font-size:1.1em; color:white !important;">{row['name']}</div><div style="color:#FBBF24 !important; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>{mini_bars}</div></div><div style="text-align:right"><div style="font-size:1.1em; font-weight:900; color:#3B82F6 !important;">{row['match']:.0f}%</div><div class="orange-link">VIEW ></div></div></div></a>"""
                 st.markdown(alt_card, unsafe_allow_html=True)
         else:
             st.warning(f"No devices found under ${budget}.")
 
 # ==========================================
-# TAB 2: VS MODE (Auto & No Jump)
+# TAB 2: VS MODE (Stable Session State)
 # ==========================================
 with tab2:
     st.markdown("### 🥊 Head-to-Head Comparison")
@@ -274,7 +290,7 @@ with tab2:
 
         c1, c2 = st.columns(2)
         
-        # 🔥 FIX: No Indentation + 1 Decimal
+        # 🔥 FIX: No Indentation + Orange Link
         with c1:
             card1 = f"""<div class='vs-card {c1_cls}'>{b1_html}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div><a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card1, unsafe_allow_html=True)
