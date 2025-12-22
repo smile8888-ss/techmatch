@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Ultra Dark",
+    page_title="TechChoose - Final Dark Mode",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -41,24 +41,51 @@ def load_data():
 
     return df
 
-# --- 3. CSS (Ultra Dark & High Contrast Labels) ---
+# --- 3. CSS (Fix White Bar & All Dark Mode) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* พื้นหลังหลัก */
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
 
-    /* 🔥 2. แก้หัวข้อ (Labels) ให้อ่านง่ายขึ้น (ตัวใหญ่+ขาวสว่าง+หนา) */
+    /* 🔥 แก้แถบขาว (Expander) แบบถอนรากถอนโคน */
+    .streamlit-expanderHeader {
+        background-color: #111 !important;
+        color: white !important;
+        border: 1px solid #333 !important;
+    }
+    div[data-testid="stExpander"] {
+        background-color: transparent !important;
+        border: none !important;
+        color: white !important;
+    }
+    div[data-testid="stExpander"] details {
+        background-color: #111 !important;
+        border-color: #333 !important;
+    }
+    div[data-testid="stExpander"] summary {
+        background-color: #222 !important; /* สีพื้นหลังหัวข้อ */
+        color: white !important;
+    }
+    div[data-testid="stExpander"] summary:hover {
+        color: #FBBF24 !important;
+    }
+    /* บังคับตัวหนังสือข้างในให้ขาว */
+    div[data-testid="stExpander"] * {
+        color: white !important;
+    }
+    div[data-testid="stExpander"] svg {
+        fill: white !important;
+    }
+
+    /* 🔥 Labels หัวข้อ */
     label[data-testid="stWidgetLabel"] p {
-        color: #FFFFFF !important; /* ขาวสว่าง */
-        font-size: 1.1rem !important; /* ใหญ่ขึ้น */
-        font-weight: 700 !important; /* ตัวหนา */
-        margin-bottom: 8px !important;
+        color: #FFFFFF !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
     }
     
-    /* 🔥 1. แก้ Dropdown ขาวโพลน (ยาแรง) */
-    /* กล่องตอนยังไม่กด */
+    /* 🔥 Dropdowns */
     div[data-baseweb="select"] > div {
         background-color: #111 !important;
         border: 1px solid #444 !important;
@@ -66,46 +93,24 @@ st.markdown("""
     }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="select"] svg { fill: white !important; }
-
-    /* เมนูที่เด้งออกมา (Popover) ต้องดำ */
-    div[data-baseweb="popover"],
-    div[data-baseweb="menu"],
-    ul[role="listbox"] {
+    div[data-baseweb="popover"], div[data-baseweb="menu"], ul[role="listbox"] {
         background-color: #111 !important;
         color: white !important;
         border: 1px solid #333 !important;
     }
-    
-    /* ตัวเลือกข้างในเมนู */
     li[role="option"] {
         color: white !important;
         background-color: #111 !important;
     }
-    /* ตอนเอาเมาส์ชี้ตัวเลือก */
     li[role="option"]:hover, li[role="option"][aria-selected="true"] {
-        background-color: #333 !important; /* เทาเข้มขึ้น */
-        color: #FBBF24 !important; /* ตัวหนังสือสีทอง */
+        background-color: #333 !important;
+        color: #FBBF24 !important;
     }
 
-    /* Expander Style */
-    div[data-testid="stExpander"] details {
-        background-color: #0A0A0A !important;
-        border: 1px solid #333 !important;
-        border-radius: 8px !important;
-    }
-    div[data-testid="stExpander"] summary {
-        color: white !important;
-        font-weight: bold !important;
-    }
-    div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
-    div[data-testid="stExpander"] svg { fill: white !important; }
-
-    
-    /* Responsive Sizes */
+    /* Responsive */
     .hero-title { font-size: 3.5em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 10px; }
     .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 5px; }
 
-    /* Tablet & Mobile Tweaks */
     @media only screen and (max-width: 1024px) {
         .hero-title { font-size: 2.5em !important; }
         .hero-price { font-size: 2.5em !important; }
@@ -155,8 +160,7 @@ st.markdown("""
 st.title("🛒 TechChoose")
 st.markdown("<div class='update-badge'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
 
-# ใช้ Expander แบบเปิดตลอด
-with st.expander("🔍 **FILTER OPTIONS / ตัวเลือกการค้นหา**", expanded=True):
+with st.expander("🔍 **TAP HERE TO FILTER / เลือกงบและสเปก**", expanded=True):
     col_filter1, col_filter2 = st.columns(2)
     with col_filter1:
         os_choice = st.selectbox("Operating System (ระบบปฏิบัติการ)", ["Any", "iOS (Apple)", "Android"])
