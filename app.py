@@ -1,26 +1,48 @@
-ฃimport streamlit as st
+import streamlit as st
 import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Form Fixed",
+    page_title="TechChoose - Master Fix",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS (DARK & STABLE) ---
+# --- 2. CSS (แก้กล่องขาวแบบถอนรากถอนโคน) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
+    /* Global Dark Mode Force */
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
 
-    /* Fix Expander White Box */
-    div[data-testid="stExpander"] { background-color: transparent !important; border: none !important; }
-    div[data-testid="stExpander"] details { background-color: #111 !important; border-color: #333 !important; }
-    div[data-testid="stExpander"] summary { color: white !important; }
-    div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
+    /* 🔥 FIX WHITE EXPANDER (แก้กล่องขาวแบบเจาะจง) */
+    .streamlit-expanderHeader {
+        background-color: #0e0e0e !important;
+        color: white !important;
+        border: 1px solid #333 !important;
+        border-radius: 10px !important;
+    }
+    div[data-testid="stExpander"] {
+        background-color: transparent !important;
+        border: none !important;
+        color: white !important;
+    }
+    div[data-testid="stExpander"] details {
+        background-color: #0e0e0e !important;
+        border-color: #333 !important;
+    }
+    div[data-testid="stExpander"] summary {
+        color: white !important;
+    }
+    div[data-testid="stExpander"] summary:hover {
+        color: #FBBF24 !important;
+    }
+    /* บังคับตัวหนังสือใน Expander เป็นสีขาว */
+    div[data-testid="stExpander"] p, div[data-testid="stExpander"] label {
+        color: white !important;
+    }
 
     /* Tabs */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
@@ -248,6 +270,14 @@ with tab2:
             return f"<div class='vs-row'><div class='vs-label'><span>{icon}</span> {label}</div><div class='{c1}'>{val1}</div></div>", \
                    f"<div class='vs-row'><div class='vs-label'><span>{icon}</span> {label}</div><div class='{c2}'>{val2}</div></div>"
 
+        # Check for chipset col
+        r_chip = ("", "")
+        if 'chipset' in df.columns:
+             t1 = r1['chipset'] if pd.notna(r1['chipset']) else "-"
+             t2 = r2['chipset'] if pd.notna(r2['chipset']) else "-"
+             r_chip = (f"<div class='vs-row'><div class='vs-label'><span>🧠</span> Chipset</div><div style='color:white;font-weight:bold;'>{t1}</div></div>",
+                       f"<div class='vs-row'><div class='vs-label'><span>🧠</span> Chipset</div><div style='color:white;font-weight:bold;'>{t2}</div></div>")
+
         r_antutu = create_vs_row("🚀", "AnTuTu", r1['antutu'], r2['antutu'], True)
         r_speed = create_vs_row("⚡", "Speed", r1['perf_score'], r2['perf_score'])
         r_cam = create_vs_row("📸", "Cam", r1['cam_score'], r2['cam_score'])
@@ -262,7 +292,7 @@ with tab2:
                 {rec1}
                 <div class='hero-title' style='font-size:1.5em;'>{r1['name']}</div>
                 <div class='hero-price' style='font-size:1.5em;'>${r1['price']:,}</div>
-                {r_antutu[0]}{r_speed[0]}{r_cam[0]}{r_batt[0]}
+                {r_chip[0]}{r_antutu[0]}{r_speed[0]}{r_cam[0]}{r_batt[0]}
                 <a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
             </div>
             """, unsafe_allow_html=True)
@@ -273,7 +303,7 @@ with tab2:
                 {rec2}
                 <div class='hero-title' style='font-size:1.5em;'>{r2['name']}</div>
                 <div class='hero-price' style='font-size:1.5em;'>${r2['price']:,}</div>
-                {r_antutu[1]}{r_speed[1]}{r_cam[1]}{r_batt[1]}
+                {r_chip[1]}{r_antutu[1]}{r_speed[1]}{r_cam[1]}{r_batt[1]}
                 <a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
             </div>
             """, unsafe_allow_html=True)
