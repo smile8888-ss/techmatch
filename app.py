@@ -41,14 +41,14 @@ def load_data():
 
     return df
 
-# --- 3. CSS (Ultra Dark Mode) ---
+# --- 3. CSS (Ultra Dark + Input Fix) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
 
-    /* Expander Fix */
+    /* 🔥 Expander Fix */
     .streamlit-expanderHeader {
         background-color: #111 !important;
         color: white !important;
@@ -67,24 +67,17 @@ st.markdown("""
         background-color: #222 !important;
         color: white !important;
     }
-    div[data-testid="stExpander"] summary:hover {
-        color: #FBBF24 !important;
-    }
-    div[data-testid="stExpander"] * {
-        color: white !important;
-    }
-    div[data-testid="stExpander"] svg {
-        fill: white !important;
-    }
+    div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
+    div[data-testid="stExpander"] svg { fill: white !important; }
 
-    /* Labels */
+    /* 🔥 Labels */
     label[data-testid="stWidgetLabel"] p {
         color: #FFFFFF !important;
         font-size: 1.1rem !important;
         font-weight: 700 !important;
     }
     
-    /* Dropdowns */
+    /* 🔥 Dropdowns */
     div[data-baseweb="select"] > div {
         background-color: #111 !important;
         border: 1px solid #444 !important;
@@ -104,6 +97,22 @@ st.markdown("""
     li[role="option"]:hover, li[role="option"][aria-selected="true"] {
         background-color: #333 !important;
         color: #FBBF24 !important;
+    }
+    
+    /* 🔥 NEW FIX: Number Inputs (Custom Mode) */
+    div[data-baseweb="input"] > div {
+        background-color: #111 !important; /* พื้นหลังดำ */
+        border: 1px solid #444 !important;
+        color: white !important; /* ตัวเลขขาว */
+    }
+    input {
+        color: white !important; 
+    }
+    /* ปุ่ม +/- */
+    button[kind="secondary"] {
+        background-color: #222 !important;
+        color: white !important;
+        border: 1px solid #444 !important;
     }
 
     /* Responsive */
@@ -159,7 +168,6 @@ st.markdown("""
 st.title("🛒 TechChoose")
 st.markdown("<div class='update-badge'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
 
-# 🔥 แก้ภาษาไทยออกหมดแล้วครับ (English Only)
 with st.expander("🔍 **TAP HERE TO FILTER & CUSTOMIZE**", expanded=True):
     col_filter1, col_filter2 = st.columns(2)
     with col_filter1:
