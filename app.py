@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final VS",
+    page_title="TechChoose - Perfect Edition",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -28,6 +28,7 @@ def load_data():
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
+        # Normalize Scores
         if 'antutu' in df.columns:
             df['perf_score'] = (df['antutu'] / 3500000) * 10 
             df['perf_score'] = df['perf_score'].clip(upper=10)
@@ -44,69 +45,94 @@ def load_data():
 
     return df
 
-# --- 3. CSS (Pro Dark Theme) ---
+# --- 3. CSS (All Fixes Included) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
+    
     .stApp { background-color: #000000; color: #FFFFFF; font-family: 'Inter', sans-serif; }
 
-    /* Tabs Styling */
+    /* --- TABS Styling --- */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border: 1px solid #333; }
 
-    /* Inputs Fix */
+    /* --- INPUTS & COLORS Fix --- */
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
-    div[data-testid="stNumberInput"] button { background-color: #222 !important; color: white !important; border-color: #444 !important; }
-    div[data-testid="stNumberInput"] input { background-color: transparent !important; color: white !important; }
+    div[data-baseweb="select"] span { color: white !important; }
+    div[data-baseweb="select"] svg { fill: white !important; }
     div[data-baseweb="popover"], ul[role="listbox"] { background-color: #111 !important; color: white !important; border: 1px solid #333 !important; }
-    li[role="option"]:hover { background-color: #333 !important; color: #FBBF24 !important; }
+    li[role="option"] { color: white !important; background-color: #111 !important; }
+    li[role="option"]:hover, li[role="option"][aria-selected="true"] { background-color: #333 !important; color: #FBBF24 !important; }
+    
+    /* Number Input & Buttons */
+    div[data-testid="stNumberInput"] div[data-baseweb="input"] { background-color: #111 !important; }
+    div[data-testid="stNumberInput"] input { background-color: transparent !important; color: white !important; }
+    div[data-testid="stNumberInput"] button { background-color: #222 !important; color: white !important; border-color: #444 !important; }
 
-    /* VS Mode Cards */
-    .vs-container { display: flex; gap: 20px; }
-    .vs-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 25px; text-align: center; width: 100%; position: relative; }
-    .vs-winner { border: 2px solid #10B981; background: radial-gradient(circle at top, #1a2e25, #000); box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); }
-    .vs-name { font-size: 1.4em; font-weight: 900; margin-bottom: 5px; height: 60px; display: flex; align-items: center; justify-content: center; }
-    .vs-price { font-family: 'JetBrains Mono'; color: #FBBF24; font-size: 1.5em; margin-bottom: 20px; font-weight: bold; }
-    
-    .stat-row { display: flex; justify-content: space-between; margin-bottom: 12px; padding: 8px; background: #000; border-radius: 8px; border: 1px solid #222; }
-    .stat-name { color: #888; font-size: 0.9em; font-weight: bold; }
-    .stat-val { font-weight: 900; font-size: 1.1em; }
-    .win-text { color: #10B981; } /* สีเขียวสำหรับค่าที่ชนะ */
-    
-    .rec-badge { 
-        background: #10B981; color: black; font-weight: 900; padding: 8px 20px; 
-        border-radius: 50px; display: inline-block; margin-bottom: 20px; 
-        box-shadow: 0 0 15px #10B981;
-    }
-    
-    .amazon-btn { background: #3B82F6; color: white !important; padding: 18px; display: block; text-align: center; border-radius: 10px; font-weight: 900; text-decoration: none; margin-top: 20px; font-size: 1.2em; }
-    
-    /* Original CSS */
-    .streamlit-expanderHeader { background-color: #111 !important; color: white !important; }
-    .hero-title { font-size: 3.5em; font-weight: 900; }
-    .winner-box { background: radial-gradient(circle at top right, #111, #000); border: 2px solid #3B82F6; border-radius: 20px; padding: 40px; }
+    /* --- TAB 1: ORIGINAL STYLES --- */
+    .hero-title { font-size: 3.5em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 10px; }
+    .hero-price { color: #FBBF24; font-size: 3em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 5px; }
+    .winner-box { background: radial-gradient(circle at top right, #111, #000); border: 2px solid #3B82F6; border-radius: 20px; padding: 40px; box-shadow: 0 0 60px rgba(59, 130, 246, 0.25); }
     .stat-box { background: #151515; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #333; }
+    .stat-label { color: #888; font-size: 0.7em; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+    .stat-val { font-size: 1.2em; font-weight: 900; color: white; }
+    .bar-bg { background: #333; height: 4px; border-radius: 2px; margin-top: 5px; overflow: hidden; }
+    .amazon-btn { background: #3B82F6; color: white !important; padding: 22px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.4em; margin-top: 20px; transition: 0.3s; }
+    .deal-hint { text-align: center; color: #10B981; font-size: 0.9em; margin-top: 10px; font-weight: bold; }
+
+    /* --- TAB 2: VS CARD STYLES --- */
+    .vs-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; height: 100%; }
+    .vs-winner-border { border: 2px solid #10B981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); background: radial-gradient(circle at top, #0f291e, #111); }
+    .vs-title { font-size: 1.3em; font-weight: 900; margin-bottom: 5px; min-height: 50px; display:flex; align-items:center; justify-content:center;}
+    .vs-price { font-family: 'JetBrains Mono'; color: #FBBF24; font-size: 1.5em; margin-bottom: 15px; font-weight: bold; }
+    
+    .vs-row { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 8px 0; font-size: 0.9em; }
+    .vs-label { color: #888; font-weight: bold; }
+    .vs-val { color: white; font-weight: 900; }
+    .val-win { color: #10B981; } /* Green for winner stat */
+    .val-lose { color: #555; }
+    
+    .rec-badge { background: #10B981; color: black; font-weight: 900; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 0.8em; letter-spacing: 1px; }
+
+    /* Alternatives List (Tab 1) */
+    .alt-link { text-decoration: none; display: block; }
+    .alt-row { background: #0A0A0A; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .rank-circle { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; background: #222; border: 1px solid #444; color: #888; }
+    .mini-bar-container { display: flex; gap: 4px; margin-top: 6px; }
+    .mini-stat { width: 30px; }
+    .mini-track { width: 100%; height: 3px; background: #333; border-radius: 2px; }
+    .mini-fill-blue { height: 100%; background: #3B82F6; } 
+    .mini-fill-purple { height: 100%; background: #A855F7; } 
+    .mini-fill-green { height: 100%; background: #10B981; }
+
+    /* Responsive */
+    @media only screen and (max-width: 600px) {
+        .hero-title { font-size: 2.0em !important; }
+        .hero-price { font-size: 2.0em !important; }
+        .winner-box { padding: 20px !important; }
+        .vs-title { font-size: 1.1em !important; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- 4. HEADER ---
 st.title("🛒 TechChoose")
-st.markdown("<div style='margin-bottom:20px; background:#111; color:#00FF00; padding:5px 10px; border-radius:4px; display:inline-block; border:1px solid #333;'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
+st.markdown("<div class='update-badge'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
 
 df = load_data()
 
-# --- 5. TABS ---
+# --- 5. TABS SYSTEM ---
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
 # ==========================================
-# TAB 1: ORIGINAL (คงเดิมไว้)
+# TAB 1: ORIGINAL PRO VERSION (กู้คืนอันเดิม)
 # ==========================================
 with tab1:
     with st.expander("🔍 **TAP HERE TO FILTER & CUSTOMIZE**", expanded=True):
-        col_filter1, col_filter2 = st.columns(2)
-        with col_filter1: os_choice = st.selectbox("📱 Operating System", ["Any", "iOS (Apple)", "Android"], key="t1_os")
-        with col_filter2: lifestyle = st.selectbox("👤 User Persona", ["💎 Ultimate High-End", "🏠 General Use", "🎮 Hardcore Gamer", "📸 Content Creator", "💼 Business Pro", "💰 Student / Budget", "🛠️ Custom"], key="t1_life")
+        c1, c2 = st.columns(2)
+        with c1: os_choice = st.selectbox("📱 Operating System", ["Any", "iOS (Apple)", "Android"], key="t1_os")
+        with c2: lifestyle = st.selectbox("👤 User Persona", ["💎 Ultimate High-End", "🏠 General Use", "🎮 Hardcore Gamer", "📸 Content Creator", "💼 Business Pro", "💰 Student / Budget", "🛠️ Custom"], key="t1_life")
 
         if "High-End" in lifestyle: budget = 9999 
         elif "Custom" in lifestyle: budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50, key="t1_bud")
@@ -123,149 +149,157 @@ with tab1:
 
         if "Custom" in lifestyle:
             st.divider()
-            c1, c2, c3, c4 = st.columns(4)
-            with c1: p = st.number_input("Speed", 1, 10, 8, key="t1_p")
-            with c2: c = st.number_input("Cam", 1, 10, 8, key="t1_c")
-            with c3: b = st.number_input("Batt", 1, 10, 5, key="t1_b")
-            with c4: v = st.number_input("Value", 1, 10, 5, key="t1_v")
+            cc1, cc2, cc3, cc4 = st.columns(4)
+            with cc1: p = st.number_input("Speed", 1, 10, 8, key="t1_p")
+            with cc2: c = st.number_input("Cam", 1, 10, 8, key="t1_c")
+            with cc3: b = st.number_input("Batt", 1, 10, 5, key="t1_b")
+            with cc4: v = st.number_input("Value", 1, 10, 5, key="t1_v")
 
         if st.button("🚀 UPDATE RESULTS", type="primary", use_container_width=True, key="t1_btn"): st.rerun()
 
     st.divider()
-    
-    # ... (ส่วนแสดงผล Tab 1 เหมือนเดิม ละไว้เพื่อความกระชับ แต่ใช้ logic เดิมเป๊ะ) ...
-    # Copy Logic เดิมมาใส่ตรงนี้ได้เลยครับ หรือใช้โค้ดเต็มด้านบนที่ผมเคยให้ไป
-    # เพื่อความชัวร์ ผมใส่ Logic ย่อให้ทำงานได้จริง
+
+    # --- TAB 1 LOGIC & DISPLAY ---
     if not df.empty:
-        df_filter = df.copy()
-        if "iOS" in os_choice: df_filter = df_filter[df_filter['os_type']=='iOS']
-        elif "Android" in os_choice: df_filter = df_filter[df_filter['os_type']=='Android']
-        df_filter = df_filter[df_filter['price'] <= budget]
+        df_f = df.copy()
+        if "iOS" in os_choice: df_f = df_f[df_f['os_type']=='iOS']
+        elif "Android" in os_choice: df_f = df_f[df_f['os_type']=='Android']
+        df_f = df_f[df_f['price'] <= budget]
         
-        score = (df_filter['perf_score']*p) + (df_filter['cam_score']*c) + (df_filter['batt_score']*b) + (df_filter['value']*v)
-        df_filter['final_score'] = score
-        df_filter = df_filter.sort_values('final_score', ascending=False).head(1)
-        
-        if not df_filter.empty:
-            winner = df_filter.iloc[0]
+        score = (df_f['perf_score']*p) + (df_f['cam_score']*c) + (df_f['batt_score']*b) + (df_f['value']*v)
+        price_pen = df_f['price'].apply(lambda x: (x - price_penalty_threshold) * 0.5 if x > price_penalty_threshold else 0)
+        df_f['final_score'] = score - price_pen
+        max_s = (10*p) + (10*c) + (10*b) + (10*v)
+        df_f['match'] = (df_f['final_score'] / max_s) * 100
+        df_f = df_f.sort_values('match', ascending=False).reset_index(drop=True)
+
+        if len(df_f) > 0:
+            winner = df_f.iloc[0]
+            
+            # Badge Logic
+            if "High-End" in lifestyle: badge_txt = "💎 ABSOLUTE BEST"
+            elif "Gamer" in lifestyle: badge_txt = "🏆 GAMING BEAST"
+            else: badge_txt = "⭐ TOP RECOMMENDATION"
+            
+            # Helper for HTML bars
+            def bar_html(lbl, val, col):
+                return f"<div class='stat-box'><div class='stat-label'>{lbl}</div><div class='stat-val'>{val:.1f}/10</div><div class='bar-bg'><div style='width:{val*10}%; height:100%; background:{col};'></div></div></div>"
+
+            stats_html = f"{bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{bar_html('🔋 BATT', winner['batt_score'], '#10B981')}"
+            
+            # WINNER CARD (Original Design)
             st.markdown(f"""
             <div class='winner-box'>
-                <div style='background:#F59E0B; color:black; padding:5px 15px; border-radius:20px; display:inline-block; font-weight:bold; margin-bottom:10px;'>💎 TOP PICK</div>
+                <div style='background:#F59E0B; color:black; padding:8px 16px; border-radius:50px; display:inline-block; font-weight:900; font-size:0.8em; margin-bottom:15px;'>{badge_txt}</div>
                 <div class='hero-title'>{winner['name']}</div>
                 <div class='hero-price'>${winner['price']:,}</div>
-                <div style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:20px;'>
-                    <div class='stat-box'>🚀 Speed {winner['perf_score']}</div>
-                    <div class='stat-box'>📸 Cam {winner['cam_score']}</div>
-                    <div class='stat-box'>🔋 Batt {winner['batt_score']}</div>
+                <div style='color:#888; font-style:italic; font-size:0.8em; margin-bottom:20px;'>*Official MSRP. Check link for real-time pricing.</div>
+                
+                <div style='background:#111; border-left:5px solid #3B82F6; padding:15px; margin-bottom:25px; border-radius:0 10px 10px 0;'>
+                    Excellent choice based on your preferences.
                 </div>
+                
+                <div style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:25px;'>
+                    {stats_html}
+                </div>
+                
                 <a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a>
+                <div class='deal-hint'>⚡ Click to check today's best price & coupons</div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # TOP ALTERNATIVES
+            st.write("")
+            st.markdown("### 🥈 Top Alternatives")
+            for i, row in df_f.iloc[1:6].iterrows():
+                rank_badge = f"<div class='rank-circle'>{i+1}</div>"
+                mini_bars = f"""<div class='mini-bar-container'><div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div></div>"""
+                
+                st.markdown(f"""
+                <a href="{row['link']}" target="_blank" class="alt-link">
+                    <div class="alt-row">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            {rank_badge} 
+                            <div>
+                                <div style="font-weight:bold; font-size:1em; color:white;">{row['name']}</div>
+                                <div style="color:#FBBF24; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>
+                                {mini_bars}
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-size:1.1em; font-weight:900; color:#3B82F6;">{row['match']:.0f}%</div>
+                            <div style="color:#FBBF24; font-size:0.7em; font-weight:bold;">VIEW ></div>
+                        </div>
+                    </div>
+                </a>""", unsafe_allow_html=True)
         else:
             st.warning("No phones found.")
 
-
 # ==========================================
-# TAB 2: COMPARE VS MODE (Highlight)
+# TAB 2: VS MODE (อันใหม่ แก้บั๊ก + สวยขึ้น)
 # ==========================================
 with tab2:
-    st.markdown("### 🥊 Compare 2 Models")
+    st.markdown("### 🥊 Head-to-Head Comparison")
     
-    # 1. Select Criteria
     judge = st.selectbox("⚖️ Decide Winner By (ตัดสินจาก):", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
     
-    # 2. Select Phones
-    c_sel1, c_sel2 = st.columns(2)
-    with c_sel1: p1_name = st.selectbox("Select Phone A", df['name'].unique(), index=0, key="p1")
-    with c_sel2: p2_name = st.selectbox("Select Phone B", df['name'].unique(), index=1, key="p2")
+    col_a, col_b = st.columns(2)
+    with col_a: p1_name = st.selectbox("Select Phone A", df['name'].unique(), index=0, key="p1")
+    with col_b: p2_name = st.selectbox("Select Phone B", df['name'].unique(), index=1, key="p2")
     
     if p1_name and p2_name:
-        row1 = df[df['name'] == p1_name].iloc[0]
-        row2 = df[df['name'] == p2_name].iloc[0]
+        r1 = df[df['name'] == p1_name].iloc[0]
+        r2 = df[df['name'] == p2_name].iloc[0]
         
-        # Calculate Score based on Judge
+        # Calculate Logic
         w_p, w_c, w_b, w_v = 1, 1, 1, 1
         if "Gaming" in judge: w_p, w_c, w_b, w_v = 10, 0, 3, 1
         elif "Camera" in judge: w_p, w_c, w_b, w_v = 2, 10, 3, 1
         elif "Value" in judge: w_p, w_c, w_b, w_v = 3, 3, 3, 10
         
-        s1 = (row1['perf_score']*w_p) + (row1['cam_score']*w_c) + (row1['batt_score']*w_b) + (row1['value']*w_v)
-        s2 = (row2['perf_score']*w_p) + (row2['cam_score']*w_c) + (row2['batt_score']*w_b) + (row2['value']*w_v)
+        s1 = (r1['perf_score']*w_p) + (r1['cam_score']*w_c) + (r1['batt_score']*w_b) + (r1['value']*w_v)
+        s2 = (r2['perf_score']*w_p) + (r2['cam_score']*w_c) + (r2['batt_score']*w_b) + (r2['value']*w_v)
         
-        # Determine Visuals
         win1 = s1 >= s2
-        card1_cls = "vs-winner" if win1 else ""
-        card2_cls = "vs-winner" if not win1 else ""
-        badge1 = "<div class='rec-badge'>👑 RECOMMENDED</div>" if win1 else "<div style='height:40px;'></div>"
-        badge2 = "<div class='rec-badge'>👑 RECOMMENDED</div>" if not win1 else "<div style='height:40px;'></div>"
         
-        # Helper for color stats
-        def color_stat(v1, v2):
-            return "win-text" if v1 >= v2 else "lose-text"
-            
+        # Helper styles
+        cls1 = "vs-winner-border" if win1 else ""
+        cls2 = "vs-winner-border" if not win1 else ""
+        bad1 = "<div class='rec-badge'>👑 RECOMMENDED</div>" if win1 else "<div style='height:40px;'></div>"
+        bad2 = "<div class='rec-badge'>👑 RECOMMENDED</div>" if not win1 else "<div style='height:40px;'></div>"
+        
+        def val_col(v1, v2): return "val-win" if v1 >= v2 else "val-lose"
+
         c1, c2 = st.columns(2)
         
-        # --- LEFT CARD ---
         with c1:
             st.markdown(f"""
-            <div class='vs-card {card1_cls}'>
-                {badge1}
-                <div class='vs-name'>{row1['name']}</div>
-                <div class='vs-price'>${row1['price']:,}</div>
-                
-                <div class='stat-row'>
-                    <span class='stat-name'>🚀 AnTuTu</span>
-                    <span class='stat-val {color_stat(row1['antutu'], row2['antutu'])}'>{int(row1['antutu']):,}</span>
-                </div>
-                <div class='stat-row'>
-                    <span class='stat-name'>⚡ Speed</span>
-                    <span class='stat-val {color_stat(row1['perf_score'], row2['perf_score'])}'>{row1['perf_score']}</span>
-                </div>
-                <div class='stat-row'>
-                    <span class='stat-name'>📸 Camera</span>
-                    <span class='stat-val {color_stat(row1['cam_score'], row2['cam_score'])}'>{row1['cam_score']}</span>
-                </div>
-                <div class='stat-row'>
-                    <span class='stat-name'>🔋 Battery</span>
-                    <span class='stat-val {color_stat(row1['batt_score'], row2['batt_score'])}'>{row1['batt_score']}</span>
-                </div>
-                
-                <a href='{row1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
+            <div class='vs-card {cls1}'>
+                {bad1}
+                <div class='vs-title'>{r1['name']}</div>
+                <div class='vs-price'>${r1['price']:,}</div>
+                <div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div>
+                <div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']}</span></div>
+                <div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div>
+                <div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div>
+                <a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
             </div>
             """, unsafe_allow_html=True)
 
-        # --- RIGHT CARD ---
         with c2:
             st.markdown(f"""
-            <div class='vs-card {card2_cls}'>
-                {badge2}
-                <div class='vs-name'>{row2['name']}</div>
-                <div class='vs-price'>${row2['price']:,}</div>
-                
-                <div class='stat-row'>
-                    <span class='stat-name'>🚀 AnTuTu</span>
-                    <span class='stat-val {color_stat(row2['antutu'], row1['antutu'])}'>{int(row2['antutu']):,}</span>
-                </div>
-                <div class='stat-row'>
-                    <span class='stat-name'>⚡ Speed</span>
-                    <span class='stat-val {color_stat(row2['perf_score'], row1['perf_score'])}'>{row2['perf_score']}</span>
-                </div>
-                <div class='stat-row'>
-                    <span class='stat-name'>📸 Camera</span>
-                    <span class='stat-val {color_stat(row2['cam_score'], row1['cam_score'])}'>{row2['cam_score']}</span>
-                </div>
-                <div class='stat-row'>
-                    <span class='stat-name'>🔋 Battery</span>
-                    <span class='stat-val {color_stat(row2['batt_score'], row1['batt_score'])}'>{row2['batt_score']}</span>
-                </div>
-                
-                <a href='{row2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
+            <div class='vs-card {cls2}'>
+                {bad2}
+                <div class='vs-title'>{r2['name']}</div>
+                <div class='vs-price'>${r2['price']:,}</div>
+                <div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r2['antutu'], r1['antutu'])}'>{int(r2['antutu']):,}</span></div>
+                <div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r2['perf_score'], r1['perf_score'])}'>{r2['perf_score']}</span></div>
+                <div class='vs-row'><span>📸 Camera</span><span class='{val_col(r2['cam_score'], r1['cam_score'])}'>{r2['cam_score']}</span></div>
+                <div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r2['batt_score'], r1['batt_score'])}'>{r2['batt_score']}</span></div>
+                <a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
             </div>
             """, unsafe_allow_html=True)
             
         st.write("---")
-        # Final Verdict Text
-        winner_name = row1['name'] if win1 else row2['name']
-        diff = abs(s1 - s2)
-        reason = f"higher {judge.split(' ')[1]} score"
-        st.success(f"**AI Recommendation:** The **{winner_name}** is the better choice for **{judge}**.")
+        winner_name = r1['name'] if win1 else r2['name']
+        st.success(f"**AI Verdict:** Based on **{judge}**, the **{winner_name}** wins.")
