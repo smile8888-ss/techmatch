@@ -3,45 +3,48 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Masterpiece",
+    page_title="TechChoose - Black Hole",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS (แก้กล่องขาว & ตกแต่ง) ---
+# --- 2. CSS (NUCLEAR DARK MODE) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* บังคับ Dark Mode ทั้งหน้า */
+    /* Global Background */
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
 
-    /* 🔥🔥🔥 FIX WHITE EXPANDER (แก้กล่องขาวถาวร) 🔥🔥🔥 */
-    /* ส่วนหัวของ Expander */
-    .streamlit-expanderHeader {
-        background-color: #0e0e0e !important;
-        color: white !important;
-        border-bottom: 1px solid #333 !important;
-    }
-    /* ตัวกล่องรวม */
+    /* 🔥🔥🔥 FIX EXPANDER (NUCLEAR METHOD) 🔥🔥🔥 */
+    /* 1. ตัวกรอบหลัก */
     div[data-testid="stExpander"] {
         background-color: #0e0e0e !important;
         border: 1px solid #333 !important;
         border-radius: 8px !important;
         color: white !important;
     }
-    /* เนื้อหาข้างใน */
-    div[data-testid="stExpander"] details {
+    /* 2. ส่วนหัว (Summary) */
+    div[data-testid="stExpander"] > details > summary {
         background-color: #0e0e0e !important;
-    }
-    /* ข้อความข้างใน */
-    div[data-testid="stExpander"] div {
         color: white !important;
     }
-    /* Hover Effect */
-    .streamlit-expanderHeader:hover {
-        color: #FBBF24 !important;
+    /* 3. เนื้อหาข้างใน (Content) */
+    div[data-testid="stExpander"] > details > div {
+        background-color: #0e0e0e !important;
+        color: white !important;
+    }
+    /* 4. ไอคอนลูกศร (SVG) */
+    div[data-testid="stExpander"] > details > summary > svg {
+        fill: white !important;
+    }
+    /* 5. Hover Effect */
+    div[data-testid="stExpander"] > details > summary:hover {
+        color: #FBBF24 !important; /* สีทองตอนเอาเมาส์ชี้ */
+    }
+    div[data-testid="stExpander"] > details > summary:hover > svg {
+        fill: #FBBF24 !important;
     }
 
     /* Tabs */
@@ -49,22 +52,20 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; border: 1px solid #333; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border-color: #3B82F6 !important; }
 
-    /* Inputs (Dropdowns) */
+    /* Inputs */
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
     div[data-baseweb="select"] span { color: white !important; }
     
-    /* Form Background */
+    /* Form */
     div[data-testid="stForm"] { background-color: #0e0e0e !important; border: 1px solid #333; padding: 20px; border-radius: 12px; }
 
-    /* Winner Card */
+    /* Cards */
     .winner-box { background: radial-gradient(circle at top right, #111, #000); border: 2px solid #3B82F6; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.2); }
     .hero-title { font-size: 2.5em; font-weight: 900; color: white; margin-bottom: 5px; }
     .hero-price { color: #FBBF24; font-size: 2em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 15px; }
-    
     .amazon-btn { background: #3B82F6; color: white !important; padding: 12px; display: block; text-align: center; border-radius: 8px; font-weight: 900; text-decoration: none; margin-top: 15px; transition: 0.3s; }
-    .amazon-btn:hover { background: #2563EB; }
-
-    /* Alt Cards */
+    
+    /* Alt List */
     .alt-link { text-decoration: none !important; display: block; }
     .alt-card { background: #111; border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
     .alt-card:hover { border-color: #555; background: #161616; transform: translateX(5px); }
@@ -97,7 +98,6 @@ def load_data():
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
-        # Brand Score
         def get_brand_score(name):
             n = str(name).lower()
             if 'iphone' in n or 'apple' in n: return 10.0
@@ -106,13 +106,11 @@ def load_data():
             return 9.0 
         df['brand_score'] = df['name'].apply(get_brand_score)
         
-        # Relative Scoring (เทียบกับตัวท็อปสุด)
         max_antutu = df['antutu'].max() if 'antutu' in df.columns else 1
         max_cam = df['camera'].max() if 'camera' in df.columns else 10
         max_batt = df['battery'].max() if 'battery' in df.columns else 10
         
-        if 'antutu' in df.columns:
-            df['perf_score'] = (df['antutu'] / max_antutu) * 10
+        if 'antutu' in df.columns: df['perf_score'] = (df['antutu'] / max_antutu) * 10
         else: df['perf_score'] = 8.0 
         
         if 'camera' in df.columns: df['cam_score'] = (df['camera'] / max_cam) * 10
@@ -127,7 +125,7 @@ def load_data():
 
 df = load_data()
 
-# --- 4. HTML HELPERS (SAFE MODE) ---
+# --- 4. HELPERS ---
 def get_dynamic_badge(mode, price):
     if "High-End" in mode: return "💎 MARKET LEADER"
     elif "Gamer" in mode: return "🏆 GAMING BEAST"
@@ -177,21 +175,10 @@ with tab1:
         if "iOS" in os_choice: df_f = df_f[df_f['os_type']=='iOS']
         elif "Android" in os_choice: df_f = df_f[df_f['os_type']=='Android']
         
-        # Scoring Logic
         p, c, b, v, br = 5, 5, 5, 5, 2 
-        if "High-End" in lifestyle: 
-            p,c,b,v,br = 10, 10, 8, 0, 4 # High end เน้นแบรนด์และสเปก
-            budget = 9999
-        elif "Gamer" in lifestyle: 
-            p,c,b,v,br = 20, 5, 10, 5, 1
-            budget = 2000
-        elif "Student" in lifestyle:
-            budget = 800
-            p,c,b,v,br = 6, 6, 8, 20, 1
-        else:
-            budget = 2000
-            
-        df_f = df_f[df_f['price'] <= budget]
+        if "High-End" in lifestyle: p,c,b,v,br = 10, 10, 8, 0, 4
+        elif "Gamer" in lifestyle: p,c,b,v,br = 20, 5, 10, 5, 1
+        
         df_f['final_score'] = (df_f['perf_score']*p) + (df_f['cam_score']*c) + (df_f['batt_score']*b) + (df_f['value']*v) + (df_f['brand_score']*br)
         df_f = df_f.sort_values('final_score', ascending=False).reset_index(drop=True)
 
@@ -237,14 +224,14 @@ with tab1:
                 """, unsafe_allow_html=True)
 
 # ==========================================
-# TAB 2: VS MODE (FORM - NO JUMPING)
+# TAB 2: VS MODE (LOCKED FORM - NO JUMPING)
 # ==========================================
 with tab2:
     st.subheader("🥊 Head-to-Head Comparison")
     
     all_models = sorted(df['name'].unique())
     
-    # 🔥 FORM: ล็อกการเลือกไว้ในนี้ ไม่เด้งแน่นอน
+    # 🔥🔥🔥 FORM: ล็อกหน้าไว้จนกว่าจะกดปุ่ม
     with st.form("compare_form"):
         c1, c2 = st.columns(2)
         with c1: p1_name = st.selectbox("Select Phone A", all_models, index=0)
@@ -252,15 +239,14 @@ with tab2:
         
         judge = st.selectbox("Decide Winner By:", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality"])
         
-        # กดปุ่มนี้เท่านั้นถึงจะประมวลผล
+        # ปุ่มนี้คือกุญแจกันหน้าเด้ง
         submitted = st.form_submit_button("⚔️ COMPARE NOW", type="primary", use_container_width=True)
     
-    # 🔥 Logic ทำงานหลังกดปุ่ม
+    # 🔥 แสดงผลเมื่อกดปุ่มเท่านั้น
     if submitted:
         r1 = df[df['name'] == p1_name].iloc[0]
         r2 = df[df['name'] == p2_name].iloc[0]
         
-        # Scoring
         w_p, w_c, w_b, w_v, w_br = 1, 1, 1, 1, 1
         if "Gaming" in judge: w_p, w_c, w_b, w_v, w_br = 10, 0, 3, 1, 1
         elif "Camera" in judge: w_p, w_c, w_b, w_v, w_br = 2, 10, 3, 1, 1
@@ -282,7 +268,7 @@ with tab2:
             return f"<div class='vs-row'><div class='vs-label'><span>{icon}</span> {label}</div><div class='{c1}'>{val1}</div></div>", \
                    f"<div class='vs-row'><div class='vs-label'><span>{icon}</span> {label}</div><div class='{c2}'>{val2}</div></div>"
 
-        # Check for chipset (if exists)
+        # Check for chipset
         r_chip = ("", "")
         if 'chipset' in df.columns:
              t1 = r1['chipset'] if pd.notna(r1['chipset']) else "-"
@@ -319,3 +305,7 @@ with tab2:
                 <a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
             </div>
             """, unsafe_allow_html=True)
+        
+        st.write("---")
+        winner_name = r1['name'] if win1 else r2['name']
+        st.success(f"**AI Verdict:** Based on **{judge}**, the **{winner_name}** wins.")
