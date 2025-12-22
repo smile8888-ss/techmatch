@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. LOAD DATA ---
+# --- 2. LOAD DATA & RELATIVE SCORING ---
 @st.cache_data(ttl=60)
 def load_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
@@ -28,12 +28,13 @@ def load_data():
         df['os_type'] = df['name'].apply(get_os)
         
         # --- 🔥 FORMULA: RELATIVE SCORING (วัดกันที่ 1) ---
-        # หาค่าสูงสุดในกลุ่ม (The King)
+        # หาค่าสูงสุดในกลุ่ม (The King) เพื่อใช้เป็นฐาน 10
         max_antutu = df['antutu'].max() if 'antutu' in df.columns else 1
         max_cam = df['camera'].max() if 'camera' in df.columns else 10
         max_batt = df['battery'].max() if 'battery' in df.columns else 10
         
         # คำนวณคะแนนเทียบกับตัวท็อป (เต็ม 10)
+        # ตัวที่แรงสุดจะได้ 10.0 เสมอ ตัวรองจะได้ลดหลั่นลงมา เช่น 9.7
         if 'antutu' in df.columns:
             df['perf_score'] = (df['antutu'] / max_antutu) * 10
         else: df['perf_score'] = 8.0 
@@ -67,32 +68,34 @@ def get_expert_verdict(row, mode):
 def stat_bar_html(label, score, color):
     # ปรับหลอดให้เต็ม 100% ถ้าคะแนน > 9.9
     width = min(score * 10, 100)
-    return f"""<div style="background:#151515;padding:8px;border-radius:8px;text-align:center;border:1px solid #333;"><div style="color:#888;font-size:0.65em;font-weight:700;margin-bottom:4px;">{label}</div><div style="font-size:1.1em;font-weight:900;color:white;">{score:.1f}</div><div style="background:#333;height:4px;border-radius:2px;margin-top:4px;overflow:hidden;"><div style="width:{width}%;height:100%;background:{color};"></div></div></div>"""
+    # ใช้ Single Quote ภายใน HTML เพื่อไม่ให้ชนกับ f-string
+    return f"""<div style='background:#151515;padding:8px;border-radius:8px;text-align:center;border:1px solid #333;'><div style='color:#888;font-size:0.65em;font-weight:700;margin-bottom:4px;'>{label}</div><div style='font-size:1.1em;font-weight:900;color:white;'>{score:.1f}</div><div style='background:#333;height:4px;border-radius:2px;margin-top:4px;overflow:hidden;'><div style='width:{width}%;height:100%;background:{color};'></div></div></div>"""
 
-# 🔥 FIX HTML: ใช้ Inline Styles ป้องกัน CSS ตีกัน
+# 🔥 FIX HTML: สร้าง HTML string แบบปลอดภัย (ไม่มี Quote ตีกัน)
 def get_reason_badge(winner_row, current_row):
     badges = ""
     # Price
     price_diff = winner_row['price'] - current_row['price']
     if price_diff >= 50:
-        badges += f"""<span style="background:rgba(16,185,129,0.2);color:#10B981;border:1px solid #10B981;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;">SAVE ${int(price_diff):,}</span>"""
+        badges += f"<span style='background:rgba(16,185,129,0.2);color:#10B981;border:1px solid #10B981;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>SAVE ${int(price_diff):,}</span>"
     
-    # Spec Highlights
+    # Spec Highlights (เทียบกันตรงๆ)
     if current_row['perf_score'] > winner_row['perf_score']:
-        badges += """<span style="background:rgba(59,130,246,0.2);color:#3B82F6;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;">🚀 FASTER</span>"""
+        badges += "<span style='background:rgba(59,130,246,0.2);color:#3B82F6;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>🚀 FASTER</span>"
     elif current_row['batt_score'] > winner_row['batt_score']:
-        badges += """<span style="background:rgba(59,130,246,0.2);color:#3B82F6;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;">🔋 BATT</span>"""
+        badges += "<span style='background:rgba(59,130,246,0.2);color:#3B82F6;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>🔋 BATT</span>"
         
     return badges
 
 def get_score_badge(icon, label, score):
-    # สีคะแนน
+    # สีคะแนนตามเกรด
     if score >= 9.8: color = "#10B981"; border = "rgba(16,185,129,0.4)" # เขียว (เทพ)
     elif score >= 9.0: color = "#3B82F6"; border = "rgba(59,130,246,0.4)" # ฟ้า (ดีมาก)
     elif score >= 8.0: color = "#F59E0B"; border = "rgba(245,158,11,0.4)" # ส้ม (ดี)
     else: color = "#EF4444"; border = "rgba(239,68,68,0.4)" # แดง (พอใช้)
         
-    return f"""<div style="display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {border};border-radius:6px;padding:3px 8px;margin-right:6px;"><span style="font-size:1em;margin-right:4px;">{icon}</span><span style="color:#888;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;">{label}</span><span style="color:{color};font-weight:900;font-family:'JetBrains Mono',monospace;font-size:0.9em;">{score:.1f}</span></div>"""
+    # HTML บรรทัดเดียว กันเหนียว
+    return f"<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {border};border-radius:6px;padding:3px 8px;margin-right:6px;'><span style='font-size:1em;margin-right:4px;'>{icon}</span><span style='color:#888;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;'>{label}</span><span style='color:{color};font-weight:900;font-family:monospace;font-size:0.9em;'>{score:.1f}</span></div>"
 
 # --- 4. CSS (CLEAN & DARK) ---
 st.markdown("""
@@ -207,7 +210,7 @@ with tab1:
             winner = df_f.iloc[0]
             current_badge = get_dynamic_badge(lifestyle, winner['price'])
             
-            stats_html = f"""<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">{stat_bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATT', winner['batt_score'], '#10B981')}</div>"""
+            stats_html = f"""<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;'>{stat_bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATT', winner['batt_score'], '#10B981')}</div>"""
             
             # 🔥 HTML CARD (Clean & Error Free)
             winner_card = f"""<div class='winner-box'><div style='background:#F59E0B; color:black; padding:6px 14px; border-radius:50px; display:inline-block; font-weight:900; font-size:0.75em; margin-bottom:15px; letter-spacing:1px;'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div style='background:#111; border-left:4px solid #3B82F6; padding:12px; margin-bottom:20px; font-size:0.9em; color:#CCC;'>{get_expert_verdict(winner, lifestyle)}</div>{stats_html}<a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div style='text-align:center; color:#10B981; font-size:0.85em; margin-top:10px; font-weight:bold;'>⚡ Check today's price</div></div>"""
@@ -228,6 +231,7 @@ with tab1:
                 b_cam = get_score_badge("📸", "Cam", row['cam_score'])
                 b_batt = get_score_badge("🔋", "Batt", row['batt_score'])
                 
+                # 🔥 FIX HTML: ใช้ Single Line, ไม่เว้นวรรคใน Tag
                 alt_card = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-card"><div style="display:flex;align-items:center;width:100%;"><div style="width:35px;height:35px;display:flex;align-items:center;justify-content:center;font-weight:900;border-radius:8px;font-size:1.2em;margin-right:20px;{rank_style}">{rank_num}</div><div style="flex-grow:1;"><div style="color:white;font-weight:700;font-size:1.1em;margin-bottom:6px;">{row['name']} {reason_badge}</div><div style="color:#FBBF24;font-family:'JetBrains Mono';font-weight:bold;font-size:1em;">${row['price']:,}</div><div style="margin-top:10px;display:flex;gap:5px;">{b_speed}{b_cam}{b_batt}</div></div><div style="color:#FF9900;font-weight:900;font-size:0.8em;">VIEW &gt;</div></div></div></a>"""
                 st.markdown(alt_card, unsafe_allow_html=True)
         else:
