@@ -3,13 +3,13 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Final Precision Fixed",
+    page_title="TechChoose - Perfect Score",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. LOAD DATA ---
+# --- 2. LOAD DATA & RELATIVE SCORING ---
 @st.cache_data(ttl=60)
 def load_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
@@ -27,17 +27,23 @@ def load_data():
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
-        # Smart Score Calculation
+        # --- 🔥 RELATIVE SCORING SYSTEM (แก้คะแนนเท่ากัน) ---
+        # หาค่าสูงสุดในกลุ่ม (The King) แล้วเทียบสัดส่วน
+        max_antutu = df['antutu'].max() if 'antutu' in df.columns else 1
+        max_cam = df['camera'].max() if 'camera' in df.columns else 10
+        max_batt = df['battery'].max() if 'battery' in df.columns else 10
+        
         if 'antutu' in df.columns:
-            def calc_speed(score):
-                if score >= 2800000: return 10.0
-                elif score >= 1500000: return 9.0 + ((score-1500000)/1300000)
-                else: return 7.0 + ((score-800000)/700000)*2
-            df['perf_score'] = df['antutu'].apply(calc_speed).clip(upper=10.0)
+            # สูตร: (คะแนนตัวเอง / คะแนนตัวท็อป) * 10
+            df['perf_score'] = (df['antutu'] / max_antutu) * 10
         else: df['perf_score'] = 8.0 
         
-        if 'camera' in df.columns: df['cam_score'] = df['camera']
-        if 'battery' in df.columns: df['batt_score'] = df['battery']
+        if 'camera' in df.columns: 
+            df['cam_score'] = (df['camera'] / max_cam) * 10
+        
+        if 'battery' in df.columns: 
+            df['batt_score'] = (df['battery'] / max_batt) * 10
+            
         if 'value' not in df.columns: df['value'] = 8.0
         if 'antutu' not in df.columns: df['antutu'] = df['price'] * 2000
 
@@ -59,31 +65,42 @@ def get_expert_verdict(row, mode):
     return f"Excellent choice based on your preferences."
 
 def stat_bar_html(label, score, color):
+    # แสดงทศนิยม 1 ตำแหน่งเพื่อความสวยงาม
     return f"<div class='stat-box'><div class='stat-label'>{label}</div><div class='stat-val'>{score:.1f}/10</div><div class='bar-bg'><div style='width:{score*10}%; height:100%; background:{color};'></div></div></div>"
 
 def get_reason_badge(winner_row, current_row):
+    # Build string carefully to avoid breaking HTML
+    badges = ""
+    
+    # Price Check
     price_diff = winner_row['price'] - current_row['price']
-    if price_diff >= 100:
-        return f"<span class='reason-tag tag-save'>💰 SAVE ${int(price_diff):,}</span>"
-    if current_row['batt_score'] > (winner_row['batt_score'] + 0.5):
-        return "<span class='reason-tag tag-spec'>🔋 BETTER BATT</span>"
-    if current_row['cam_score'] > (winner_row['cam_score'] + 0.5):
-        return "<span class='reason-tag tag-spec'>📸 BETTER CAM</span>"
-    return ""
+    if price_diff >= 50:
+        badges += f"<span class='reason-tag tag-save'>SAVE ${int(price_diff):,}</span>"
+    
+    # Spec Check (Compare values directly)
+    if current_row['batt_score'] > winner_row['batt_score']:
+        badges += "<span class='reason-tag tag-spec'>🔋 BETTER BATT</span>"
+    elif current_row['cam_score'] > winner_row['cam_score']:
+        badges += "<span class='reason-tag tag-spec'>📸 BETTER CAM</span>"
+        
+    return badges
 
 def get_score_badge(icon, label, score):
-    if score >= 9.0: 
-        color = "#10B981" # Green
-        border = "rgba(16, 185, 129, 0.3)"
-    elif score >= 8.0: 
+    # Color Logic based on Relative Score
+    if score >= 9.8: 
+        color = "#10B981" # Green (The Best)
+        border = "rgba(16, 185, 129, 0.5)"
+    elif score >= 9.0: 
         color = "#3B82F6" # Blue
-        border = "rgba(59, 130, 246, 0.3)"
-    else: 
+        border = "rgba(59, 130, 246, 0.5)"
+    elif score >= 8.0:
         color = "#F59E0B" # Orange
-        border = "rgba(245, 158, 11, 0.3)"
+        border = "rgba(245, 158, 11, 0.5)"
+    else:
+        color = "#EF4444" # Red
+        border = "rgba(239, 68, 68, 0.5)"
         
-    # 🔥 Compressing HTML to avoid whitespace issues
-    return f"<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.4);border:1px solid {border};border-radius:6px;padding:4px 8px;margin-right:8px;'><span style='font-size:1.1em;margin-right:5px;'>{icon}</span><span style='color:#AAA;font-size:0.7em;font-weight:700;margin-right:5px;text-transform:uppercase;'>{label}</span><span style='color:{color};font-weight:900;font-family:JetBrains Mono;font-size:0.9em;'>{score:.1f}</span></div>"
+    return f"<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.6);border:1px solid {border};border-radius:6px;padding:3px 8px;margin-right:6px;'><span style='font-size:1em;margin-right:4px;'>{icon}</span><span style='color:#888;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;'>{label}</span><span style='color:{color};font-weight:900;font-family:JetBrains Mono;font-size:0.9em;'>{score:.1f}</span></div>"
 
 # --- 4. CSS ---
 st.markdown("""
@@ -127,9 +144,9 @@ st.markdown("""
     .amazon-btn:hover { background: #2563EB; }
 
     /* BADGES */
-    .reason-tag { font-size: 0.7em; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-left: 10px; vertical-align: middle; display: inline-block; letter-spacing: 0.5px; }
-    .tag-save { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid #10B981; }
-    .tag-spec { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid #3B82F6; }
+    .reason-tag { font-size: 0.7em; font-weight: 900; padding: 3px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block; letter-spacing: 0.5px; }
+    .tag-save { background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; }
+    .tag-spec { background: rgba(59, 130, 246, 0.2); color: #3B82F6; border: 1px solid #3B82F6; }
 
     /* ALT CARDS */
     .alt-link { text-decoration: none !important; display: block; }
@@ -145,7 +162,7 @@ st.markdown("""
     .rank-norm { background: #222; color: #888; border: 1px solid #444; }
 
     .alt-info { flex-grow: 1; }
-    .alt-name { color: white; font-weight: 700; font-size: 1.2em; margin-bottom: 8px; }
+    .alt-name { color: white; font-weight: 700; font-size: 1.2em; margin-bottom: 8px; display: flex; align-items: center; }
     .alt-price { color: #FBBF24; font-family: 'JetBrains Mono'; font-weight: bold; font-size: 1.1em; }
     
     .view-btn { color: #FF9900; font-weight: 900; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; }
@@ -163,6 +180,7 @@ st.markdown("""
         .hero-title { font-size: 2.0em !important; }
         .alt-card { flex-direction: column; align-items: flex-start; }
         .view-btn { margin-top: 10px; }
+        .alt-name { flex-wrap: wrap; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -229,7 +247,7 @@ with tab1:
             
             stats_html = f"{stat_bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATT', winner['batt_score'], '#10B981')}"
             
-            # 🔥 FIX: One-Liner HTML
+            # 🔥 CLEAN HTML
             winner_card = f"""<div class='winner-box'><div style='background:#F59E0B; color:black; padding:8px 16px; border-radius:50px; display:inline-block; font-weight:900; font-size:0.8em; margin-bottom:15px;'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div class='expert-verdict'>{get_expert_verdict(winner, lifestyle)}</div><div class='stat-container'>{stats_html}</div><a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div class='deal-hint'>⚡ Check today's price</div></div>"""
             st.markdown(winner_card, unsafe_allow_html=True)
 
@@ -248,8 +266,8 @@ with tab1:
                 b_cam = get_score_badge("📸", "Cam", row['cam_score'])
                 b_batt = get_score_badge("🔋", "Batt", row['batt_score'])
                 
-                # 🔥 FIX: One-Liner HTML (No Indentation!)
-                alt_card = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-card"><div style="display:flex; align-items:center; width:100%;"><div class="rank-box {rank_cls}">{rank_num}</div><div class="alt-info"><div class="alt-name">{row['name']} {reason_badge}</div><div class="alt-price">${row['price']:,}</div><div style="margin-top:10px;">{b_speed}{b_cam}{b_batt}</div></div><div class="view-btn">VIEW ></div></div></div></a>"""
+                # 🔥 CLEAN HTML (No Whitespace)
+                alt_card = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-card"><div style="display:flex;align-items:center;width:100%;"><div class="rank-box {rank_cls}">{rank_num}</div><div class="alt-info"><div class="alt-name"><span>{row['name']}</span>{reason_badge}</div><div class="alt-price">${row['price']:,}</div><div style="margin-top:10px;">{b_speed}{b_cam}{b_batt}</div></div><div class="view-btn">VIEW ></div></div></div></a>"""
                 st.markdown(alt_card, unsafe_allow_html=True)
         else:
             st.warning("No phones found under this budget.")
@@ -296,13 +314,12 @@ with tab2:
 
         col_card1, col_card2 = st.columns(2)
         
-        # 🔥 FIX: One-Liner HTML
         with col_card1:
-            card1 = f"""<div class='vs-card {c1_cls}'>{b1_html}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']}</span></div><a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
+            card1 = f"""<div class='vs-card {c1_cls}'>{b1_html}<div class='vs-title'>{r1['name']}</div><div class='vs-price'>${r1['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r1['antutu'], r2['antutu'])}'>{int(r1['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r1['perf_score'], r2['perf_score'])}'>{r1['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r1['cam_score'], r2['cam_score'])}'>{r1['cam_score']:.1f}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r1['batt_score'], r2['batt_score'])}'>{r1['batt_score']:.1f}</span></div><a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card1, unsafe_allow_html=True)
 
         with col_card2:
-            card2 = f"""<div class='vs-card {c2_cls}'>{b2_html}<div class='vs-title'>{r2['name']}</div><div class='vs-price'>${r2['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r2['antutu'], r1['antutu'])}'>{int(r2['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r2['perf_score'], r1['perf_score'])}'>{r2['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r2['cam_score'], r1['cam_score'])}'>{r2['cam_score']}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r2['batt_score'], r1['batt_score'])}'>{r2['batt_score']}</span></div><a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
+            card2 = f"""<div class='vs-card {c2_cls}'>{b2_html}<div class='vs-title'>{r2['name']}</div><div class='vs-price'>${r2['price']:,}</div><div class='vs-row'><span>🚀 AnTuTu</span><span class='{val_col(r2['antutu'], r1['antutu'])}'>{int(r2['antutu']):,}</span></div><div class='vs-row'><span>⚡ Speed</span><span class='{val_col(r2['perf_score'], r1['perf_score'])}'>{r2['perf_score']:.1f}</span></div><div class='vs-row'><span>📸 Camera</span><span class='{val_col(r2['cam_score'], r1['cam_score'])}'>{r2['cam_score']:.1f}</span></div><div class='vs-row'><span>🔋 Battery</span><span class='{val_col(r2['batt_score'], r1['batt_score'])}'>{r2['batt_score']:.1f}</span></div><a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>"""
             st.markdown(card2, unsafe_allow_html=True)
             
         st.write("---")
