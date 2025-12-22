@@ -5,53 +5,58 @@ import io
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Masterpiece",
+    page_title="TechChoose - Final Global",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS (NUCLEAR DARK MODE FIXED) ---
+# --- 2. CSS (COLOR RESTORED & EXPANDER FIXED) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* 1. Force Background & Text */
-    .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
-    p, label, span, div, h1, h2, h3, h4, h5, h6 { color: #FFFFFF !important; }
+    /* 1. Global Background (พื้นหลังดำ) */
+    .stApp { background-color: #000000 !important; font-family: 'Inter', sans-serif; }
     
-    /* 2. Specific Overrides for Inputs */
-    .stSelectbox label, .stNumberInput label { color: #FFFFFF !important; font-weight: bold; }
-    div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
+    /* 2. Text Color Strategy (อย่าบังคับขาวทุกตัว เดี๋ยวสีค่าพลังหาย) */
+    h1, h2, h3, h4, h5, h6, p, label, li { color: #FFFFFF !important; }
+    .stSelectbox div[data-baseweb="select"] div { color: white !important; }
+    
+    /* 3. 🔥 FIX EXPANDER (แก้กล่องขาวแบบเจาะจง) */
+    .streamlit-expanderHeader {
+        background-color: #111111 !important;
+        border: 1px solid #333 !important;
+        border-radius: 8px !important;
+        color: white !important;
+    }
+    div[data-testid="stExpander"] {
+        background-color: #111111 !important;
+        border: none !important;
+        color: white !important;
+    }
+    div[data-testid="stExpander"] details {
+        background-color: #111111 !important;
+        border-radius: 8px !important;
+    }
+    div[data-testid="stExpander"] > details > summary {
+        color: white !important;
+    }
+    div[data-testid="stExpander"] > details > summary:hover {
+        color: #FBBF24 !important;
+    }
+    .streamlit-expanderHeader svg { fill: white !important; }
+
+    /* 4. Form & Inputs */
+    div[data-testid="stForm"] { background-color: #0e0e0e !important; border: 1px solid #333; padding: 20px; border-radius: 12px; }
+    div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, div[data-testid="stChatInput"] {
         background-color: #222 !important;
         border: 1px solid #444 !important;
         color: white !important;
     }
     div[data-baseweb="select"] span { color: white !important; }
-    li[role="option"] { background-color: #222 !important; color: white !important; }
-
-    /* 3. 🔥 EXPANDER FIX (Blackout) 🔥 */
-    .streamlit-expanderHeader {
-        background-color: #111 !important;
-        border: 1px solid #333 !important;
-        color: white !important;
-    }
-    div[data-testid="stExpander"] {
-        background-color: #111 !important;
-        border: none !important;
-        color: white !important;
-    }
-    div[data-testid="stExpander"] details {
-        background-color: #111 !important;
-    }
-    .streamlit-expanderHeader:hover {
-        color: #FBBF24 !important;
-        border-color: #FBBF24 !important;
-    }
-    .streamlit-expanderHeader svg { fill: white !important; }
-
-    /* 4. Form Styling */
-    div[data-testid="stForm"] { background-color: #0e0e0e !important; border: 1px solid #333; padding: 20px; border-radius: 12px; }
+    div[data-baseweb="popover"] { background-color: #111 !important; }
+    li[role="option"] { background-color: #111 !important; color: white !important; }
 
     /* 5. Tabs */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
@@ -78,7 +83,7 @@ st.markdown("""
     .val-win { color: #10B981 !important; font-weight: 900; font-family: 'JetBrains Mono'; font-size: 1.1em; }
     .val-lose { color: #555 !important; font-weight: 900; font-family: 'JetBrains Mono'; font-size: 1.1em; }
     
-    /* Chat */
+    /* Chat Bubbles */
     .chat-user { background: #3B82F6; color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; margin: 10px 0; display: inline-block; float: right; clear: both; }
     .chat-ai { background: #222; border: 1px solid #333; color: #EEE; padding: 15px; border-radius: 15px 15px 15px 0; margin: 10px 0; display: inline-block; float: left; clear: both; }
 </style>
@@ -130,10 +135,9 @@ df = load_data()
 # --- 4. IMAGE GENERATOR (EXPORT FEATURE) ---
 def generate_card_image(r1, r2, winner_col):
     W, H = 900, 550
-    img = Image.new('RGB', (W, H), color='#080808') # Dark bg
+    img = Image.new('RGB', (W, H), color='#080808') 
     d = ImageDraw.Draw(img)
     
-    # Load Font
     try:
         font_lg = ImageFont.truetype("arial.ttf", 40)
         font_md = ImageFont.truetype("arial.ttf", 28)
@@ -143,20 +147,16 @@ def generate_card_image(r1, r2, winner_col):
         font_md = ImageFont.load_default()
         font_sm = ImageFont.load_default()
 
-    # Draw Center Line
     d.line([(W/2, 40), (W/2, H-40)], fill="#333", width=2)
     
     def draw_side(x_start, row, is_winner):
-        # Winner Badge
         if is_winner:
             d.rectangle([x_start+100, 30, x_start+350, 70], fill="#10B981")
             d.text((x_start+165, 38), "👑 WINNER", font=font_sm, fill="black")
         
-        # Name & Price
         d.text((x_start+30, 90), row['name'][:22], font=font_lg, fill="white")
         d.text((x_start+30, 140), f"${row['price']:,}", font=font_md, fill="#FBBF24")
         
-        # Stats
         y = 210
         specs = [
             ("CHIPSET", str(row.get('chipset', '-'))),
@@ -174,21 +174,20 @@ def generate_card_image(r1, r2, winner_col):
 
     draw_side(0, r1, winner_col==1)
     draw_side(450, r2, winner_col==2)
-    
-    # Footer
     d.text((30, H-40), "Generated by TechChoose App", font=font_sm, fill="#444")
     return img
 
-# --- 5. HELPERS HTML ---
+# --- 5. HELPERS HTML (FIXED COLORS) ---
 def get_dynamic_badge(mode, price):
     if "High-End" in mode: return "💎 MARKET LEADER"
     elif "Gamer" in mode: return "🏆 GAMING BEAST"
     elif "Creator" in mode: return "🎥 CREATOR CHOICE"
     else: return "⭐ TOP FLAGSHIP"
 
+# 🔥 FIX: เพิ่ม !important ในสีตัวเลข เพื่อให้สีกลับมา (Speed/Cam/Batt)
 def stat_bar_html(label, score, color):
     w = min(score * 10, 100)
-    return f"<div style='background:#151515;padding:8px;border-radius:8px;text-align:center;border:1px solid #333;margin-bottom:5px;'><div style='color:#888 !important;font-size:0.65em;font-weight:700;margin-bottom:4px;'>{label}</div><div style='font-size:1.1em;font-weight:900;color:white !important;'>{score:.1f}</div><div style='background:#333;height:4px;border-radius:2px;margin-top:4px;overflow:hidden;'><div style='width:{w}%;height:100%;background:{color};'></div></div></div>"
+    return f"<div style='background:#151515;padding:8px;border-radius:8px;text-align:center;border:1px solid #333;margin-bottom:5px;'><div style='color:#888 !important;font-size:0.65em;font-weight:700;margin-bottom:4px;'>{label}</div><div style='font-size:1.1em;font-weight:900;color:white !important;'>{score:.1f}</div><div style='background:#333;height:4px;border-radius:2px;margin-top:4px;overflow:hidden;'><div style='width:{w}%;height:100%;background:{color} !important;'></div></div></div>"
 
 def get_reason_badge_html(winner_row, current_row):
     badges = ""
@@ -197,6 +196,7 @@ def get_reason_badge_html(winner_row, current_row):
     if current_row['perf_score'] > (winner_row['perf_score'] + 0.3): badges += "<span style='background:rgba(59,130,246,0.2);color:#3B82F6 !important;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>🚀 FASTER</span>"
     return badges
 
+# 🔥 FIX: เพิ่ม !important ให้สีตัวเลขคะแนนเล็กๆ
 def get_score_badge_html(icon, label, score):
     if score >= 9.5: c, b = "#10B981", "rgba(16,185,129,0.4)"
     elif score >= 8.5: c, b = "#3B82F6", "rgba(59,130,246,0.4)"
@@ -269,7 +269,7 @@ with tab1:
                     </div>
                 </a>""", unsafe_allow_html=True)
 
-# ================= TAB 2: COMPARE & EXPORT =================
+# ================= TAB 2 =================
 with tab2:
     st.subheader("🥊 Head-to-Head Comparison")
     all_models = sorted(df['name'].unique())
@@ -293,7 +293,6 @@ with tab2:
         s2 = (r2['perf_score']*w_p) + (r2['cam_score']*w_c) + (r2['batt_score']*w_b) + (r2['value']*w_v) + (r2['brand_score']*w_br)
         win1 = s1 >= s2
         
-        # 🔥 GENERATE IMAGE
         img_buffer = io.BytesIO()
         img = generate_card_image(r1, r2, 1 if win1 else 2)
         img.save(img_buffer, format="PNG")
@@ -344,10 +343,10 @@ with tab2:
                 <a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
             </div>""", unsafe_allow_html=True)
 
-# ================= TAB 3: AI ADVISOR =================
+# ================= TAB 3: AI ADVISOR (ENGLISH) =================
 with tab3:
     st.subheader("🤖 AI Genius Advisor")
-    st.markdown("Ask me: **'มือถือเล่นเกม งบ 20000'**, **'เน้นกล้องสวย'**, **'Samsung vs iPhone?'**")
+    st.markdown("Ask me: **'Best gaming phone under $800?'**, **'Samsung vs iPhone camera?'**")
     
     if "messages" not in st.session_state: st.session_state.messages = []
     for message in st.session_state.messages:
@@ -362,12 +361,15 @@ with tab3:
         rec_df = df.copy()
         ai_reply = "I recommend checking out the 'Find Best Match' tab for detailed filters!"
         
-        if "game" in prompt_lower or "เกม" in prompt_lower:
+        if "game" in prompt_lower or "gaming" in prompt_lower:
             best = rec_df.sort_values('perf_score', ascending=False).iloc[0]
             ai_reply = f"🎮 For gaming, **{best['name']}** is a beast! AnTuTu: {int(best['antutu']):,}."
-        elif "camera" in prompt_lower or "กล้อง" in prompt_lower:
+        elif "camera" in prompt_lower or "photo" in prompt_lower:
             best = rec_df.sort_values('cam_score', ascending=False).iloc[0]
             ai_reply = f"📸 **{best['name']}** has the best camera score ({best['cam_score']}/10) in our list."
+        elif "battery" in prompt_lower:
+            best = rec_df.sort_values('batt_score', ascending=False).iloc[0]
+            ai_reply = f"🔋 Need battery? **{best['name']}** lasts forever with a score of {best['batt_score']}/10."
         
         st.session_state.messages.append({"role": "assistant", "content": ai_reply})
         st.markdown(f"<div class='chat-ai'>{ai_reply}</div>", unsafe_allow_html=True)
