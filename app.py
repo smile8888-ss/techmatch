@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Brand Aware",
+    page_title="TechChoose - Balanced",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -27,19 +27,17 @@ def load_data():
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
-        # --- 🔥 NEW: BRAND & POPULARITY SCORE ---
+        # --- Brand Score (ลดความสำคัญลง) ---
         def get_brand_score(name):
             n = str(name).lower()
             if 'iphone' in n or 'apple' in n: return 10.0
             if 'samsung' in n or 'galaxy' in n: return 10.0
-            if 'google' in n or 'pixel' in n: return 9.0
-            if 'xiaomi' in n or 'oneplus' in n: return 8.8
-            if 'oppo' in n or 'vivo' in n or 'honor' in n: return 8.5
-            return 8.0 # แบรนด์อื่นๆ
+            if 'google' in n or 'pixel' in n: return 9.5
+            return 9.0 # แบรนด์อื่นๆ ให้คะแนนเกาะกลุ่ม ไม่ห่างกันมาก
             
         df['brand_score'] = df['name'].apply(get_brand_score)
-
-        # Relative Spec Scoring
+        
+        # --- Relative Scoring ---
         max_antutu = df['antutu'].max() if 'antutu' in df.columns else 1
         max_cam = df['camera'].max() if 'camera' in df.columns else 10
         max_batt = df['battery'].max() if 'battery' in df.columns else 10
@@ -60,45 +58,44 @@ def load_data():
 
 # --- 3. HELPER FUNCTIONS ---
 def get_dynamic_badge(mode, price):
-    if "High-End" in mode: return "💎 MARKET LEADER" # เปลี่ยนคำให้ดูขลังขึ้น
+    if "High-End" in mode: return "💎 ABSOLUTE BEST"
     elif "Gamer" in mode: return "🏆 GAMING BEAST"
     elif "Creator" in mode: return "🎥 CREATOR CHOICE"
     elif "Student" in mode: return "💰 SMART SAVER"
     else: return "⭐ TOP FLAGSHIP"
 
 def get_expert_verdict(row, mode):
-    # ปรับคำพูดให้ดูโปรขึ้น
-    if row['brand_score'] >= 9.5:
-        return f"The best experience. Top-tier specs with <b>unmatched software & support</b>."
-    return f"Incredible value. Flagship specs at a <b>competitive price</b>."
+    return f"Excellent choice based on your preferences. Score: {row['final_score']:.1f}/100"
 
 def stat_bar_html(label, score, color):
     width = min(score * 10, 100)
-    return f"""<div style='background:#151515;padding:8px;border-radius:8px;text-align:center;border:1px solid #333;'><div style='color:#888;font-size:0.65em;font-weight:700;margin-bottom:4px;'>{label}</div><div style='font-size:1.1em;font-weight:900;color:white;'>{score:.1f}</div><div style='background:#333;height:4px;border-radius:2px;margin-top:4px;overflow:hidden;'><div style='width:{width}%;height:100%;background:{color};'></div></div></div>"""
+    return f"""<div class="stat-box"><div class="stat-label">{label}</div><div class="stat-val">{score:.1f}/10</div><div class="bar-bg"><div style="width:{width}%;height:100%;background:{color};"></div></div></div>"""
 
+# 🔥 FIX HTML: ใช้ Triple Quotes เพื่อความปลอดภัยของ String
 def get_reason_badge(winner_row, current_row):
     badges = ""
-    # Price Check
     price_diff = winner_row['price'] - current_row['price']
-    if price_diff >= 100:
-        badges += f"<span style='background:rgba(16,185,129,0.2);color:#10B981;border:1px solid #10B981;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>SAVE ${int(price_diff):,}</span>"
     
-    # Brand Check (ถ้าแบรนด์ดังกว่าที่ 1 ให้โชว์)
-    if current_row['brand_score'] > winner_row['brand_score']:
-         badges += "<span style='background:rgba(255,215,0,0.2);color:#FFD700;border:1px solid #FFD700;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>👑 TOP BRAND</span>"
-
-    # Specs
-    elif current_row['perf_score'] > winner_row['perf_score']:
-        badges += "<span style='background:rgba(59,130,246,0.2);color:#3B82F6;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;'>🚀 FASTER</span>"
+    # 1. Price Badge
+    if price_diff >= 50:
+        badges += f"""<span style="background:rgba(16,185,129,0.2);color:#10B981;border:1px solid #10B981;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;">SAVE ${int(price_diff):,}</span>"""
+    
+    # 2. Spec Badge (ต้องชนะเกิน 0.3 คะแนนถึงจะโชว์)
+    if current_row['perf_score'] > (winner_row['perf_score'] + 0.3):
+        badges += """<span style="background:rgba(59,130,246,0.2);color:#3B82F6;border:1px solid #3B82F6;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;">🚀 FASTER</span>"""
+    elif current_row['batt_score'] > (winner_row['batt_score'] + 0.3):
+        badges += """<span style="background:rgba(168,85,247,0.2);color:#A855F7;border:1px solid #A855F7;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;">🔋 BATT</span>"""
+    elif current_row['cam_score'] > (winner_row['cam_score'] + 0.3):
+        badges += """<span style="background:rgba(245,158,11,0.2);color:#F59E0B;border:1px solid #F59E0B;padding:2px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;margin-left:8px;">📸 CAM</span>"""
         
     return badges
 
 def get_score_badge(icon, label, score):
-    if score >= 9.8: color = "#10B981"; border = "rgba(16,185,129,0.4)"
-    elif score >= 9.0: color = "#3B82F6"; border = "rgba(59,130,246,0.4)"
-    elif score >= 8.0: color = "#F59E0B"; border = "rgba(245,158,11,0.4)"
-    else: color = "#EF4444"; border = "rgba(239,68,68,0.4)"
-    return f"<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {border};border-radius:6px;padding:3px 8px;margin-right:6px;'><span style='font-size:1em;margin-right:4px;'>{icon}</span><span style='color:#888;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;'>{label}</span><span style='color:{color};font-weight:900;font-family:monospace;font-size:0.9em;'>{score:.1f}</span></div>"
+    if score >= 9.5: color = "#10B981"; border = "rgba(16,185,129,0.4)" # เขียว
+    elif score >= 8.5: color = "#3B82F6"; border = "rgba(59,130,246,0.4)" # ฟ้า
+    else: color = "#F59E0B"; border = "rgba(245,158,11,0.4)" # ส้ม
+        
+    return f"""<div style="display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {border};border-radius:6px;padding:3px 8px;margin-right:6px;"><span style="font-size:1em;margin-right:4px;">{icon}</span><span style="color:#888;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;">{label}</span><span style="color:{color};font-weight:900;font-family:'JetBrains Mono',monospace;font-size:0.9em;">{score:.1f}</span></div>"""
 
 # --- 4. CSS ---
 st.markdown("""
@@ -126,16 +123,23 @@ st.markdown("""
     div[data-testid="stNumberInput"] button { background-color: #222 !important; color: white !important; border-color: #444 !important; }
     div[data-testid="stNumberInput"] input { background-color: transparent !important; color: white !important; }
 
+    /* Cards */
     .winner-box { background: radial-gradient(circle at top right, #111, #000); border: 2px solid #3B82F6; border-radius: 20px; padding: 30px; box-shadow: 0 0 60px rgba(59, 130, 246, 0.25); margin-bottom: 30px; }
     .hero-title { font-size: 2.8em; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 10px; }
     .hero-price { color: #FBBF24; font-size: 2.2em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 15px; }
+    .stat-box { background: #151515; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #333; }
+    .stat-label { color: #888; font-size: 0.7em; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+    .stat-val { font-size: 1.2em; font-weight: 900; color: white; }
+    .bar-bg { background: #333; height: 4px; border-radius: 2px; margin-top: 5px; overflow: hidden; }
     .amazon-btn { background: #3B82F6; color: white !important; padding: 15px; display: block; text-align: center; border-radius: 12px; font-weight: 900; text-decoration: none; font-size: 1.1em; margin-top: 20px; transition: 0.3s; }
     .amazon-btn:hover { background: #2563EB; }
 
+    /* Alt List */
     .alt-link { text-decoration: none !important; display: block; }
     .alt-card { background: #111; border: 1px solid #333; border-radius: 12px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; }
     .alt-card:hover { border-color: #555; background: #161616; transform: translateX(5px); }
     
+    /* VS Card */
     .vs-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 25px; text-align: center; height: 100%; }
     .vs-winner-border { border: 2px solid #10B981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); }
     .val-win { color: #10B981; font-weight: 900; } .val-lose { color: #555; }
@@ -169,19 +173,20 @@ with tab1:
         elif "Custom" in lifestyle: budget = st.slider("💰 Max Budget (USD)", 100, 2000, 2000, step=50, key="t1_bud")
         else: budget = 9999
 
-        # 🔥 WEIGHTING SYSTEM (ปรับน้ำหนักให้ Brand มีผล)
-        p, c, b, v, br = 5, 5, 5, 5, 5
+        # 🔥 BALANCED WEIGHTS (สูตรสมดุลใหม่)
+        # ปรับลด Brand (br) ให้มีผลน้อยลง (แค่ 2-3 คะแนน) เพื่อให้ Spec (p,c,b) นำหน้า
+        p, c, b, v, br = 5, 5, 5, 5, 2 
         price_penalty_threshold = 9999
         
         if "High-End" in lifestyle: 
-            # High-End: ไม่สนราคา (v=0) เน้นแบรนด์ (br=20) และสเปก
-            p,c,b,v,br = 10, 10, 8, 0, 20
+            # High-End: เน้น Spec (10) แบรนด์ (4) ราคาไม่สน (0)
+            p,c,b,v,br = 10, 10, 8, 0, 4
         elif "Gamer" in lifestyle: 
-            p,c,b,v,br = 20, 5, 10, 5, 5
+            p,c,b,v,br = 20, 5, 10, 5, 1
         elif "Business" in lifestyle: 
-            p,c,b,v,br = 8, 8, 10, 5, 15 # นักธุรกิจชอบแบรนด์
+            p,c,b,v,br = 8, 8, 10, 5, 5
         elif "Student" in lifestyle: 
-            p,c,b,v,br = 6, 6, 8, 20, 2 # นักเรียนเน้นคุ้ม ไม่เน้นแบรนด์
+            p,c,b,v,br = 6, 6, 8, 20, 1
             price_penalty_threshold = 800
 
         if "Custom" in lifestyle:
@@ -190,7 +195,7 @@ with tab1:
             with cc1: p = st.number_input("Speed", 1, 10, 8, key="t1_p")
             with cc2: c = st.number_input("Cam", 1, 10, 8, key="t1_c")
             with cc3: b = st.number_input("Batt", 1, 10, 5, key="t1_b")
-            with cc4: br = st.number_input("Brand", 1, 10, 5, key="t1_br") # ให้ User ปรับได้
+            with cc4: br = st.number_input("Brand", 1, 10, 2, key="t1_br") # Default น้อยๆ
 
         if st.button("🚀 UPDATE RESULTS", type="primary", use_container_width=True, key="t1_btn"): st.rerun()
 
@@ -202,7 +207,6 @@ with tab1:
         elif "Android" in os_choice: df_f = df_f[df_f['os_type']=='Android']
         df_f = df_f[df_f['price'] <= budget]
         
-        # 🔥 FORMULA UPDATE (รวม Brand Score)
         score = (df_f['perf_score']*p) + (df_f['cam_score']*c) + (df_f['batt_score']*b) + (df_f['value']*v) + (df_f['brand_score']*br)
         
         price_pen = df_f['price'].apply(lambda x: (x - price_penalty_threshold) * 0.5 if x > price_penalty_threshold else 0)
@@ -216,7 +220,7 @@ with tab1:
             winner = df_f.iloc[0]
             current_badge = get_dynamic_badge(lifestyle, winner['price'])
             
-            stats_html = f"""<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;'>{stat_bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATT', winner['batt_score'], '#10B981')}</div>"""
+            stats_html = f"""<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">{stat_bar_html('🚀 SPEED', winner['perf_score'], '#3B82F6')}{stat_bar_html('📸 CAM', winner['cam_score'], '#A855F7')}{stat_bar_html('🔋 BATT', winner['batt_score'], '#10B981')}</div>"""
             
             winner_card = f"""<div class='winner-box'><div style='background:#F59E0B; color:black; padding:6px 14px; border-radius:50px; display:inline-block; font-weight:900; font-size:0.75em; margin-bottom:15px; letter-spacing:1px;'>{current_badge}</div><div class='hero-title'>{winner['name']}</div><div class='hero-price'>${winner['price']:,}</div><div style='background:#111; border-left:4px solid #3B82F6; padding:12px; margin-bottom:20px; font-size:0.9em; color:#CCC;'>{get_expert_verdict(winner, lifestyle)}</div>{stats_html}<a href='{winner['link']}' target='_blank' class='amazon-btn'>👉 VIEW DEAL ON AMAZON</a><div style='text-align:center; color:#10B981; font-size:0.85em; margin-top:10px; font-weight:bold;'>⚡ Check today's price</div></div>"""
             st.markdown(winner_card, unsafe_allow_html=True)
@@ -236,7 +240,22 @@ with tab1:
                 b_cam = get_score_badge("📸", "Cam", row['cam_score'])
                 b_batt = get_score_badge("🔋", "Batt", row['batt_score'])
                 
-                alt_card = f"""<a href="{row['link']}" target="_blank" class="alt-link"><div class="alt-card"><div style="display:flex;align-items:center;width:100%;"><div style="width:35px;height:35px;display:flex;align-items:center;justify-content:center;font-weight:900;border-radius:8px;font-size:1.2em;margin-right:20px;{rank_style}">{rank_num}</div><div style="flex-grow:1;"><div style="color:white;font-weight:700;font-size:1.1em;margin-bottom:6px;">{row['name']} {reason_badge}</div><div style="color:#FBBF24;font-family:'JetBrains Mono';font-weight:bold;font-size:1em;">${row['price']:,}</div><div style="margin-top:10px;display:flex;gap:5px;">{b_speed}{b_cam}{b_batt}</div></div><div style="color:#FF9900;font-weight:900;font-size:0.8em;">VIEW &gt;</div></div></div></a>"""
+                # 🔥 FIX HTML: Triple Quotes เพื่อความปลอดภัยสูงสุด
+                alt_card = f"""
+                <a href="{row['link']}" target="_blank" class="alt-link">
+                    <div class="alt-card">
+                        <div style="display:flex;align-items:center;width:100%;">
+                            <div style="width:35px;height:35px;display:flex;align-items:center;justify-content:center;font-weight:900;border-radius:8px;font-size:1.2em;margin-right:20px;{rank_style}">{rank_num}</div>
+                            <div style="flex-grow:1;">
+                                <div style="color:white;font-weight:700;font-size:1.1em;margin-bottom:6px;">{row['name']} {reason_badge}</div>
+                                <div style="color:#FBBF24;font-family:'JetBrains Mono';font-weight:bold;font-size:1em;">${row['price']:,}</div>
+                                <div style="margin-top:10px;display:flex;gap:5px;">{b_speed}{b_cam}{b_batt}</div>
+                            </div>
+                            <div class="view-btn">VIEW &gt;</div>
+                        </div>
+                    </div>
+                </a>
+                """
                 st.markdown(alt_card, unsafe_allow_html=True)
         else:
             st.warning("No phones found under this budget.")
@@ -267,9 +286,8 @@ with tab2:
         
         w_p, w_c, w_b, w_v, w_br = 1, 1, 1, 1, 1
         if "Gaming" in judge: w_p, w_c, w_b, w_v, w_br = 10, 0, 3, 1, 1
-        elif "Camera" in judge: w_p, w_c, w_b, w_v, w_br = 2, 10, 3, 1, 2
+        elif "Camera" in judge: w_p, w_c, w_b, w_v, w_br = 2, 10, 3, 1, 1
         elif "Value" in judge: w_p, w_c, w_b, w_v, w_br = 3, 3, 3, 10, 1
-        elif "Overall" in judge: w_p, w_c, w_b, w_v, w_br = 5, 5, 5, 5, 8 # Overall ให้ค่าแบรนด์สูงหน่อย
         
         s1 = (r1['perf_score']*w_p) + (r1['cam_score']*w_c) + (r1['batt_score']*w_b) + (r1['value']*w_v) + (r1['brand_score']*w_br)
         s2 = (r2['perf_score']*w_p) + (r2['cam_score']*w_c) + (r2['batt_score']*w_b) + (r2['value']*w_v) + (r2['brand_score']*w_br)
