@@ -3,7 +3,7 @@ import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Ultimate",
+    page_title="TechChoose - Final Stable",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -42,12 +42,11 @@ def load_data():
 
     return df
 
-# --- 3. CSS (NUCLEAR DARK MODE + COLOR FIXES) ---
+# --- 3. CSS (DESIGN SYSTEM) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* Global */
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
     
     /* Expander */
@@ -62,7 +61,7 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border: 1px solid #333; }
 
-    /* Inputs */
+    /* Input Colors */
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
     div[data-baseweb="select"] span { color: white !important; }
     div[data-baseweb="popover"], ul[role="listbox"] { background-color: #111 !important; color: white !important; }
@@ -93,19 +92,28 @@ st.markdown("""
     .val-win { color: #10B981; } 
     .rec-badge { background: #10B981; color: black; font-weight: 900; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 0.8em; }
 
-    /* Top Alternatives Styling */
+    /* Alternatives Styling (Hierarchical) */
     .alt-link { text-decoration: none !important; display: block; }
-    .alt-row { 
-        background: #0A0A0A; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; 
-        display: flex; justify-content: space-between; align-items: center; transition: 0.2s;
-    }
-    .alt-row:hover { border-color: #444; background: #111; }
     
-    /* Rank Badges */
-    .rank-circle { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; border: 1px solid #444; }
-    .rank-2 { background: linear-gradient(135deg, #E0E0E0, #757575); color: black; border: none; } /* Silver */
-    .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; border: none; } /* Bronze */
-    .rank-other { background: #222; color: #888; border: 1px solid #444; } /* Normal */
+    /* Rank 2 & 3 (Large) */
+    .alt-row-large { 
+        background: #111; border: 1px solid #333; padding: 20px; border-radius: 12px; margin-bottom: 15px; 
+        display: flex; justify-content: space-between; align-items: center; 
+    }
+    .alt-row-large:hover { border-color: #555; background: #1a1a1a; }
+    
+    /* Rank 4 & 5 (Small) */
+    .alt-row-small { 
+        background: #080808; border: 1px solid #222; padding: 12px; border-radius: 8px; margin-bottom: 8px; 
+        display: flex; justify-content: space-between; align-items: center; 
+    }
+    .alt-row-small:hover { border-color: #444; background: #111; }
+
+    /* Badges */
+    .rank-circle { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1em; }
+    .rank-2 { background: linear-gradient(135deg, #D7D7D7, #999); color: black; border: 1px solid #EEE; box-shadow: 0 0 10px rgba(255,255,255,0.1); } 
+    .rank-3 { background: linear-gradient(135deg, #E6AC75, #A0522D); color: black; border: 1px solid #FFD700; box-shadow: 0 0 10px rgba(230,172,117,0.1); } 
+    .rank-other { width: 24px; height: 24px; background: #222; color: #777; border: 1px solid #333; font-size: 0.8em; }
 
     .mini-bar-container { display: flex; gap: 4px; margin-top: 6px; }
     .mini-stat { width: 30px; }
@@ -128,7 +136,14 @@ st.markdown("<div style='background:#111; color:#00FF00; padding:5px 10px; borde
 
 df = load_data()
 
-# --- 5. TABS SYSTEM ---
+# --- 5. SESSION STATE INIT (แก้เด้ง) ---
+# สร้างตัวแปรจำค่าไว้ ถ้ายังไม่มี
+if 'p1' not in st.session_state:
+    st.session_state['p1'] = None
+if 'p2' not in st.session_state:
+    st.session_state['p2'] = None
+
+# --- 6. TABS SYSTEM ---
 tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
 
 # ==========================================
@@ -184,6 +199,7 @@ with tab1:
             elif "Gamer" in lifestyle: badge_txt = "🏆 GAMING BEAST"
             else: badge_txt = "⭐ TOP RECOMMENDATION"
             
+            # Winner Card HTML
             def bar_html(lbl, val, col):
                 return f"<div class='stat-box'><div class='stat-label'>{lbl}</div><div class='stat-val'>{val:.1f}/10</div><div class='bar-bg'><div style='width:{val*10}%; height:100%; background:{col};'></div></div></div>"
 
@@ -194,33 +210,40 @@ with tab1:
             
             st.write("")
             st.markdown("### 🥈 Top Alternatives")
+            
             for i, row in df_f.iloc[1:6].iterrows():
                 rank_num = i + 1
                 
-                # 🔥 FIX: สีเหรียญอันดับแบบชัดเจน
+                # Logic แยกดีไซน์ อันดับ 2-3 (Large) กับ 4-5 (Small)
+                is_large = rank_num <= 3
+                row_cls = "alt-row-large" if is_large else "alt-row-small"
+                
+                # Badge Style
                 rank_cls = "rank-circle rank-other"
                 if rank_num == 2: rank_cls = "rank-circle rank-2"
                 elif rank_num == 3: rank_cls = "rank-circle rank-3"
                 
                 rank_badge = f"<div class='{rank_cls}'>{rank_num}</div>"
-                
                 mini_bars = f"""<div class='mini-bar-container'><div class='mini-stat'><div class='mini-track'><div class='mini-fill-blue' style='width:{row['perf_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-purple' style='width:{row['cam_score']*10}%;'></div></div></div><div class='mini-stat'><div class='mini-track'><div class='mini-fill-green' style='width:{row['batt_score']*10}%;'></div></div></div></div>"""
                 
-                # 🔥 FIX: บังคับสีขาว/ทอง ไม่ให้กลืนกัน (style='color:white !important')
+                # Font Sizes (Hierarchical)
+                name_size = "1.2em" if is_large else "1em"
+                price_size = "1em" if is_large else "0.9em"
+                
                 alt_html = f"""
                 <a href="{row['link']}" target="_blank" class="alt-link">
-                    <div class="alt-row">
-                        <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="{row_cls}">
+                        <div style="display:flex; align-items:center; gap:15px;">
                             {rank_badge} 
                             <div>
-                                <div style="font-weight:bold; font-size:1.1em; color:white !important;">{row['name']}</div>
-                                <div style="color:#FBBF24 !important; font-weight:bold; font-size:0.9em;">${row['price']:,}</div>
-                                {mini_bars}
+                                <div style="font-weight:bold; font-size:{name_size}; color:white !important;">{row['name']}</div>
+                                <div style="color:#FBBF24 !important; font-weight:bold; font-size:{price_size};">${row['price']:,}</div>
+                                {mini_bars if is_large else ""}
                             </div>
                         </div>
                         <div style="text-align:right">
                             <div style="font-size:1.1em; font-weight:900; color:#3B82F6 !important;">{row['match']:.0f}%</div>
-                            <div style="color:#FBBF24 !important; font-size:0.7em; font-weight:bold;">VIEW ></div>
+                            <div style="color:#666; font-size:0.7em; font-weight:bold;">VIEW ></div>
                         </div>
                     </div>
                 </a>"""
@@ -229,26 +252,39 @@ with tab1:
             st.warning("No phones found under this budget.")
 
 # ==========================================
-# TAB 2: VS MODE (AUTO & NO JUMP)
+# TAB 2: VS MODE (SESSION STATE FIX)
 # ==========================================
 with tab2:
     st.markdown("### 🥊 Head-to-Head Comparison")
     
-    # 🔥 FIX: ไม่ใช้ st.form แล้ว เพื่อให้ Auto Update
-    # แต่ใช้การจัดวางที่เรียบง่ายเพื่อลดการกระตุก
-    
     judge = st.selectbox("⚖️ Decide Winner By (ตัดสินจาก):", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality", "💰 Value for Money"], key="vs_judge")
     
     all_models = sorted(df['name'].unique())
-    col_a, col_b = st.columns(2)
-    with col_a: p1_name = st.selectbox("Select Phone A", all_models, index=0, key="p1")
-    idx2 = 1 if len(all_models) > 1 else 0
-    with col_b: p2_name = st.selectbox("Select Phone B", all_models, index=idx2, key="p2")
     
-    # Logic แสดงผลทันที (Auto)
-    if p1_name and p2_name: 
-        r1 = df[df['name'] == p1_name].iloc[0]
-        r2 = df[df['name'] == p2_name].iloc[0]
+    # Init Session State for Selectboxes (ถ้ายังไม่มีค่า ให้ตั้งค่าเริ่มต้น)
+    if st.session_state.p1 is None: st.session_state.p1 = all_models[0]
+    if st.session_state.p2 is None: st.session_state.p2 = all_models[1] if len(all_models) > 1 else all_models[0]
+
+    # Callbacks to update Session State (แก้เด้ง)
+    def update_p1(): st.session_state.p1 = st.session_state.widget_p1
+    def update_p2(): st.session_state.p2 = st.session_state.widget_p2
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        # ใช้ index จาก session_state
+        try: idx1 = all_models.index(st.session_state.p1)
+        except: idx1 = 0
+        st.selectbox("Select Phone A", all_models, index=idx1, key="widget_p1", on_change=update_p1)
+
+    with col_b:
+        try: idx2 = all_models.index(st.session_state.p2)
+        except: idx2 = 1
+        st.selectbox("Select Phone B", all_models, index=idx2, key="widget_p2", on_change=update_p2)
+    
+    # Logic Auto-Calculate (ใช้ค่าจาก Session State โดยตรง)
+    if st.session_state.p1 and st.session_state.p2: 
+        r1 = df[df['name'] == st.session_state.p1].iloc[0]
+        r2 = df[df['name'] == st.session_state.p2].iloc[0]
         
         w_p, w_c, w_b, w_v = 1, 1, 1, 1
         if "Gaming" in judge: w_p, w_c, w_b, w_v = 10, 0, 3, 1
