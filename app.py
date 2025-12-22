@@ -1,61 +1,46 @@
-import streamlit as st
+ฃimport streamlit as st
 import pandas as pd
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="TechChoose - Ultimate Fix",
+    page_title="TechChoose - Form Fixed",
     page_icon="📱",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS (แก้กล่องขาวแบบถอนรากถอนโคน) ---
+# --- 2. CSS (DARK & STABLE) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;900&display=swap');
     
-    /* Global Dark Mode Force */
     .stApp { background-color: #000000 !important; color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
 
-    /* 🔥 FIX WHITE EXPANDER (แก้กล่องขาว) */
-    div[data-testid="stExpander"] { 
-        background-color: #0e0e0e !important; 
-        border: 1px solid #333 !important; 
-        border-radius: 10px !important;
-        color: white !important;
-    }
-    div[data-testid="stExpander"] details {
-        background-color: #0e0e0e !important;
-    }
-    div[data-testid="stExpander"] summary {
-        background-color: #0e0e0e !important;
-        color: white !important;
-    }
-    div[data-testid="stExpander"] summary:hover {
-        color: #FBBF24 !important;
-    }
-    /* ป้องกันตัวหนังสือข้างในเป็นสีดำ */
-    div[data-testid="stExpander"] * {
-        color: white !important;
-    }
+    /* Fix Expander White Box */
+    div[data-testid="stExpander"] { background-color: transparent !important; border: none !important; }
+    div[data-testid="stExpander"] details { background-color: #111 !important; border-color: #333 !important; }
+    div[data-testid="stExpander"] summary { color: white !important; }
+    div[data-testid="stExpander"] summary:hover { color: #FBBF24 !important; }
 
     /* Tabs */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; background-color: #000; padding-bottom: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #111; border-radius: 5px; color: #888; font-weight: bold; border: 1px solid #333; }
     .stTabs [aria-selected="true"] { background-color: #222 !important; color: #3B82F6 !important; border-color: #3B82F6 !important; }
 
-    /* Inputs */
+    /* Form & Inputs */
+    div[data-testid="stForm"] { border: 1px solid #333; padding: 20px; border-radius: 15px; background-color: #0e0e0e; }
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background-color: #111 !important; border: 1px solid #444 !important; color: white !important; }
     div[data-baseweb="select"] span { color: white !important; }
-    div[data-testid="stNumberInput"] input { background-color: transparent !important; color: white !important; }
-
-    /* Cards */
+    
+    /* Winner Card */
     .winner-box { background: radial-gradient(circle at top right, #111, #000); border: 2px solid #3B82F6; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.2); }
     .hero-title { font-size: 2.5em; font-weight: 900; color: white; margin-bottom: 5px; }
     .hero-price { color: #FBBF24; font-size: 2em; font-weight: 800; font-family: 'JetBrains Mono'; margin-bottom: 15px; }
-    .amazon-btn { background: #3B82F6; color: white !important; padding: 12px; display: block; text-align: center; border-radius: 8px; font-weight: 900; text-decoration: none; margin-top: 15px; transition: 0.3s; }
     
-    /* Alt Cards */
+    .amazon-btn { background: #3B82F6; color: white !important; padding: 12px; display: block; text-align: center; border-radius: 8px; font-weight: 900; text-decoration: none; margin-top: 15px; transition: 0.3s; }
+    .amazon-btn:hover { background: #2563EB; }
+
+    /* Alt List */
     .alt-link { text-decoration: none !important; display: block; }
     .alt-card { background: #111; border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
     .alt-card:hover { border-color: #555; background: #161616; transform: translateX(5px); }
@@ -70,7 +55,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LOAD DATA ---
+# --- 3. DATA ---
 @st.cache_data(ttl=60)
 def load_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqoziKy640ID3oDos-DKk49txgsNPdMJGb_vAH1_WiRG88kewDPneVgo9iSHq2u5DXYI_g_n6se14k/pub?output=csv"
@@ -81,14 +66,12 @@ def load_data():
 
     if not df.empty:
         df = df.dropna(subset=['name', 'price'])
-        
         def get_os(name):
             name_str = str(name).lower()
             if 'iphone' in name_str or 'ipad' in name_str: return 'iOS'
             return 'Android'
         df['os_type'] = df['name'].apply(get_os)
         
-        # Brand Score
         def get_brand_score(name):
             n = str(name).lower()
             if 'iphone' in n or 'apple' in n: return 10.0
@@ -97,13 +80,11 @@ def load_data():
             return 9.0 
         df['brand_score'] = df['name'].apply(get_brand_score)
         
-        # Relative Scoring
         max_antutu = df['antutu'].max() if 'antutu' in df.columns else 1
         max_cam = df['camera'].max() if 'camera' in df.columns else 10
         max_batt = df['battery'].max() if 'battery' in df.columns else 10
         
-        if 'antutu' in df.columns:
-            df['perf_score'] = (df['antutu'] / max_antutu) * 10
+        if 'antutu' in df.columns: df['perf_score'] = (df['antutu'] / max_antutu) * 10
         else: df['perf_score'] = 8.0 
         
         if 'camera' in df.columns: df['cam_score'] = (df['camera'] / max_cam) * 10
@@ -113,12 +94,11 @@ def load_data():
 
         my_tag = "techchoose-20"
         df['link'] = df['link'].apply(lambda x: f"{x}&tag={my_tag}" if '?' in str(x) else f"{x}?tag={my_tag}")
-
     return df
 
 df = load_data()
 
-# --- 4. SAFE HTML GENERATORS (NO ERROR) ---
+# --- 4. HELPERS ---
 def get_dynamic_badge(mode, price):
     if "High-End" in mode: return "💎 MARKET LEADER"
     elif "Gamer" in mode: return "🏆 GAMING BEAST"
@@ -144,7 +124,7 @@ def get_score_badge_html(icon, label, score):
     else: c, b = "#F59E0B", "rgba(245,158,11,0.4)"
     return f"<div style='display:inline-flex;align-items:center;background:rgba(0,0,0,0.5);border:1px solid {b};border-radius:6px;padding:3px 8px;margin-right:6px;'><span style='font-size:1em;margin-right:4px;'>{icon}</span><span style='color:#888;font-size:0.6em;font-weight:700;margin-right:4px;text-transform:uppercase;'>{label}</span><span style='color:{c};font-weight:900;font-family:monospace;font-size:0.9em;'>{score:.1f}</span></div>"
 
-# --- 5. MAIN APP ---
+# --- 5. APP ---
 st.title("🛒 TechChoose")
 st.markdown("<div style='margin-bottom:20px; color:#888;'>✅ Data Verified: 20 Dec 2025</div>", unsafe_allow_html=True)
 
@@ -168,7 +148,11 @@ with tab1:
         if "iOS" in os_choice: df_f = df_f[df_f['os_type']=='iOS']
         elif "Android" in os_choice: df_f = df_f[df_f['os_type']=='Android']
         
-        # Balanced Weights
+        if "High-End" in lifestyle: budget = 9999
+        elif "Student" in lifestyle: budget = 800
+        else: budget = 2000
+        df_f = df_f[df_f['price'] <= budget]
+
         p, c, b, v, br = 5, 5, 5, 5, 2 
         if "High-End" in lifestyle: p,c,b,v,br = 10, 10, 8, 0, 4
         elif "Gamer" in lifestyle: p,c,b,v,br = 20, 5, 10, 5, 1
@@ -218,33 +202,37 @@ with tab1:
                 """, unsafe_allow_html=True)
 
 # ==========================================
-# TAB 2: VS MODE (BUTTON TRIGGERED)
+# TAB 2: VS MODE (LOCKED FORM)
 # ==========================================
 with tab2:
     st.subheader("🥊 Head-to-Head Comparison")
     
-    # 🔥 Initialize Session State to prevent jumping
-    if 'compare_ready' not in st.session_state: st.session_state.compare_ready = False
-    
-    judge = st.selectbox("⚖️ Decide Winner By:", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality"], key="vs_judge")
     all_models = sorted(df['name'].unique())
     
-    c1, c2 = st.columns(2)
-    with c1: p1_name = st.selectbox("Select Phone A", all_models, index=0, key="vs_p1")
-    with c2: p2_name = st.selectbox("Select Phone B", all_models, index=1 if len(all_models)>1 else 0, key="vs_p2")
+    # 🔥🔥🔥 FORM START: ล็อกการทำงานไว้ข้างในนี้ ไม่เด้งแน่นอน
+    with st.form("compare_form"):
+        st.markdown("**1️⃣ Select Models:**")
+        c1, c2 = st.columns(2)
+        with c1: p1_name = st.selectbox("Phone A", all_models, index=0)
+        with c2: p2_name = st.selectbox("Phone B", all_models, index=1 if len(all_models)>1 else 0)
+        
+        st.markdown("**2️⃣ Judge By:**")
+        judge = st.selectbox("Decide Winner By:", ["💎 Overall Specs", "🎮 Gaming Performance", "📸 Camera Quality"])
+        
+        submitted = st.form_submit_button("⚔️ COMPARE NOW", type="primary", use_container_width=True)
+    # 🔥🔥🔥 FORM END
     
-    # Trigger Button
-    if st.button("⚔️ COMPARE NOW", type="primary", use_container_width=True):
-        st.session_state.compare_ready = True
-    
-    if st.session_state.compare_ready and p1_name and p2_name:
-        st.divider()
+    if submitted:
         r1 = df[df['name'] == p1_name].iloc[0]
         r2 = df[df['name'] == p2_name].iloc[0]
         
-        # Scoring Logic
-        s1 = r1['perf_score'] + r1['cam_score'] + r1['batt_score']
-        s2 = r2['perf_score'] + r2['cam_score'] + r2['batt_score']
+        # Scoring
+        w_p, w_c, w_b, w_v, w_br = 1, 1, 1, 1, 1
+        if "Gaming" in judge: w_p, w_c, w_b, w_v, w_br = 10, 0, 3, 1, 1
+        elif "Camera" in judge: w_p, w_c, w_b, w_v, w_br = 2, 10, 3, 1, 1
+        
+        s1 = (r1['perf_score']*w_p) + (r1['cam_score']*w_c) + (r1['batt_score']*w_b) + (r1['value']*w_v) + (r1['brand_score']*w_br)
+        s2 = (r2['perf_score']*w_p) + (r2['cam_score']*w_c) + (r2['batt_score']*w_b) + (r2['value']*w_v) + (r2['brand_score']*w_br)
         win1 = s1 >= s2
         
         c1_cls = "vs-winner-border" if win1 else ""
@@ -265,7 +253,9 @@ with tab2:
         r_cam = create_vs_row("📸", "Cam", r1['cam_score'], r2['cam_score'])
         r_batt = create_vs_row("🔋", "Batt", r1['batt_score'], r2['batt_score'])
 
+        st.divider()
         col_a, col_b = st.columns(2)
+        
         with col_a:
             st.markdown(f"""
             <div class='vs-card {c1_cls}'>
@@ -287,3 +277,7 @@ with tab2:
                 <a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a>
             </div>
             """, unsafe_allow_html=True)
+        
+        st.write("---")
+        winner_name = r1['name'] if win1 else r2['name']
+        st.success(f"**AI Verdict:** Based on **{judge}**, the **{winner_name}** wins.")
