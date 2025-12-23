@@ -357,7 +357,7 @@ with tab3:
             else:
                 try:
                     genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    model = genai.GenerativeModel('gemini-pro')
                     prompt = f"""
                     Role: You are a tech enthusiast on Reddit. You are NOT an AI assistant.
                     Task: Reply to this user question: "{q_text}"
