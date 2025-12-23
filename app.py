@@ -359,16 +359,17 @@ with tab3:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-1.5-flash')
                     prompt = f"""
-                    Role: Expert Tech Friend on Reddit.
-                    Task: Answer this user question: "{q_text}"
-                    My Argument/Winner: "{k_text}"
+                    Role: You are a tech enthusiast on Reddit. You are NOT an AI assistant.
+                    Task: Reply to this user question: "{q_text}"
+                    My Opinion: "{k_text}"
                     
-                    Instructions:
-                    1. Be casual, helpful, and direct.
-                    2. Use BOLD for phone names.
-                    3. Explain WHY based on my argument.
-                    4. End with a call-to-action to check the comparison tool: [Link to TechChoose]
-                    5. Output ONLY the response text.
+                    Style Guidelines (VERY IMPORTANT):
+                    1. Write like a normal human, not a robot. Don't be too formal.
+                    2. Do NOT use words like "Verdict", "Analysis", "Conclusion", or "Here is the breakdown".
+                    3. It's okay to start sentences with lowercase or be a bit casual.
+                    4. Focus on personal advice. Use "I think" or "IMO" (In My Opinion).
+                    5. Only bold the phone names, nothing else.
+                    6. End naturally with: "You can check the scores on my comparison tool here: [Link to TechChoose]"
                     """
                     with st.spinner("Writing..."):
                         response = model.generate_content(prompt)
