@@ -168,7 +168,7 @@ def generate_ai_analysis(winner, loser, reason_mode):
 
 # --- 5. MAIN APP ---
 st.title("🛒 TechChoose Smart AI")
-st.markdown("<div style='margin-bottom:20px; color:#888 !important;'>✅ Logic Updated: Smart Weighting V2</div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom:20px; color:#888 !important;'>📅 Data Updated: 20/12/2025</div>", unsafe_allow_html=True)
 
 # 🚀 เพิ่ม Tab 3 ตรงนี้
 tab1, tab2, tab3 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS", "🤖 ADMIN AI"])
