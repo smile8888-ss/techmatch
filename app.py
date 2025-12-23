@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
+import google.generativeai as genai
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
@@ -104,7 +105,7 @@ def load_data():
         if 'battery' in df.columns: df['batt_score'] = (df['battery'] / max_batt) * 10
         else: df['batt_score'] = 5.0
 
-        # Dynamic Value Score: ยิ่งถูก คะแนนยิ่งเยอะ (เต็ม 10)
+        # Dynamic Value Score
         if max_price > 0:
             df['value'] = 10 * (1 - (df['price'] / max_price)) + 1 
             df['value'] = df['value'].clip(0, 10)
@@ -169,7 +170,8 @@ def generate_ai_analysis(winner, loser, reason_mode):
 st.title("🛒 TechChoose Smart AI")
 st.markdown("<div style='margin-bottom:20px; color:#888 !important;'>✅ Logic Updated: Smart Weighting V2</div>", unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS"])
+# 🚀 เพิ่ม Tab 3 ตรงนี้
+tab1, tab2, tab3 = st.tabs(["🔍 FIND BEST MATCH", "⚔️ COMPARE MODELS", "🤖 ADMIN AI"])
 
 # ==========================================
 # TAB 1: SMART MATCHING ENGINE
@@ -188,30 +190,21 @@ with tab1:
         if "iOS" in os_choice: df_f = df_f[df_f['os_type']=='iOS']
         elif "Android" in os_choice: df_f = df_f[df_f['os_type']=='Android']
         
-        # 🔥🔥🔥 SMART WEIGHTING LOGIC V2 🔥🔥🔥
-        # p=Perf, c=Cam, b=Batt, v=Value(Cheapness), br=Brand
-        
+        # Weighting Logic
         if "High-End" in lifestyle: 
-            # รวย: ไม่สนราคา (v=0) เอาสุดทุกด้าน
             p,c,b,v,br = 10, 10, 10, 0, 5 
             budget = 9999
         elif "Gamer" in lifestyle: 
-            # เกมเมอร์: แรงต้องมาก่อน (p=25) กล้องช่างมัน (c=3)
             p,c,b,v,br = 25, 3, 10, 5, 2
             budget = 2000
         elif "Creator" in lifestyle:
-            # สายคอนเทนต์: กล้องต้องเทพ (c=25) แบรนด์สำคัญ (แอพเสถียร)
             p,c,b,v,br = 6, 25, 7, 3, 4
             budget = 2000
         elif "Student" in lifestyle:
-            # นักเรียน: ต้องคุ้ม (v=15) แต่ห้ามกาก! ต้องแรงพอ (p=7) แบตอึด (b=8)
-            # ไม่ใช่แค่ถูก (ลด v จาก 40 เหลือ 15 เพื่อให้รุ่นสเปคดีชนะรุ่นถูกๆ)
             budget = 900 
             p,c,b,v,br = 7, 6, 8, 15, 2
-            # 🔥 กฎเหล็ก: ตัดรุ่นที่ช้าเกินไปออก (No Lag allowed)
             df_f = df_f[df_f['perf_score'] >= 4.0]
         else: 
-            # General: สมดุล เน้นคุ้มค่าพอประมาณ
             budget = 1500
             p,c,b,v,br = 6, 6, 6, 12, 3
             
@@ -319,3 +312,67 @@ with tab2:
             st.markdown(f"<div class='vs-card {c1_cls}'>{rec1}<div class='hero-title' style='font-size:1.5em !important;'>{r1['name']}</div><div class='hero-price' style='font-size:1.5em !important;'>${r1['price']:,}</div>{r_chip[0]}{r_antutu[0]}{r_speed[0]}{r_cam[0]}{r_batt[0]}<a href='{r1['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>", unsafe_allow_html=True)
         with col_b:
             st.markdown(f"<div class='vs-card {c2_cls}'>{rec2}<div class='hero-title' style='font-size:1.5em !important;'>{r2['name']}</div><div class='hero-price' style='font-size:1.5em !important;'>${r2['price']:,}</div>{r_chip[1]}{r_antutu[1]}{r_speed[1]}{r_cam[1]}{r_batt[1]}<a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>", unsafe_allow_html=True)
+
+# ==========================================
+# TAB 3: ADMIN AI TOOL (Secure)
+# ==========================================
+with tab3:
+    st.header("🤖 ADMIN AI CONSOLE")
+    st.caption("🔒 Secured Area for Post Generation")
+    
+    # 🔐 Password Protection
+    with st.expander("🔑 Login to Access", expanded=True):
+        password = st.text_input("Admin Password:", type="password")
+        
+    if password == "tech1234": # <--- เปลี่ยนรหัสตรงนี้ได้ครับ
+        st.success("✅ Access Granted")
+        
+        # Admin Interface
+        api_key = st.text_input("Enter Gemini API Key:", type="password", help="Get free key at aistudio.google.com")
+        
+        col_q, col_k = st.columns(2)
+        with col_q:
+            q_text = st.text_area("1. Paste Reddit Question:", height=150)
+        with col_k:
+            k_text = st.text_area("2. Key Points / Winner:", height=150, placeholder="Ex: S24 is better for concerts...")
+            
+        if st.button("🚀 GENERATE REPLY", type="primary"):
+            if not api_key or not q_text:
+                st.error("Missing API Key or Question")
+            else:
+                try:
+                    genai.configure(api_key=api_key)
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    prompt = f"""
+                    Role: Expert Tech Friend on Reddit.
+                    Task: Answer this user question: "{q_text}"
+                    My Argument/Winner: "{k_text}"
+                    
+                    Instructions:
+                    1. Be casual, helpful, and direct.
+                    2. Use BOLD for phone names.
+                    3. Explain WHY based on my argument.
+                    4. End with a call-to-action to check the comparison tool: [Link to TechChoose]
+                    5. Output ONLY the response text.
+                    """
+                    with st.spinner("Writing..."):
+                        response = model.generate_content(prompt)
+                        st.code(response.text, language='markdown')
+                        st.caption("✅ Copy this text to Reddit")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+    elif password:
+        st.error("❌ Wrong Password")
+
+# --- 6. FOOTER / DISCLOSURE ---
+st.markdown("---")
+st.markdown(
+    """
+    <div style='text-align: center; color: #555 !important; font-size: 0.75em; padding: 20px; font-family: sans-serif;'>
+        <p>⚠️ <b>Affiliate Disclosure:</b> TechChoose is a participant in the Amazon Services LLC Associates Program.<br>
+        As an Amazon Associate, we earn from qualifying purchases at no extra cost to you.</p>
+        <p>Data is for informational purposes only. Prices and availability are subject to change.</p>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
