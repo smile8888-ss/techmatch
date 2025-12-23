@@ -314,27 +314,42 @@ with tab2:
             st.markdown(f"<div class='vs-card {c2_cls}'>{rec2}<div class='hero-title' style='font-size:1.5em !important;'>{r2['name']}</div><div class='hero-price' style='font-size:1.5em !important;'>${r2['price']:,}</div>{r_chip[1]}{r_antutu[1]}{r_speed[1]}{r_cam[1]}{r_batt[1]}<a href='{r2['link']}' target='_blank' class='amazon-btn'>VIEW DEAL</a></div>", unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: ADMIN AI TOOL (Secure)
+# TAB 3: ADMIN AI TOOL (Secure & Auto-Login)
 # ==========================================
 with tab3:
     st.header("🤖 ADMIN AI CONSOLE")
     st.caption("🔒 Secured Area for Post Generation")
     
-    # 🔐 Password Protection
+    # --- ส่วนเช็ค Password ---
+    # ดึงรหัสผ่านจาก Secrets ที่เราตั้งไว้เมื่อกี้
+    if "ADMIN_PASSWORD" in st.secrets:
+        stored_password = st.secrets["ADMIN_PASSWORD"]
+    else:
+        stored_password = "tech1234" # รหัสสำรองเผื่อลืมตั้งค่า
+
     with st.expander("🔑 Login to Access", expanded=True):
-        password = st.text_input("Admin Password:", type="password")
+        password_input = st.text_input("Admin Password:", type="password")
         
-    if password == "tech1234": # <--- เปลี่ยนรหัสตรงนี้ได้ครับ
+    # --- ถ้าใส่รหัสผ่านถูก ---
+    if password_input == stored_password:
         st.success("✅ Access Granted")
         
-        # Admin Interface
-        api_key = st.text_input("Enter Gemini API Key:", type="password", help="Get free key at aistudio.google.com")
+        # --- ส่วนเช็ค API Key ---
+        # ตรงนี้แหละที่มันจะไปดึงรหัสยาวๆ มาเอง
+        if "GEMINI_API_KEY" in st.secrets:
+            api_key = st.secrets["GEMINI_API_KEY"]
+            # แสดงข้อความบอกว่า "เชื่อมต่อระบบเรียบร้อยแล้ว" (ไม่ต้องโชว์รหัสให้เห็น)
+            st.info("✅ System Connected: Ready to Generate!")
+        else:
+            # ถ้าลืมตั้งค่าใน Secrets ก็ให้กรอกเองเหมือนเดิม (กันเหนียว)
+            api_key = st.text_input("Enter Gemini API Key:", type="password")
         
+        # --- ส่วนทำงาน ---
         col_q, col_k = st.columns(2)
         with col_q:
             q_text = st.text_area("1. Paste Reddit Question:", height=150)
         with col_k:
-            k_text = st.text_area("2. Key Points / Winner:", height=150, placeholder="Ex: S24 is better for concerts...")
+            k_text = st.text_area("2. Key Points / Winner:", height=150)
             
         if st.button("🚀 GENERATE REPLY", type="primary"):
             if not api_key or not q_text:
@@ -361,7 +376,7 @@ with tab3:
                         st.caption("✅ Copy this text to Reddit")
                 except Exception as e:
                     st.error(f"Error: {e}")
-    elif password:
+    elif password_input:
         st.error("❌ Wrong Password")
 
 # --- 6. FOOTER / DISCLOSURE ---
